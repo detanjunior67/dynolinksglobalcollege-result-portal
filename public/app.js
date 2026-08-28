@@ -59,13 +59,21 @@ function switchTab(tabName) {
     if (tabName === 'student') {
         studentTab.classList.add('active');
         staffTab.classList.remove('active');
-        staffSection.style.display = 'none';
+
+        studentSection.classList.add('active-section');
         studentSection.style.display = 'block';
+
+        staffSection.classList.remove('active-section');
+        staffSection.style.display = 'none';
     } else {
         staffTab.classList.add('active');
         studentTab.classList.remove('active');
-        studentSection.style.display = 'none';
+
+        staffSection.classList.add('active-section');
         staffSection.style.display = 'block';
+
+        studentSection.classList.remove('active-section');
+        studentSection.style.display = 'none';
     }
 }
 
