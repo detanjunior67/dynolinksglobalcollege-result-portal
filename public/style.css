@@ -257,3 +257,60 @@ input:focus {
     .card-body { box-shadow: none; padding: 0; }
     #result-card { display: block !important; }
 }
+/* Responsive Layout Optimizations */
+
+/* Adjust main container spacing for mobile */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .main-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 10px;
+    }
+
+    /* Stack form inputs vertically on smaller screens */
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Make subject input rows compact on phones */
+    .subject-row {
+        flex-direction: row !important;
+        gap: 5px;
+    }
+
+    .subject-row input {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    /* Stack tab buttons nicely */
+    .tab-navigation {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .tab-btn {
+        width: 100%;
+    }
+
+    /* Allow result tables to scroll horizontally without breaking layout */
+    .result-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Full-width action buttons on mobile */
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+    }
+}
