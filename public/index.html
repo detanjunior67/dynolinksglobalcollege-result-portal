@@ -153,8 +153,27 @@
                                 <input type="text" id="admFullName" placeholder="John Doe" required>
                             </div>
                             <div class="form-group">
-                                <label for="admClass">Class</label>
-                                <input type="text" id="admClass" placeholder="Grade 10-A" required>
+                                <label for="admClassSelect">Class</label>
+                                <select id="admClassSelect" onchange="handleClassChange()" required>
+                                    <option value="" disabled selected>Select Class</option>
+                                    <option value="JSS1">JSS1</option>
+                                    <option value="JSS2">JSS2</option>
+                                    <option value="JSS3">JSS3</option>
+                                    <option value="SSS1">SSS1</option>
+                                    <option value="SSS2">SSS2</option>
+                                    <option value="SSS3">SSS3</option>
+                                    <option value="Custom">Custom Class...</option>
+                                </select>
+                                <input type="text" id="admCustomClass" class="hidden" placeholder="Type custom class name" style="margin-top: 5px;">
+                            </div>
+                            <div class="form-group hidden" id="departmentGroup">
+                                <label for="admDepartmentSelect">Department</label>
+                                <select id="admDepartmentSelect" onchange="handleDepartmentChange()">
+                                    <option value="" disabled selected>Select Department</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Commercial">Commercial</option>
+                                </select>
                             </div>
                         </div>
 

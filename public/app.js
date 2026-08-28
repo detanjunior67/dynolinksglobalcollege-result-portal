@@ -1,13 +1,49 @@
+// Subject Presets
+const JSS_SUBJECTS = [
+    "Mathematics",
+    "English Language",
+    "Basic Technology",
+    "Home Economics",
+    "Business Studies",
+    "Religious Studies",
+    "Social Studies",
+    "Agricultural Science",
+    "Nigerian Language",
+    "French Language",
+    "Physical and Health Education",
+    "Civic Education",
+    "Information Technology",
+    "Creative Art",
+    "History",
+    "Entrepreneurship"
+];
+
+const SSS_COMPULSORY = [
+    "Mathematics",
+    "English Language",
+    "Agricultural Science",
+    "Civic Education",
+    "Economics",
+    "Marketing"
+];
+
+const SSS_DEPARTMENTS = {
+    Science: ["Chemistry", "Physics", "Biology"],
+    Arts: ["Literature in English", "Government", "Christian Religious Studies"],
+    Commercial: ["Financial Accounting", "Commerce", "Literature in English"]
+};
+
 // Dynamic Subject Fields Generator
-function generateSubjectFields() {
+function generateSubjectFields(presetSubjects = []) {
     const container = document.getElementById('subjectsContainer');
     if (container) {
         container.innerHTML = '';
         for (let i = 1; i <= 20; i++) {
+            const subjectName = presetSubjects[i - 1] || '';
             container.innerHTML += `
                 <div class="form-row subject-row" style="margin-bottom: 10px;">
                     <div class="form-group" style="flex: 2;">
-                        <input type="text" class="sub-name" placeholder="Subject ${i} Name (e.g. Mathematics)" oninput="recalculatePercentage()">
+                        <input type="text" class="sub-name" value="${subjectName}" placeholder="Subject ${i} Name (e.g. Mathematics)" oninput="recalculatePercentage()">
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <input type="number" class="sub-ca" min="0" max="40" placeholder="CA (40)" oninput="recalculatePercentage()">
@@ -17,6 +53,51 @@ function generateSubjectFields() {
                     </div>
                 </div>`;
         }
+        recalculatePercentage();
+    }
+}
+
+// Handle Class Selection
+function handleClassChange() {
+    const select = document.getElementById('admClassSelect');
+    const customInput = document.getElementById('admCustomClass');
+    const deptGroup = document.getElementById('departmentGroup');
+    const deptSelect = document.getElementById('admDepartmentSelect');
+    const selectedClass = select.value;
+
+    deptGroup.classList.add('hidden');
+    deptSelect.required = false;
+    deptSelect.value = '';
+
+    if (selectedClass === 'Custom') {
+        customInput.classList.remove('hidden');
+        customInput.required = true;
+        generateSubjectFields();
+    } else {
+        customInput.classList.add('hidden');
+        customInput.required = false;
+        customInput.value = '';
+
+        if (['JSS1', 'JSS2', 'JSS3'].includes(selectedClass)) {
+            generateSubjectFields(JSS_SUBJECTS);
+        } else if (['SSS1', 'SSS2', 'SSS3'].includes(selectedClass)) {
+            deptGroup.classList.remove('hidden');
+            deptSelect.required = true;
+            generateSubjectFields(SSS_COMPULSORY);
+        } else {
+            generateSubjectFields();
+        }
+    }
+}
+
+// Handle Department Selection for SSS Classes
+function handleDepartmentChange() {
+    const deptSelect = document.getElementById('admDepartmentSelect');
+    const selectedDept = deptSelect.value;
+
+    if (SSS_DEPARTMENTS[selectedDept]) {
+        const fullSubjectList = [...SSS_COMPULSORY, ...SSS_DEPARTMENTS[selectedDept]];
+        generateSubjectFields(fullSubjectList);
     }
 }
 
@@ -279,10 +360,24 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
     e.preventDefault();
     const studentId = document.getElementById('admStudentId').value.trim();
     const fullName = document.getElementById('admFullName').value.trim();
-    const studentClass = document.getElementById('admClass').value.trim();
+    
+    const selectClass = document.getElementById('admClassSelect').value;
+    const customClass = document.getElementById('admCustomClass').value.trim();
+    const deptSelect = document.getElementById('admDepartmentSelect').value;
+    
+    let studentClass = selectClass === 'Custom' ? customClass : selectClass;
+    if (['SSS1', 'SSS2', 'SSS3'].includes(selectClass) && deptSelect) {
+        studentClass += ` (${deptSelect})`;
+    }
+
     const session = document.getElementById('admSession').value;
     const term = document.getElementById('admTerm').value;
     const pin = document.getElementById('generatedPin').value.trim();
+
+    if (!studentClass) {
+        alert('Please select or type a class name.');
+        return;
+    }
 
     if (!pin) {
         alert('Please click "Generate PIN" before saving.');
@@ -316,6 +411,8 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
         if (data.success) {
             document.getElementById('addResultForm').reset();
             document.getElementById('generatedPin').value = '';
+            document.getElementById('admCustomClass').classList.add('hidden');
+            document.getElementById('departmentGroup').classList.add('hidden');
             generateSubjectFields();
             recalculatePercentage();
             loadStudentStatuses();
