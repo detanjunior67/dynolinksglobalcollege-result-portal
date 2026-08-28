@@ -45,7 +45,7 @@ function initTables() {
             ca_score INTEGER,
             exam_score INTEGER,
             academic_term TEXT,
-            academic_year TEXT,
+            academic_session TEXT,
             FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
         )`);
     });
@@ -189,7 +189,10 @@ app.post('/api/admin/add-full-result', (req, res) => {
             `INSERT INTO students (student_id, full_name, student_class) 
              VALUES (?, ?, ?) 
              ON CONFLICT(student_id) DO UPDATE SET full_name = excluded.full_name, student_class = excluded.student_class`,
-            [studentId, fullName, studentClass]
+            [studentId, fullName, studentClass],
+            (err) => {
+                if (err) console.error('Student Save Error:', err.message);
+            }
         );
 
         // Upsert PIN
@@ -197,7 +200,10 @@ app.post('/api/admin/add-full-result', (req, res) => {
             `INSERT INTO access_pins (student_id, pin_code, usage_count, max_usage)
              VALUES (?, ?, 0, 3)
              ON CONFLICT(student_id) DO UPDATE SET pin_code = excluded.pin_code, usage_count = 0`,
-            [studentId, pin]
+            [studentId, pin],
+            (err) => {
+                if (err) console.error('PIN Save Error:', err.message);
+            }
         );
 
         // Clear previous scores
@@ -221,5 +227,5 @@ app.post('/api/admin/add-full-result', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`DYNOLINKS Portal running on http://localhost:${PORT}`);
+    console.log(`DYNOLINKS Portal running on port ${PORT}`);
 });
