@@ -6,14 +6,14 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB Atlas Connection String
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:GgAKIGLIQr1VgFMy@cluster0.wosavjw.mongodb.net/dynolinks?appName=Cluster0";
+// MongoDB Connection String
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:GgAKIGLIQr1VgFMy@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+    .catch(err => console.error('MongoDB Connection Error Detailed:', err));
 
-// MongoDB Schemas
+// Schema
 const StudentSchema = new mongoose.Schema({
     student_id: { type: String, required: true, unique: true },
     full_name: { type: String, required: true },
@@ -34,11 +34,7 @@ const StudentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', StudentSchema);
 
-// ------------------------------------------------------------------
-// ADMIN API ENDPOINTS
-// ------------------------------------------------------------------
-
-// 1. Add or Update Student Result
+// Admin Save Endpoint
 app.post('/api/admin/add-full-result', async (req, res) => {
     try {
         const { studentId, fullName, studentClass, session, term, pin, subjects } = req.body;
@@ -65,7 +61,6 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             };
         });
 
-        // Delete previous record if it exists, then save the new record
         await Student.deleteOne({ student_id: String(studentId).trim() });
 
         const newStudent = new Student({
@@ -81,15 +76,14 @@ app.post('/api/admin/add-full-result', async (req, res) => {
         });
 
         await newStudent.save();
-
         res.json({ success: true, message: 'Result and PIN saved successfully!' });
     } catch (err) {
-        console.error('Save student error:', err);
+        console.error('Save student error detailed:', err);
         res.status(500).json({ success: false, message: 'Failed to save student record.' });
     }
 });
 
-// 2. Load Student List for Admin Dashboard
+// Admin List Endpoint
 app.get('/api/admin/student-status', async (req, res) => {
     try {
         const students = await Student.find({}, 'student_id full_name student_class pin_code usage_count max_usage');
@@ -99,21 +93,18 @@ app.get('/api/admin/student-status', async (req, res) => {
     }
 });
 
-// 3. Reset Student PIN Checks
+// Reset PIN Endpoint
 app.post('/api/admin/reset-pin', async (req, res) => {
     try {
         const { studentId } = req.body;
-        const result = await Student.findOneAndUpdate({ student_id: studentId }, { usage_count: 0 });
-        if (!result) {
-            return res.status(400).json({ success: false, message: 'Could not reset PIN.' });
-        }
+        await Student.findOneAndUpdate({ student_id: studentId }, { usage_count: 0 });
         res.json({ success: true, message: `PIN check count reset to 0 for ${studentId}.` });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Could not reset PIN.' });
     }
 });
 
-// 4. Delete Student Record
+// Delete Student Endpoint
 app.delete('/api/admin/delete-student', async (req, res) => {
     try {
         const { studentId } = req.body;
@@ -124,7 +115,7 @@ app.delete('/api/admin/delete-student', async (req, res) => {
     }
 });
 
-// 5. Export All Results as CSV
+// Export CSV Endpoint
 app.get('/api/admin/export-results', async (req, res) => {
     try {
         const students = await Student.find({});
@@ -147,10 +138,6 @@ app.get('/api/admin/export-results', async (req, res) => {
         res.status(500).send('Error generating CSV.');
     }
 });
-
-// ------------------------------------------------------------------
-// STUDENT API ENDPOINTS
-// ------------------------------------------------------------------
 
 // Check Student Result
 app.post('/api/check-result', async (req, res) => {
@@ -198,8 +185,7 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// Start Express Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Dynolinks Portal Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
