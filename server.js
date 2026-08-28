@@ -48,7 +48,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
         }
 
         const formattedResults = subjects.map(sub => {
-            const total = sub.caScore + sub.examScore;
+            const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
             let grade = 'F';
             if (total >= 70) grade = 'A';
             else if (total >= 60) grade = 'B';
@@ -58,30 +58,31 @@ app.post('/api/admin/add-full-result', async (req, res) => {
 
             return {
                 subject: sub.subjectName,
-                ca: sub.caScore,
-                exam: sub.examScore,
+                ca: Number(sub.caScore) || 0,
+                exam: Number(sub.examScore) || 0,
                 total: total,
                 grade: grade
             };
         });
 
-        await Student.findOneAndUpdate(
-            { student_id: studentId },
-            {
-                student_id: studentId,
-                full_name: fullName,
-                student_class: studentClass,
-                session: session,
-                term: term,
-                pin_code: pin,
-                usage_count: 0,
-                max_usage: 3,
-                results: formattedResults
-            },
-            { upsert: true, new: true }
-        );
+        // Delete previous record if it exists, then save the new record
+        await Student.deleteOne({ student_id: String(studentId).trim() });
 
-        res.json({ success: true, message: 'Result and PIN saved permanently to Cloud DB!' });
+        const newStudent = new Student({
+            student_id: String(studentId).trim(),
+            full_name: fullName,
+            student_class: studentClass,
+            session: session,
+            term: term,
+            pin_code: String(pin).trim(),
+            usage_count: 0,
+            max_usage: 3,
+            results: formattedResults
+        });
+
+        await newStudent.save();
+
+        res.json({ success: true, message: 'Result and PIN saved successfully!' });
     } catch (err) {
         console.error('Save student error:', err);
         res.status(500).json({ success: false, message: 'Failed to save student record.' });
