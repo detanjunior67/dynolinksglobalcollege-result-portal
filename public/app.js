@@ -1,5 +1,5 @@
-// Render 20 Blank Subject Fields on Page Load
-document.addEventListener('DOMContentLoaded', () => {
+// Dynamic Subject Fields Generator
+function generateSubjectFields() {
     const container = document.getElementById('subjectsContainer');
     if (container) {
         container.innerHTML = '';
@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
     }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    generateSubjectFields();
 });
 
 // Live Percentage Calculator in Admin Dashboard
@@ -100,8 +104,8 @@ async function loadStudentStatuses() {
                         <td><code>${student.pin_code || 'N/A'}</code></td>
                         <td>${student.usage_count} / ${student.max_usage}</td>
                         <td>
-                            <button class="btn btn-sm btn-primary" onclick="resetPin('${student.student_id}')">Reset PIN</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.student_id}')">Delete</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="resetPin('${student.student_id}')">Reset PIN</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteStudent('${student.student_id}')">Delete</button>
                         </td>
                     </tr>
                 `;
@@ -304,6 +308,7 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
         if (data.success) {
             document.getElementById('addResultForm').reset();
             document.getElementById('generatedPin').value = '';
+            generateSubjectFields();
             recalculatePercentage();
             loadStudentStatuses();
         }

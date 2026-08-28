@@ -73,7 +73,7 @@
                         <p><strong>Session:</strong> <span id="resSession">--</span></p>
                         <p><strong>Term:</strong> <span id="resTerm">--</span></p>
                         <p><strong>Overall Score:</strong> <span id="resTotalScore">--</span> (<span id="resPercentage">--</span>%)</p>
-                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky); font-weight: 600;">--</span></p>
+                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky, #0288d1); font-weight: 600;">--</span></p>
                     </div>
 
                     <table class="result-table">
@@ -98,7 +98,7 @@
             </section>
 
             <!-- STAFF / ADMIN SECTION -->
-            <section id="staff-section" class="portal-section">
+            <section id="staff-section" class="portal-section" style="display: none;">
                 
                 <form id="adminAuthForm">
                     <h2 class="section-title">Staff Portal Access</h2>
@@ -115,8 +115,8 @@
                         <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout</button>
                     </div>
 
-                    <!-- Search Filter & Admin Overview Table -->
-                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px;">
+                    <!-- Search Filter & Admin Summary Table -->
+                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                             <h4 style="margin: 0;">Uploaded Results & Check Status</h4>
                             <div style="display: flex; gap: 10px;">
