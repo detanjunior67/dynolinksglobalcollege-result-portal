@@ -1,0 +1,20 @@
+{
+  "name": "dynolinks-portal",
+  "version": "1.0.0",
+  "description": "DYNOLINKS GLOBAL COLLEGE Result Checking Portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "html2canvas": "^1.4.1",
+    "mysql2": "^3.9.7",
+    "sqlite3": "^6.0.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
