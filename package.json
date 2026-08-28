@@ -5,15 +5,13 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "npm rebuild sqlite3 --build-from-source"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "html2canvas": "^1.4.1",
-    "mysql2": "^3.9.7",
-    "sqlite3": "^6.0.1"
+    "mongoose": "^8.0.0"
   },
   "devDependencies": {},
   "keywords": [],

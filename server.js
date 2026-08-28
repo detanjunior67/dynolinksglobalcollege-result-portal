@@ -1,162 +1,150 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect to SQLite Database (Auto-creates 'dynolinks_portal.db' if missing)
-const dbPath = path.join(__dirname, 'dynolinks_portal.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to SQLite database at:', dbPath);
-    }
+// MongoDB Atlas Connection String
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:GgAKIGLIQr1VgFMy@cluster0.wosavjw.mongodb.net/dynolinks?appName=Cluster0";
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
+    .catch(err => console.error('MongoDB Connection Error:', err));
+
+// MongoDB Schemas
+const StudentSchema = new mongoose.Schema({
+    student_id: { type: String, required: true, unique: true },
+    full_name: { type: String, required: true },
+    student_class: { type: String, required: true },
+    session: { type: String, required: true },
+    term: { type: String, required: true },
+    pin_code: { type: String, required: true },
+    usage_count: { type: Number, default: 0 },
+    max_usage: { type: Number, default: 3 },
+    results: [{
+        subject: String,
+        ca: Number,
+        exam: Number,
+        total: Number,
+        grade: String
+    }]
 });
 
-// Auto-create database schema on server startup
-db.serialize(() => {
-    // Create Students Table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS students (
-            student_id TEXT PRIMARY KEY,
-            full_name TEXT NOT NULL,
-            student_class TEXT NOT NULL,
-            session TEXT NOT NULL,
-            term TEXT NOT NULL,
-            pin_code TEXT UNIQUE,
-            usage_count INTEGER DEFAULT 0,
-            max_usage INTEGER DEFAULT 3
-        )
-    `, (err) => {
-        if (err) console.error('Error creating students table:', err.message);
-    });
-
-    // Create Results Table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            ca INTEGER NOT NULL,
-            exam INTEGER NOT NULL,
-            total INTEGER NOT NULL,
-            grade TEXT NOT NULL,
-            FOREIGN KEY (student_id) REFERENCES students (student_id) ON DELETE CASCADE
-        )
-    `, (err) => {
-        if (err) console.error('Error creating results table:', err.message);
-    });
-
-    console.log('Database tables verified/created successfully.');
-});
+const Student = mongoose.model('Student', StudentSchema);
 
 // ------------------------------------------------------------------
 // ADMIN API ENDPOINTS
 // ------------------------------------------------------------------
 
 // 1. Add or Update Student Result
-app.post('/api/admin/add-full-result', (req, res) => {
-    const { studentId, fullName, studentClass, session, term, pin, subjects } = req.body;
+app.post('/api/admin/add-full-result', async (req, res) => {
+    try {
+        const { studentId, fullName, studentClass, session, term, pin, subjects } = req.body;
 
-    if (!studentId || !fullName || !studentClass || !pin || !subjects || subjects.length === 0) {
-        return res.status(400).json({ success: false, message: 'Please provide all required student details and scores.' });
-    }
-
-    db.run(
-        `INSERT OR REPLACE INTO students (student_id, full_name, student_class, session, term, pin_code, usage_count, max_usage)
-         VALUES (?, ?, ?, ?, ?, ?, 0, 3)`,
-        [studentId, fullName, studentClass, session, term, pin],
-        function(err) {
-            if (err) {
-                console.error('Save student error:', err.message);
-                return res.status(500).json({ success: false, message: 'Failed to save student record.' });
-            }
-
-            // Remove existing subjects if updating
-            db.run(`DELETE FROM results WHERE student_id = ?`, [studentId], (err) => {
-                if (err) {
-                    return res.status(500).json({ success: false, message: 'Failed to clear previous subject records.' });
-                }
-
-                const stmt = db.prepare(`INSERT INTO results (student_id, subject, ca, exam, total, grade) VALUES (?, ?, ?, ?, ?, ?)`);
-
-                subjects.forEach(sub => {
-                    const total = sub.caScore + sub.examScore;
-                    let grade = 'F';
-                    if (total >= 70) grade = 'A';
-                    else if (total >= 60) grade = 'B';
-                    else if (total >= 50) grade = 'C';
-                    else if (total >= 45) grade = 'D';
-                    else if (total >= 40) grade = 'E';
-
-                    stmt.run(studentId, sub.subjectName, sub.caScore, sub.examScore, total, grade);
-                });
-
-                stmt.finalize();
-                res.json({ success: true, message: 'Result and PIN saved successfully!' });
-            });
+        if (!studentId || !fullName || !studentClass || !pin || !subjects || subjects.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please provide all required student details and scores.' });
         }
-    );
+
+        const formattedResults = subjects.map(sub => {
+            const total = sub.caScore + sub.examScore;
+            let grade = 'F';
+            if (total >= 70) grade = 'A';
+            else if (total >= 60) grade = 'B';
+            else if (total >= 50) grade = 'C';
+            else if (total >= 45) grade = 'D';
+            else if (total >= 40) grade = 'E';
+
+            return {
+                subject: sub.subjectName,
+                ca: sub.caScore,
+                exam: sub.examScore,
+                total: total,
+                grade: grade
+            };
+        });
+
+        await Student.findOneAndUpdate(
+            { student_id: studentId },
+            {
+                student_id: studentId,
+                full_name: fullName,
+                student_class: studentClass,
+                session: session,
+                term: term,
+                pin_code: pin,
+                usage_count: 0,
+                max_usage: 3,
+                results: formattedResults
+            },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, message: 'Result and PIN saved permanently to Cloud DB!' });
+    } catch (err) {
+        console.error('Save student error:', err);
+        res.status(500).json({ success: false, message: 'Failed to save student record.' });
+    }
 });
 
 // 2. Load Student List for Admin Dashboard
-app.get('/api/admin/student-status', (req, res) => {
-    db.all(`SELECT student_id, full_name, student_class, pin_code, usage_count, max_usage FROM students`, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Error fetching student list.' });
-        }
-        res.json({ success: true, students: rows });
-    });
+app.get('/api/admin/student-status', async (req, res) => {
+    try {
+        const students = await Student.find({}, 'student_id full_name student_class pin_code usage_count max_usage');
+        res.json({ success: true, students });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error fetching student list.' });
+    }
 });
 
 // 3. Reset Student PIN Checks
-app.post('/api/admin/reset-pin', (req, res) => {
-    const { studentId } = req.body;
-    db.run(`UPDATE students SET usage_count = 0 WHERE student_id = ?`, [studentId], function(err) {
-        if (err || this.changes === 0) {
+app.post('/api/admin/reset-pin', async (req, res) => {
+    try {
+        const { studentId } = req.body;
+        const result = await Student.findOneAndUpdate({ student_id: studentId }, { usage_count: 0 });
+        if (!result) {
             return res.status(400).json({ success: false, message: 'Could not reset PIN.' });
         }
         res.json({ success: true, message: `PIN check count reset to 0 for ${studentId}.` });
-    });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not reset PIN.' });
+    }
 });
 
 // 4. Delete Student Record
-app.delete('/api/admin/delete-student', (req, res) => {
-    const { studentId } = req.body;
-    db.run(`DELETE FROM students WHERE student_id = ?`, [studentId], function(err) {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Failed to delete student.' });
-        }
-        db.run(`DELETE FROM results WHERE student_id = ?`, [studentId]);
+app.delete('/api/admin/delete-student', async (req, res) => {
+    try {
+        const { studentId } = req.body;
+        await Student.deleteOne({ student_id: studentId });
         res.json({ success: true, message: `Student ${studentId} deleted successfully.` });
-    });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to delete student.' });
+    }
 });
 
 // 5. Export All Results as CSV
-app.get('/api/admin/export-results', (req, res) => {
-    const query = `
-        SELECT s.student_id, s.full_name, s.student_class, s.session, s.term, s.pin_code,
-               r.subject, r.ca, r.exam, r.total, r.grade
-        FROM students s
-        LEFT JOIN results r ON s.student_id = r.student_id
-    `;
-    db.all(query, [], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Error generating CSV.');
-        }
-
+app.get('/api/admin/export-results', async (req, res) => {
+    try {
+        const students = await Student.find({});
         let csv = 'Student ID,Full Name,Class,Session,Term,PIN,Subject,CA Score,Exam Score,Total Score,Grade\n';
-        rows.forEach(r => {
-            csv += `"${r.student_id}","${r.full_name}","${r.student_class}","${r.session}","${r.term}","${r.pin_code || ''}","${r.subject || ''}",${r.ca || 0},${r.exam || 0},${r.total || 0},"${r.grade || ''}"\n`;
+
+        students.forEach(s => {
+            if (s.results && s.results.length > 0) {
+                s.results.forEach(r => {
+                    csv += `"${s.student_id}","${s.full_name}","${s.student_class}","${s.session}","${s.term}","${s.pin_code || ''}","${r.subject || ''}",${r.ca || 0},${r.exam || 0},${r.total || 0},"${r.grade || ''}"\n`;
+                });
+            } else {
+                csv += `"${s.student_id}","${s.full_name}","${s.student_class}","${s.session}","${s.term}","${s.pin_code || ''}","","","","",""\n`;
+            }
         });
 
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename="Dynolinks_Results_Export.csv"');
         res.status(200).send(csv);
-    });
+    } catch (err) {
+        res.status(500).send('Error generating CSV.');
+    }
 });
 
 // ------------------------------------------------------------------
@@ -164,54 +152,53 @@ app.get('/api/admin/export-results', (req, res) => {
 // ------------------------------------------------------------------
 
 // Check Student Result
-app.post('/api/check-result', (req, res) => {
-    const { studentId, pin, session, term } = req.body;
+app.post('/api/check-result', async (req, res) => {
+    try {
+        const { studentId, pin, session, term } = req.body;
 
-    db.get(
-        `SELECT * FROM students WHERE UPPER(student_id) = UPPER(?) AND pin_code = ? AND session = ? AND term = ?`,
-        [studentId, pin, session, term],
-        (err, student) => {
-            if (err || !student) {
-                return res.status(400).json({ success: false, message: 'Invalid Student ID, Access PIN, or Session/Term selection.' });
-            }
+        const student = await Student.findOne({
+            student_id: new RegExp(`^${studentId.trim()}$`, 'i'),
+            pin_code: pin.trim(),
+            session: session,
+            term: term
+        });
 
-            if (student.usage_count >= student.max_usage) {
-                return res.status(403).json({ success: false, message: 'PIN check limit reached (Maximum 3 attempts allowed).' });
-            }
-
-            const newUsage = student.usage_count + 1;
-            db.run(`UPDATE students SET usage_count = ? WHERE student_id = ?`, [newUsage, student.student_id]);
-
-            db.all(`SELECT subject, ca, exam, total, grade FROM results WHERE student_id = ?`, [student.student_id], (err, results) => {
-                if (err) {
-                    return res.status(500).json({ success: false, message: 'Error retrieving academic results.' });
-                }
-
-                res.json({
-                    success: true,
-                    student: {
-                        id: student.student_id,
-                        name: student.full_name,
-                        class: student.student_class,
-                        session: student.session,
-                        term: student.term
-                    },
-                    remainingChecks: student.max_usage - newUsage,
-                    results: results.map(r => ({
-                        subject: r.subject,
-                        ca: r.ca,
-                        exam: r.exam,
-                        total: r.total,
-                        grade: r.grade
-                    }))
-                });
-            });
+        if (!student) {
+            return res.status(400).json({ success: false, message: 'Invalid Student ID, Access PIN, or Session/Term selection.' });
         }
-    );
+
+        if (student.usage_count >= student.max_usage) {
+            return res.status(403).json({ success: false, message: 'PIN check limit reached (Maximum 3 attempts allowed).' });
+        }
+
+        student.usage_count += 1;
+        await student.save();
+
+        res.json({
+            success: true,
+            student: {
+                id: student.student_id,
+                name: student.full_name,
+                class: student.student_class,
+                session: student.session,
+                term: student.term
+            },
+            remainingChecks: student.max_usage - student.usage_count,
+            results: student.results.map(r => ({
+                subject: r.subject,
+                ca: r.ca,
+                exam: r.exam,
+                total: r.total,
+                grade: r.grade
+            }))
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error retrieving academic results.' });
+    }
 });
 
 // Start Express Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Dynolinks Portal Server is running on port ${PORT}`);
+    console.log(`Dynolinks Portal Server running on port ${PORT}`);
 });
