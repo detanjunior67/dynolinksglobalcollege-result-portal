@@ -82,7 +82,33 @@ app.get('/api/admin/student-status', (req, res) => {
     });
 });
 
-// 2. Export all student results as CSV for Admin
+// 2. Reset PIN usages for Admin
+app.post('/api/admin/reset-pin', (req, res) => {
+    const { studentId } = req.body;
+    db.run('UPDATE access_pins SET usage_count = 0 WHERE student_id = ?', [studentId], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: 'Reset failed.' });
+        }
+        res.json({ success: true, message: `PIN checks successfully reset to 0 for ${studentId}` });
+    });
+});
+
+// 3. Delete Student Record & Results for Admin
+app.delete('/api/admin/delete-student', (req, res) => {
+    const { studentId } = req.body;
+    db.serialize(() => {
+        db.run('DELETE FROM results WHERE student_id = ?', [studentId]);
+        db.run('DELETE FROM access_pins WHERE student_id = ?', [studentId]);
+        db.run('DELETE FROM students WHERE student_id = ?', [studentId], (err) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Delete failed.' });
+            }
+            res.json({ success: true, message: `All records deleted for ${studentId}` });
+        });
+    });
+});
+
+// 4. Export all student results as CSV for Admin
 app.get('/api/admin/export-results', (req, res) => {
     const query = `
         SELECT 
@@ -120,9 +146,9 @@ app.get('/api/admin/export-results', (req, res) => {
     });
 });
 
-// 3. Check Result API Endpoint
+// 5. Check Result API Endpoint (Filters by Student ID, PIN, Session, & Term)
 app.post('/api/check-result', (req, res) => {
-    const { studentId, pin } = req.body;
+    const { studentId, pin, session, term } = req.body;
 
     db.get('SELECT * FROM access_pins WHERE student_id = ? AND pin_code = ?', [studentId, pin], (err, pinRecord) => {
         if (err || !pinRecord) {
@@ -141,45 +167,49 @@ app.post('/api/check-result', (req, res) => {
                 return res.status(404).json({ success: false, message: 'Student ID record not found.' });
             }
 
-            db.all('SELECT * FROM results WHERE student_id = ?', [studentId], (err, resultRows) => {
-                if (err || resultRows.length === 0) {
-                    return res.status(404).json({ success: false, message: 'No published scores found for this student.' });
-                }
+            db.all(
+                'SELECT * FROM results WHERE student_id = ? AND academic_session = ? AND academic_term = ?', 
+                [studentId, session, term], 
+                (err, resultRows) => {
+                    if (err || resultRows.length === 0) {
+                        return res.status(404).json({ success: false, message: `No published scores found for ${session} (${term}).` });
+                    }
 
-                const processedResults = resultRows.map(row => {
-                    const total = row.ca_score + row.exam_score;
-                    return {
-                        subject: row.subject_name,
-                        ca: row.ca_score,
-                        exam: row.exam_score,
-                        total: total,
-                        grade: calculateGrade(total)
-                    };
-                });
-
-                // Update PIN usage count
-                db.run('UPDATE access_pins SET usage_count = usage_count + 1 WHERE pin_id = ?', [pinRecord.pin_id], (err) => {
-                    if (err) console.error(err.message);
-
-                    res.json({
-                        success: true,
-                        student: {
-                            id: student.student_id,
-                            name: student.full_name,
-                            class: student.student_class,
-                            term: resultRows[0]?.academic_term || '1st Term',
-                            session: resultRows[0]?.academic_session || '2025/2026'
-                        },
-                        results: processedResults,
-                        remainingChecks: pinRecord.max_usage - (pinRecord.usage_count + 1)
+                    const processedResults = resultRows.map(row => {
+                        const total = row.ca_score + row.exam_score;
+                        return {
+                            subject: row.subject_name,
+                            ca: row.ca_score,
+                            exam: row.exam_score,
+                            total: total,
+                            grade: calculateGrade(total)
+                        };
                     });
-                });
-            });
+
+                    // Update PIN usage count
+                    db.run('UPDATE access_pins SET usage_count = usage_count + 1 WHERE pin_id = ?', [pinRecord.pin_id], (err) => {
+                        if (err) console.error(err.message);
+
+                        res.json({
+                            success: true,
+                            student: {
+                                id: student.student_id,
+                                name: student.full_name,
+                                class: student.student_class,
+                                term: term,
+                                session: session
+                            },
+                            results: processedResults,
+                            remainingChecks: pinRecord.max_usage - (pinRecord.usage_count + 1)
+                        });
+                    });
+                }
+            );
         });
     });
 });
 
-// 4. Admin Save Full Result + Session & Term + Generate PIN
+// 6. Admin Save Full Result + Session & Term + Generate PIN
 app.post('/api/admin/add-full-result', (req, res) => {
     const { studentId, fullName, studentClass, session, term, pin, subjects } = req.body;
 
@@ -206,8 +236,8 @@ app.post('/api/admin/add-full-result', (req, res) => {
             }
         );
 
-        // Clear previous scores
-        db.run('DELETE FROM results WHERE student_id = ?', [studentId]);
+        // Clear previous scores specifically for this session and term
+        db.run('DELETE FROM results WHERE student_id = ? AND academic_session = ? AND academic_term = ?', [studentId, session, term]);
 
         // Insert subject scores along with Session & Term
         const stmt = db.prepare(`INSERT INTO results (student_id, subject_name, ca_score, exam_score, academic_term, academic_session) VALUES (?, ?, ?, ?, ?, ?)`);
