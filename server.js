@@ -7,8 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection String
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:GgAKIGLIQr1VgFMy@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
-
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
     .catch(err => console.error('MongoDB Connection Error Detailed:', err));
