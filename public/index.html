@@ -6,9 +6,8 @@
     <title>DYNOLINKS GLOBAL COLLEGE - Result Portal</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Library to convert DOM element into image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -38,11 +37,31 @@
                         <label for="pin">Access PIN</label>
                         <input type="password" id="pin" placeholder="Enter Access PIN" required>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentSession">Academic Session</label>
+                            <select id="studentSession" required>
+                                <option value="2025/2026" selected>2025/2026</option>
+                                <option value="2026/2027">2026/2027</option>
+                                <option value="2027/2028">2027/2028</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentTerm">Academic Term</label>
+                            <select id="studentTerm" required>
+                                <option value="1st Term" selected>1st Term</option>
+                                <option value="2nd Term">2nd Term</option>
+                                <option value="3rd Term">3rd Term</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Check Result</button>
                 </form>
 
                 <div id="result-card" class="hidden" style="background: #fff; padding: 20px; border-radius: 8px;">
-                    <div class="school-header">
+                    <div class="school-header" style="text-align: center; margin-bottom: 20px;">
                         <h2>DYNOLINKS GLOBAL COLLEGE</h2>
                         <p class="sub-heading">Official Statement of Academic Results</p>
                     </div>
@@ -53,6 +72,7 @@
                         <p><strong>Class:</strong> <span id="resClass">--</span></p>
                         <p><strong>Session:</strong> <span id="resSession">--</span></p>
                         <p><strong>Term:</strong> <span id="resTerm">--</span></p>
+                        <p><strong>Overall Score:</strong> <span id="resTotalScore">--</span> (<span id="resPercentage">--</span>%)</p>
                         <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky); font-weight: 600;">--</span></p>
                     </div>
 
@@ -71,7 +91,7 @@
 
                     <div class="action-buttons" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-success" onclick="downloadResultAsImage()">Save as Image (PNG)</button>
-                        <button class="btn btn-primary" onclick="window.print()">Print / PDF</button>
+                        <button class="btn btn-primary" onclick="downloadResultPDF()">Download PDF</button>
                         <button class="btn btn-secondary" onclick="resetStudentForm()">Back to Search</button>
                     </div>
                 </div>
@@ -90,16 +110,19 @@
                 </form>
 
                 <div id="admin-dashboard" class="hidden">
-                    <div class="dashboard-header">
+                    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h3>Staff Control Panel</h3>
                         <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout</button>
                     </div>
 
-                    <!-- Uploaded Student Status Overview Table -->
-                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <!-- Search Filter & Admin Overview Table -->
+                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                             <h4 style="margin: 0;">Uploaded Results & Check Status</h4>
-                            <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">Download All Results (CSV)</button>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Student Name or ID..." style="padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;">
+                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">Download All CSV</button>
+                            </div>
                         </div>
                         <div style="overflow-x: auto;">
                             <table class="result-table">
@@ -110,12 +133,10 @@
                                         <th>Class</th>
                                         <th>PIN Code</th>
                                         <th>Checks Used</th>
-                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminStudentList">
-                                    <!-- Dynamic Rows Rendered by JS -->
-                                </tbody>
+                                <tbody id="adminStudentList"></tbody>
                             </table>
                         </div>
                     </div>
@@ -137,7 +158,6 @@
                             </div>
                         </div>
 
-                        <!-- Session and Term Selectors -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="admSession">Academic Session</label>
@@ -157,21 +177,26 @@
                             </div>
                         </div>
 
-                        <!-- Automated PIN Generation Section -->
-                        <div class="pin-gen-box" style="background: var(--light-sky); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <div class="form-row" style="align-items: center;">
-                                <div class="form-group" style="margin-bottom:0;">
+                        <!-- PIN Generator & Live Percentage Calculator Box -->
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <div class="pin-gen-box" style="flex: 1; min-width: 250px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
                                     <label>Automated PIN (3 Uses Max)</label>
                                     <input type="text" id="generatedPin" readonly placeholder="Click Generate PIN">
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" style="margin-top: 22px;" onclick="generateStudentPin()">Generate PIN</button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="generateStudentPin()">Generate PIN</button>
+                            </div>
+
+                            <!-- Live Percentage Calculation Box -->
+                            <div class="calc-box" style="flex: 1; min-width: 250px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
+                                <h5 style="margin: 0 0 10px 0; color: #2e7d32;">Calculated Class Percentage</h5>
+                                <p style="margin: 0; font-size: 14px;">Total Score: <strong id="calcTotalScore">0</strong> / <span id="calcMaxScore">0</span></p>
+                                <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #1b5e20;">Percentage: <span id="calcPercentage">0.00</span>%</p>
                             </div>
                         </div>
 
                         <h4>Subject Scores (Up to 20 Subjects)</h4>
-                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                            <!-- 20 Subject Inputs dynamically generated via JS -->
-                        </div>
+                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
 
                         <button type="submit" class="btn btn-success" style="margin-top: 15px;">Save Complete Student Result & PIN</button>
                     </form>

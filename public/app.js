@@ -7,20 +7,45 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML += `
                 <div class="form-row subject-row" style="margin-bottom: 10px;">
                     <div class="form-group" style="flex: 2;">
-                        <input type="text" class="sub-name" placeholder="Subject ${i} Name (e.g. Mathematics)">
+                        <input type="text" class="sub-name" placeholder="Subject ${i} Name (e.g. Mathematics)" oninput="recalculatePercentage()">
                     </div>
                     <div class="form-group" style="flex: 1;">
-                        <input type="number" class="sub-ca" min="0" max="40" placeholder="CA (40)">
+                        <input type="number" class="sub-ca" min="0" max="40" placeholder="CA (40)" oninput="recalculatePercentage()">
                     </div>
                     <div class="form-group" style="flex: 1;">
-                        <input type="number" class="sub-exam" min="0" max="60" placeholder="Exam (60)">
+                        <input type="number" class="sub-exam" min="0" max="60" placeholder="Exam (60)" oninput="recalculatePercentage()">
                     </div>
                 </div>`;
         }
     }
 });
 
-// Tab Switcher with smooth section animation
+// Live Percentage Calculator in Admin Dashboard
+function recalculatePercentage() {
+    const rows = document.querySelectorAll('.subject-row');
+    let totalScore = 0;
+    let validSubjectCount = 0;
+
+    rows.forEach(row => {
+        const name = row.querySelector('.sub-name').value.trim();
+        const ca = row.querySelector('.sub-ca').value;
+        const exam = row.querySelector('.sub-exam').value;
+
+        if (name !== '' && ca !== '' && exam !== '') {
+            totalScore += (parseInt(ca) || 0) + (parseInt(exam) || 0);
+            validSubjectCount++;
+        }
+    });
+
+    const maxScore = validSubjectCount * 100;
+    const percentage = maxScore > 0 ? ((totalScore / maxScore) * 100).toFixed(2) : '0.00';
+
+    document.getElementById('calcTotalScore').textContent = totalScore;
+    document.getElementById('calcMaxScore').textContent = maxScore;
+    document.getElementById('calcPercentage').textContent = percentage;
+}
+
+// Tab Switcher
 function switchTab(tabName) {
     const studentTab = document.getElementById('studentTabBtn');
     const staffTab = document.getElementById('staffTabBtn');
@@ -30,28 +55,28 @@ function switchTab(tabName) {
     if (tabName === 'student') {
         studentTab.classList.add('active');
         staffTab.classList.remove('active');
-        
-        staffSection.classList.remove('active-section');
-        setTimeout(() => {
-            staffSection.style.display = 'none';
-            studentSection.style.display = 'block';
-            studentSection.classList.add('active-section');
-        }, 150);
-
+        staffSection.style.display = 'none';
+        studentSection.style.display = 'block';
     } else {
         staffTab.classList.add('active');
         studentTab.classList.remove('active');
-
-        studentSection.classList.remove('active-section');
-        setTimeout(() => {
-            studentSection.style.display = 'none';
-            staffSection.style.display = 'block';
-            staffSection.classList.add('active-section');
-        }, 150);
+        studentSection.style.display = 'none';
+        staffSection.style.display = 'block';
     }
 }
 
-// Fetch and Render Student Result Status List for Admin Dashboard
+// Search Filter for Admin Table
+function filterAdminTable() {
+    const input = document.getElementById('adminSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#adminStudentList tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(input) ? '' : 'none';
+    });
+}
+
+// Fetch and Render Student List for Admin
 async function loadStudentStatuses() {
     try {
         const response = await fetch('/api/admin/student-status');
@@ -67,19 +92,17 @@ async function loadStudentStatuses() {
             }
 
             data.students.forEach(student => {
-                const hasChecked = student.usage_count > 0;
-                const statusBadge = hasChecked 
-                    ? `<span style="color: #27ae60; font-weight:600;">Checked (${student.usage_count}/${student.max_usage})</span>` 
-                    : `<span style="color: #e67e22; font-weight:600;">Not Checked Yet</span>`;
-
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${student.student_id}</strong></td>
                         <td>${student.full_name}</td>
                         <td>${student.student_class}</td>
                         <td><code>${student.pin_code || 'N/A'}</code></td>
-                        <td>${student.usage_count} time(s)</td>
-                        <td>${statusBadge}</td>
+                        <td>${student.usage_count} / ${student.max_usage}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="resetPin('${student.student_id}')">Reset PIN</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.student_id}')">Delete</button>
+                        </td>
                     </tr>
                 `;
             });
@@ -89,17 +112,52 @@ async function loadStudentStatuses() {
     }
 }
 
-// Student Form Handling with 3-Attempt Check Output
+// Admin Actions: Reset PIN and Delete Record
+async function resetPin(studentId) {
+    if (!confirm(`Reset PIN checks for ${studentId}?`)) return;
+    try {
+        const res = await fetch('/api/admin/reset-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadStudentStatuses();
+    } catch (err) {
+        alert('Failed to reset PIN.');
+    }
+}
+
+async function deleteStudent(studentId) {
+    if (!confirm(`Delete all records for ${studentId}? This action cannot be undone.`)) return;
+    try {
+        const res = await fetch('/api/admin/delete-student', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadStudentStatuses();
+    } catch (err) {
+        alert('Failed to delete student.');
+    }
+}
+
+// Student Search Submission
 document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const studentId = document.getElementById('studentId').value.trim();
     const pin = document.getElementById('pin').value.trim();
+    const session = document.getElementById('studentSession').value;
+    const term = document.getElementById('studentTerm').value;
 
     try {
         const response = await fetch('/api/check-result', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, pin })
+            body: JSON.stringify({ studentId, pin, session, term })
         });
 
         const data = await response.json();
@@ -110,13 +168,14 @@ document.getElementById('studentLoginForm').addEventListener('submit', async fun
             document.getElementById('resClass').textContent = data.student.class;
             document.getElementById('resSession').textContent = data.student.session;
             document.getElementById('resTerm').textContent = data.student.term;
-            
-            // Display Remaining PIN Checks
             document.getElementById('resRemaining').textContent = `${data.remainingChecks} attempt(s) remaining`;
 
+            let totalObtained = 0;
             const tbody = document.getElementById('resultBody');
             tbody.innerHTML = '';
+
             data.results.forEach(item => {
+                totalObtained += item.total;
                 tbody.innerHTML += `
                     <tr>
                         <td>${item.subject}</td>
@@ -127,13 +186,19 @@ document.getElementById('studentLoginForm').addEventListener('submit', async fun
                     </tr>`;
             });
 
+            const maxPossible = data.results.length * 100;
+            const percentage = maxPossible > 0 ? ((totalObtained / maxPossible) * 100).toFixed(2) : '0.00';
+
+            document.getElementById('resTotalScore').textContent = `${totalObtained} / ${maxPossible}`;
+            document.getElementById('resPercentage').textContent = percentage;
+
             document.getElementById('studentLoginForm').classList.add('hidden');
             document.getElementById('result-card').classList.remove('hidden');
         } else {
             alert(data.message);
         }
     } catch (err) {
-        alert('Could not establish connection to the backend server.');
+        alert('Could not connect to server.');
     }
 });
 
@@ -143,54 +208,45 @@ function resetStudentForm() {
     document.getElementById('studentLoginForm').reset();
 }
 
-// Capture and Save Student Result as PNG Image
+// PNG Download
 async function downloadResultAsImage() {
     const resultElement = document.getElementById('result-card');
-    const studentId = document.getElementById('resId').textContent || 'Student_Result';
-    const actionButtons = resultElement.querySelector('.action-buttons');
-
-    try {
-        if (actionButtons) actionButtons.style.visibility = 'hidden';
-
-        await new Promise(resolve => setTimeout(resolve, 150));
-
-        const canvas = await html2canvas(resultElement, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-            useCORS: true,
-            logging: false,
-            windowWidth: resultElement.scrollWidth,
-            windowHeight: resultElement.scrollHeight
-        });
-
-        const link = document.createElement('a');
-        link.download = `${studentId.replace(/[\/\\]/g, '_')}_Result.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
-        link.click();
-
-    } catch (err) {
-        console.error('Failed to export image:', err);
-        alert('Could not download image. Please try again.');
-    } finally {
-        if (actionButtons) actionButtons.style.visibility = 'visible';
-    }
+    const studentId = document.getElementById('resId').textContent || 'Result';
+    const canvas = await html2canvas(resultElement, { scale: 2 });
+    const link = document.createElement('a');
+    link.download = `${studentId}_Result.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 }
 
-// Trigger Backend CSV File Download for Admin
+// PDF Download
+async function downloadResultPDF() {
+    const { jsPDF } = window.jspdf;
+    const resultElement = document.getElementById('result-card');
+    const studentId = document.getElementById('resId').textContent || 'Result';
+
+    const canvas = await html2canvas(resultElement, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+    pdf.save(`${studentId}_Result.pdf`);
+}
+
 function exportAdminResultsCSV() {
     window.location.href = '/api/admin/export-results';
 }
 
-// Admin Authentication (Password: adminDGC)
+// Admin Auth
 document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const pass = document.getElementById('adminPass').value;
-
-    if (pass === 'adminDGC') {
+    if (document.getElementById('adminPass').value === 'adminDGC') {
         document.getElementById('adminAuthForm').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
         document.getElementById('adminAuthForm').reset();
-        
         loadStudentStatuses();
     } else {
         alert('Invalid Admin Authorization Password.');
@@ -202,16 +258,13 @@ function logoutAdmin() {
     document.getElementById('adminAuthForm').classList.remove('hidden');
 }
 
-// Random 6-digit PIN Generator
 function generateStudentPin() {
-    const randomPin = Math.floor(100000 + Math.random() * 900000).toString();
-    document.getElementById('generatedPin').value = randomPin;
+    document.getElementById('generatedPin').value = Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Submit 20 Subjects + Session & Term + Generated PIN
+// Submit Result Form
 document.getElementById('addResultForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-
     const studentId = document.getElementById('admStudentId').value.trim();
     const fullName = document.getElementById('admFullName').value.trim();
     const studentClass = document.getElementById('admClass').value.trim();
@@ -224,20 +277,14 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
         return;
     }
 
-    const subjectRows = document.querySelectorAll('.subject-row');
     const subjects = [];
-
-    subjectRows.forEach(row => {
+    document.querySelectorAll('.subject-row').forEach(row => {
         const name = row.querySelector('.sub-name').value.trim();
         const ca = row.querySelector('.sub-ca').value;
         const exam = row.querySelector('.sub-exam').value;
 
         if (name && ca !== '' && exam !== '') {
-            subjects.push({
-                subjectName: name,
-                caScore: parseInt(ca),
-                examScore: parseInt(exam)
-            });
+            subjects.push({ subjectName: name, caScore: parseInt(ca), examScore: parseInt(exam) });
         }
     });
 
@@ -257,7 +304,7 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
         if (data.success) {
             document.getElementById('addResultForm').reset();
             document.getElementById('generatedPin').value = '';
-            
+            recalculatePercentage();
             loadStudentStatuses();
         }
     } catch (err) {
