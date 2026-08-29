@@ -7,29 +7,26 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 1. Transporter configuration for Cloud Hosts (Render/Heroku)
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Uses SSL on port 465 for secure connection from cloud IPs
-    auth: {
-        user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-        pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
-    }
-});
-
-// Verify connection configuration on startup
-// Updated Transporter for Render Free Tier (Port 587 + STARTTLS)
+// Single Transporter configuration (Port 587 STARTTLS for Render compatibility)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Must be false for port 587
+    secure: false, // false for port 587
     auth: {
         user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
         pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
     },
     tls: {
-        rejectUnauthorized: false // Prevents local TLS certificate blocking
+        rejectUnauthorized: false
+    }
+});
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('SMTP Connection Error on Render:', error);
+    } else {
+        console.log('Nodemailer SMTP Transporter ready to send emails.');
     }
 });
 
@@ -179,7 +176,7 @@ app.get('/api/admin/export-results', async (req, res) => {
     }
 });
 
-// Check Student Result
+// Check Student Result Endpoint
 app.post('/api/check-result', async (req, res) => {
     try {
         const { studentId, pin, session, term } = req.body;
@@ -233,7 +230,6 @@ app.post('/api/enquiries', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
         }
 
-        // Save enquiry to MongoDB database
         const newEnquiry = new Enquiry({ 
             fullName, 
             email, 
@@ -245,10 +241,10 @@ app.post('/api/enquiries', async (req, res) => {
         });
         await newEnquiry.save();
 
-        // Send success response immediately to unfreeze frontend button
+        // Immediate response to frontend
         res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
 
-        // Send Email in the background without blocking HTTP response
+        // Background email send
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         const mailOptions = {
             from: `"Dynolinks Portal" <${recipientEmail}>`,
@@ -284,7 +280,7 @@ app.post('/api/enquiries', async (req, res) => {
     }
 });
 
-// Fetch All Enquiries for Admin View
+// Admin Enquiries List Endpoint
 app.get('/api/admin/enquiries', async (req, res) => {
     try {
         const enquiries = await Enquiry.find({}).sort({ createdAt: -1 });
@@ -294,7 +290,7 @@ app.get('/api/admin/enquiries', async (req, res) => {
     }
 });
 
-// Start Express Server
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Dynolinks Portal Server running on port ${PORT}`);
