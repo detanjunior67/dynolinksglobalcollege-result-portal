@@ -19,11 +19,17 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify connection configuration on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('SMTP Connection Error on Render:', error);
-    } else {
-        console.log('Nodemailer SMTP Transporter ready to send emails.');
+// Updated Transporter for Render Free Tier (Port 587 + STARTTLS)
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Must be false for port 587
+    auth: {
+        user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+        pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
+    },
+    tls: {
+        rejectUnauthorized: false // Prevents local TLS certificate blocking
     }
 });
 
