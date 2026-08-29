@@ -17,6 +17,7 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
     padding: 20px;
+    overflow-x: hidden; /* Prevents global horizontal layout breaking */
 }
 
 .hero-header {
@@ -42,6 +43,7 @@ body {
 
 .main-container {
     max-width: 900px;
+    width: 100%;
     margin: 0 auto;
     background: #ffffff;
     border-radius: 12px;
@@ -74,6 +76,8 @@ body {
 
 .card-body {
     padding: 25px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* SECTION VISIBILITY CONTROL */
@@ -168,10 +172,17 @@ body {
     display: none !important;
 }
 
+/* TABLE RESPONSIVE WRAPPER & STYLING */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+}
+
 .result-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
 }
 
 .result-table th, .result-table td {
@@ -202,6 +213,11 @@ body {
 
     .main-container {
         width: 100%;
+        max-width: 100%;
+    }
+
+    .card-body {
+        padding: 15px;
     }
 
     .form-row {
@@ -223,14 +239,22 @@ body {
         flex-direction: column;
     }
 
+    /* Keep table structured and enable clean scrolling on small screens */
     .result-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
+        display: table;
+        min-width: 500px;
+        white-space: normal;
+    }
+
+    .result-table th, .result-table td {
+        padding: 8px 6px;
+        font-size: 12px;
     }
 
     .action-buttons {
+        display: flex;
         flex-direction: column;
+        gap: 10px;
     }
 
     .action-buttons .btn {
