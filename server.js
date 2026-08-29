@@ -7,12 +7,23 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configure Nodemailer Transporter
+// 1. Updated Transporter explicitly configured for Cloud Hosts (Render/Heroku)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Uses SSL on port 465 for secure connection from cloud IPs
     auth: {
         user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
         pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
+    }
+});
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('SMTP Connection Error on Render:', error);
+    } else {
+        console.log('Nodemailer SMTP Transporter ready to send emails.');
     }
 });
 
@@ -43,7 +54,7 @@ const StudentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', StudentSchema);
 
-// Enquiry Schema (Updated with childClass and childAge)
+// Enquiry Schema
 const EnquirySchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true },
@@ -208,7 +219,7 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// Enquiry API Endpoint with Gmail Notification (Updated)
+// 2. Updated Enquiry API Endpoint with Async Await Email Dispatch
 app.post('/api/enquiries', async (req, res) => {
     try {
         const { fullName, email, phone, category, childClass, childAge, message } = req.body;
@@ -216,6 +227,7 @@ app.post('/api/enquiries', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
         }
 
+        // Save enquiry to MongoDB
         const newEnquiry = new Enquiry({ 
             fullName, 
             email, 
@@ -229,9 +241,8 @@ app.post('/api/enquiries', async (req, res) => {
 
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
 
-        // Send Email Alert to Admin
         const mailOptions = {
-            from: recipientEmail,
+            from: `"Dynolinks Portal" <${recipientEmail}>`,
             to: recipientEmail,
             replyTo: email,
             subject: `🔔 New Enquiry: ${category} from ${fullName}`,
@@ -252,7 +263,13 @@ app.post('/api/enquiries', async (req, res) => {
             `
         };
 
-        transporter.sendMail(mailOptions).catch(mailErr => console.error('Email Notification Error:', mailErr));
+        // Await email delivery so cloud functions don't terminate prematurely
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log('Enquiry email notification sent successfully.');
+        } catch (mailErr) {
+            console.error('Email Notification Error on Render:', mailErr);
+        }
 
         res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
     } catch (err) {
