@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynolinks Global College | Excellence in Education</title>
-    <!-- Google Fonts for Modern Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,10 +17,13 @@
             --bg-light: #F8FAFC;
             --text-dark: #0F172A;
             --text-muted: #64748B;
+            --text-light: #F1F5F9;
             --white: #FFFFFF;
             --border-color: #E2E8F0;
+            --border-glass: rgba(255, 255, 255, 0.15);
             --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             --shadow-lg: 0 20px 25px -5px rgba(11, 25, 44, 0.08), 0 8px 10px -6px rgba(11, 25, 44, 0.04);
+            --radius-md: 12px;
         }
 
         * {
@@ -180,14 +182,21 @@
             box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
         }
 
-        /* --- UPGRADED FANCY HERO SECTION --- */
+        /* --- FLOATING PILL HERO SECTION --- */
         .hero {
             position: relative;
             background: radial-gradient(circle at 50% 20%, #1A365D 0%, #0B192C 75%, #050C16 100%);
             color: var(--white);
             text-align: center;
-            padding: clamp(80px, 14vw, 130px) 20px;
+            padding: clamp(60px, 10vw, 100px) 20px;
             overflow: hidden;
+
+            /* Floating Pill Styling */
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+            border-radius: 40px;
+            box-shadow: 0 20px 40px -15px rgba(11, 25, 44, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Ambient glowing circles */
@@ -316,27 +325,6 @@
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-3px);
-        }
-
-        /* Bottom Hero Decorative Wave */
-        .hero-wave {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            overflow: hidden;
-            line-height: 0;
-        }
-
-        .hero-wave svg {
-            position: relative;
-            display: block;
-            width: calc(100% + 1.3px);
-            height: 45px;
-        }
-
-        .hero-wave .shape-fill {
-            fill: var(--bg-light);
         }
 
         /* Section Global */
@@ -603,6 +591,15 @@
             box-shadow: 0 6px 18px rgba(11, 25, 44, 0.3);
         }
 
+        /* Admin Table Styling Fixes for Dark Theme */
+        .admin-summary-box {
+            background: rgba(11, 25, 44, 0.95) !important;
+            border: 1px solid var(--border-glass) !important;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            overflow: hidden;
+        }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -615,6 +612,7 @@
             border-collapse: collapse;
             font-size: 0.875rem;
             min-width: 650px;
+            background: transparent !important;
         }
 
         .enquiry-table th, .enquiry-table td {
@@ -629,8 +627,17 @@
             white-space: nowrap;
         }
 
-        .enquiry-table tr:nth-child(even) {
-            background-color: #F8FAFC;
+        .admin-summary-box .enquiry-table td {
+            color: var(--text-light) !important;
+            border-color: var(--border-glass) !important;
+        }
+
+        .admin-summary-box .enquiry-table tr {
+            background-color: rgba(5, 12, 22, 0.4) !important;
+        }
+
+        .admin-summary-box .enquiry-table tr:nth-child(even) {
+            background-color: rgba(17, 34, 57, 0.5) !important;
         }
 
         .alert {
@@ -743,6 +750,12 @@
         }
 
         @media (max-width: 768px) {
+            .hero {
+                margin: 15px;
+                border-radius: 24px;
+                padding: 40px 16px;
+            }
+
             .menu-toggle {
                 display: flex;
             }
@@ -797,7 +810,6 @@
 </head>
 <body>
 
-    <!-- Top Info Bar -->
     <div class="top-bar">
         <div>Admissions Open for <span>Academic Session</span></div>
         <div>
@@ -805,7 +817,6 @@
         </div>
     </div>
 
-    <!-- Header Navigation -->
     <header>
         <div class="logo-container">
             <div class="logo-badge">DGC</div>
@@ -827,7 +838,6 @@
         </nav>
     </header>
 
-    <!-- Fancy Hero Section -->
     <div class="hero">
         <div class="hero-content">
             <span class="hero-badge">Welcome to Dynolinks Global College</span>
@@ -838,14 +848,8 @@
                 <button class="btn-secondary" onclick="openEnquiryModal()">Make an Enquiry</button>
             </div>
         </div>
-        <div class="hero-wave">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.06,150.3,121.72,217,112.5C252.12,107.65,286.82,85.22,321.39,56.44Z" class="shape-fill"></path>
-            </svg>
-        </div>
     </div>
 
-    <!-- About Section -->
     <section id="about">
         <div class="section-header">
             <span class="section-subtitle">Who We Are</span>
@@ -870,7 +874,6 @@
         </div>
     </section>
 
-    <!-- Programs & Curriculum Section -->
     <section id="programs">
         <div class="section-header">
             <span class="section-subtitle">Academic Pathways</span>
@@ -921,7 +924,6 @@
         </div>
     </section>
 
-    <!-- Enquiry Modal -->
     <div id="enquiryModal" class="modal-overlay">
         <div class="modal-card">
             <span class="close-modal" onclick="closeEnquiryModal()">&times;</span>
@@ -981,7 +983,6 @@
         </div>
     </div>
 
-    <!-- Admin Modal -->
     <div id="adminModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 900px;">
             <span class="close-modal" onclick="closeAdminModal()">&times;</span>
@@ -998,40 +999,57 @@
 
             <div id="enquiriesDashboard" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="color: var(--navy-primary);">Submitted Enquiries</h2>
-                    <button type="button" onclick="exportTableToCSV()" style="background: var(--gold-accent); color: var(--navy-primary); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer;">📥 Export to CSV</button>
+                    <h2 style="color: var(--navy-primary);">Received Enquiries</h2>
+                    <button onclick="fetchEnquiries()" style="background: var(--gold-accent); color: var(--navy-primary); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer;">Refresh Data</button>
                 </div>
-                <div id="enquiryList">Loading enquiries...</div>
+                <div class="admin-summary-box">
+                    <div class="table-responsive">
+                        <table class="enquiry-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Contact Info</th>
+                                    <th>Category</th>
+                                    <th>Class / Age</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="enquiryListBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading enquiries...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</div>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-content">
             <div class="footer-brand">
                 <h2>Dynolinks Global College</h2>
-                <p>Excellence, Discipline & Innovation</p>
+                <p>Nurturing future leaders through exceptional academic training and sound moral values.</p>
             </div>
-
             <div class="footer-contact">
-                <h3>Contact Information</h3>
-                <p>Phone: <a href="tel:+2348030634519">+234 803 063 4519</a> / <a href="tel:+2349167673507">+234 916 767 3507</a></p>
-                <p>Email: <a href="mailto:infodynolinks@gmail.com">infodynolinks@gmail.com</a></p>
-            </div>
-
-            <div>
-                <a href="/portal.html" style="color: var(--gold-accent); text-decoration: none; font-weight: 600;">Access Student Result Portal &rarr;</a>
+                <h3>Contact Desk</h3>
+                <p><strong>Phone:</strong> <a href="tel:+2348030634519">+234 803 063 4519</a> | <a href="tel:+2349167673507">+234 916 767 3507</a></p>
+                <p><strong>Email:</strong> <a href="mailto:infodynolinks@gmail.com">infodynolinks@gmail.com</a></p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; Dynolinks Global College. All Rights Reserved.</p>
+            &copy; <span id="year"></span> Dynolinks Global College. All Rights Reserved.
         </div>
     </footer>
 
     <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Mobile Menu Toggle
         const menuToggle = document.getElementById('menuToggle');
         const navMenu = document.getElementById('navMenu');
 
@@ -1040,11 +1058,24 @@
         });
 
         function closeMobileMenu() {
-            if (navMenu.classList.contains('active')) {
-                navMenu.classList.remove('active');
-            }
+            navMenu.classList.remove('active');
         }
 
+        // Back to top listener
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Enquiry Modal Functions
         function openEnquiryModal() {
             document.getElementById('enquiryModal').style.display = 'flex';
         }
@@ -1053,163 +1084,107 @@
             document.getElementById('enquiryModal').style.display = 'none';
         }
 
-        const form = document.getElementById('enquiryForm');
-        const alertBox = document.getElementById('alertBox');
-        const submitBtn = document.getElementById('submitBtn');
-
-        form.addEventListener('submit', async (e) => {
+        // Submit Enquiry
+        document.getElementById('enquiryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            submitBtn.disabled = true;
-            submitBtn.innerText = 'Sending Enquiry...';
+            const submitBtn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('alertBox');
 
             const payload = {
-                fullName: document.getElementById('fullName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
                 category: document.getElementById('category').value,
-                childClass: document.getElementById('childClass').value,
-                childAge: document.getElementById('childAge').value,
-                message: document.getElementById('message').value
+                childClass: document.getElementById('childClass').value.trim(),
+                childAge: document.getElementById('childAge').value.trim(),
+                message: document.getElementById('message').value.trim()
             };
 
             try {
-                const res = await fetch('/api/enquiries', {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+
+                const response = await fetch('/api/enquiries', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                const data = await res.json();
+                const resData = await response.json();
 
-                if (data.success) {
-                    alertBox.innerText = data.message;
+                if (resData.success) {
                     alertBox.className = 'alert alert-success';
+                    alertBox.textContent = resData.message;
                     alertBox.style.display = 'block';
-                    form.reset();
+                    document.getElementById('enquiryForm').reset();
+                    setTimeout(() => closeEnquiryModal(), 2500);
                 } else {
-                    alertBox.innerText = data.message || 'Error submitting enquiry.';
                     alertBox.className = 'alert alert-error';
+                    alertBox.textContent = resData.message || 'Error submitting form.';
                     alertBox.style.display = 'block';
                 }
             } catch (err) {
-                alertBox.innerText = 'Network connection issue. Please try again.';
                 alertBox.className = 'alert alert-error';
+                alertBox.textContent = 'Failed to submit. Please check connection.';
                 alertBox.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Send Message';
+                submitBtn.textContent = 'Send Message';
             }
         });
 
-        const backToTopBtn = document.getElementById('backToTop');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopBtn.classList.add('show');
-            } else {
-                backToTopBtn.classList.remove('show');
-            }
-        });
-
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
+        // Admin Modal Functions
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'flex';
         }
 
         function closeAdminModal() {
             document.getElementById('adminModal').style.display = 'none';
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('enquiriesDashboard').style.display = 'none';
-            document.getElementById('adminPass').value = '';
-            document.getElementById('passErr').style.display = 'none';
         }
 
-        async function verifyAdmin() {
+        function verifyAdmin() {
             const pass = document.getElementById('adminPass').value;
+            const err = document.getElementById('passErr');
+            // Change 'admin123' to your desired admin password
             if (pass === 'adminAdvocates') {
+                err.style.display = 'none';
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('enquiriesDashboard').style.display = 'block';
                 fetchEnquiries();
             } else {
-                document.getElementById('passErr').style.display = 'block';
+                err.style.display = 'block';
             }
         }
 
-        let currentEnquiries = [];
-
         async function fetchEnquiries() {
+            const tbody = document.getElementById('enquiryListBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+            
             try {
                 const res = await fetch('/api/admin/enquiries');
                 const data = await res.json();
 
                 if (data.success && data.enquiries.length > 0) {
-                    currentEnquiries = data.enquiries;
-                    let html = `<div class="table-responsive"><table class="enquiry-table" id="adminTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Category</th>
-                                <th>Class</th>
-                                <th>Age</th>
-                                <th>Message</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-
-                    data.enquiries.forEach(e => {
-                        const date = new Date(e.createdAt).toLocaleDateString();
-                        html += `<tr>
-                            <td>${date}</td>
-                            <td><b>${e.fullName}</b></td>
-                            <td>${e.email}</td>
-                            <td>${e.phone}</td>
-                            <td>${e.category}</td>
-                            <td>${e.childClass || 'N/A'}</td>
-                            <td>${e.childAge || 'N/A'}</td>
-                            <td>${e.message}</td>
-                        </tr>`;
+                    tbody.innerHTML = '';
+                    data.enquiries.forEach(item => {
+                        const dateStr = new Date(item.createdAt).toLocaleDateString();
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${dateStr}</td>
+                            <td><strong>${item.fullName}</strong></td>
+                            <td>${item.email}<br><small>${item.phone}</small></td>
+                            <td>${item.category}</td>
+                            <td>Class: ${item.childClass}<br>Age: ${item.childAge}</td>
+                            <td>${item.message}</td>
+                        `;
+                        tbody.appendChild(row);
                     });
-
-                    html += `</tbody></table></div>`;
-                    document.getElementById('enquiryList').innerHTML = html;
                 } else {
-                    document.getElementById('enquiryList').innerHTML = '<p>No enquiries found yet.</p>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No enquiries received yet.</td></tr>';
                 }
             } catch (err) {
-                document.getElementById('enquiryList').innerHTML = '<p style="color: red;">Error loading enquiries.</p>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Failed to load data.</td></tr>';
             }
-        }
-
-        function exportTableToCSV() {
-            if (currentEnquiries.length === 0) return alert('No data available to export.');
-            
-            let csvContent = "data:text/csv;charset=utf-8,Date,Full Name,Email,Phone,Category,Class,Age,Message\n";
-            currentEnquiries.forEach(e => {
-                const row = [
-                    new Date(e.createdAt).toLocaleDateString(),
-                    `"${e.fullName}"`,
-                    `"${e.email}"`,
-                    `"${e.phone}"`,
-                    `"${e.category}"`,
-                    `"${e.childClass}"`,
-                    `"${e.childAge}"`,
-                    `"${e.message.replace(/"/g, '""')}"`
-                ].join(",");
-                csvContent += row + "\n";
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Dynolinks_Enquiries.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
     </script>
 </body>
