@@ -1,10 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Configure Nodemailer Transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // MongoDB Connection String
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
@@ -196,7 +206,7 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// Enquiry API Endpoint
+// Enquiry API Endpoint with Gmail Notification
 app.post('/api/enquiries', async (req, res) => {
     try {
         const { fullName, email, phone, category, message } = req.body;
@@ -206,6 +216,24 @@ app.post('/api/enquiries', async (req, res) => {
 
         const newEnquiry = new Enquiry({ fullName, email, phone, category, message });
         await newEnquiry.save();
+
+        // Send Email Alert to Admin
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER,
+            subject: `🔔 New Enquiry: ${category} from ${fullName}`,
+            html: `
+                <h3>New Portal Enquiry Submitted</h3>
+                <p><strong>Name:</strong> ${fullName}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone:</strong> ${phone}</p>
+                <p><strong>Category:</strong> ${category}</p>
+                <p><strong>Message:</strong></p>
+                <blockquote style="background:#f4f4f4; padding:12px; border-left:4px solid #007bff;">${message}</blockquote>
+            `
+        };
+
+        transporter.sendMail(mailOptions).catch(mailErr => console.error('Email Notification Error:', mailErr));
 
         res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
     } catch (err) {

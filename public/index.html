@@ -645,6 +645,16 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label for="childClass">Child's Proposed Class *</label>
+                        <input type="text" id="childClass" required placeholder="e.g. JSS 1, SS 2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="childAge">Child's Age *</label>
+                        <input type="number" id="childAge" min="1" max="25" required placeholder="e.g. 11">
+                    </div>
+
                     <div class="form-group full-width">
                         <label for="message">Your Message / Request *</label>
                         <textarea id="message" required placeholder="How can we help you today?"></textarea>
@@ -689,7 +699,7 @@
             <div class="footer-contact">
                 <h3>Contact Information</h3>
                 <p>Phone: <a href="tel:+2348030634519">+234 803 063 4519</a> / <a href="tel:+2349167673507">+234 916 767 3507</a></p>
-                <p>Email: <a href="mailto:laoseodeyemi@gmail.com">laoseodeyemi@gmail.com</a></p>
+                <p>Email: <a href="mailto:infodynolinks@gmail.com">infodynolinks@gmail.com</a></p>
             </div>
 
             <div>
@@ -716,6 +726,8 @@
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
                 category: document.getElementById('category').value,
+                childClass: document.getElementById('childClass').value,
+                childAge: document.getElementById('childAge').value,
                 message: document.getElementById('message').value
             };
 
@@ -786,6 +798,8 @@
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Category</th>
+                                <th>Class</th>
+                                <th>Age</th>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -799,6 +813,8 @@
                             <td>${e.email}</td>
                             <td>${e.phone}</td>
                             <td>${e.category}</td>
+                            <td>${e.childClass || 'N/A'}</td>
+                            <td>${e.childAge || 'N/A'}</td>
                             <td>${e.message}</td>
                         </tr>`;
                     });
