@@ -185,6 +185,59 @@ app.post('/api/check-result', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// Enquiry Schema
+const EnquirySchema = new mongoose.Schema({
+    fullName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    category: { type: String, required: true },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Enquiry = mongoose.model('Enquiry', EnquirySchema);
+
+// Enquiry API Endpoint
+app.post('/api/enquiries', async (req, res) => {
+    try {
+        const { fullName, email, phone, category, message } = req.body;
+        if (!fullName || !email || !phone || !category || !message) {
+            return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
+        }
+
+        const newEnquiry = new Enquiry({ fullName, email, phone, category, message });
+        await newEnquiry.save();
+
+        res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
+    } catch (err) {
+        console.error('Enquiry Save Error:', err);
+        res.status(500).json({ success: false, message: 'Failed to record enquiry.' });
+    }
+});
+// Fetch All Enquiries for Admin View
+app.get('/api/admin/enquiries', async (req, res) => {
+    try {
+        const enquiries = await Enquiry.find({}).sort({ createdAt: -1 });
+        res.json({ success: true, enquiries });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to fetch enquiries.' });
+    }
+});
+// Add this snippet right above app.listen()
+app.get('/api/admin/enquiries', async (req, res) => {
+    try {
+        const enquiries = await Enquiry.find().sort({ createdAt: -1 });
+        res.json({ success: true, enquiries });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to fetch enquiries.' });
+    }
+});
+
+// Start Express Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Dynolinks Portal Server running on port ${PORT}`);
+});
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

@@ -3,229 +3,815 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DYNOLINKS GLOBAL COLLEGE - Result Portal</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Dynolinks Global College | Excellence in Education</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --navy-primary: #0B192C;
+            --navy-secondary: #1E3E62;
+            --gold-accent: #D4AF37;
+            --gold-hover: #B89628;
+            --bg-light: #F8FAFC;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --white: #FFFFFF;
+            --border-color: #E2E8F0;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(11, 25, 44, 0.08), 0 8px 10px -6px rgba(11, 25, 44, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Premium Top Bar */
+        .top-bar {
+            background: var(--navy-primary);
+            color: rgba(255, 255, 255, 0.75);
+            padding: 8px 5%;
+            font-size: 0.825rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .top-bar span {
+            color: var(--gold-accent);
+            font-weight: 600;
+        }
+
+        .top-bar a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .top-bar a:hover {
+            color: var(--gold-accent);
+        }
+
+        /* Admin Link in Header Top Right */
+        .admin-link {
+            color: var(--gold-accent) !important;
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px dashed var(--gold-accent);
+            cursor: pointer;
+        }
+
+        .admin-link:hover {
+            background: var(--gold-accent) !important;
+            color: var(--navy-primary) !important;
+        }
+
+        /* Navigation Header */
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 18px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-badge {
+            background: var(--navy-primary);
+            color: var(--gold-accent);
+            font-weight: 800;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            border: 1px solid var(--gold-accent);
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--navy-primary);
+            letter-spacing: -0.5px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        nav a {
+            color: var(--navy-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        nav a:hover {
+            color: var(--gold-accent);
+        }
+
+        .btn-portal {
+            background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: var(--navy-primary) !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s !important;
+        }
+
+        .btn-portal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(11, 25, 44, 0.92), rgba(30, 62, 98, 0.88)), 
+                        url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+            color: var(--white);
+            text-align: center;
+            padding: 110px 20px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--gold-accent);
+            color: var(--gold-accent);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            max-width: 650px;
+            margin: 0 auto 35px;
+            color: #CBD5E1;
+            font-weight: 400;
+        }
+
+        .hero-btns {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+            color: var(--navy-primary);
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--white);
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--white);
+        }
+
+        /* Section Global */
+        section {
+            max-width: 1100px;
+            margin: 90px auto;
+            padding: 0 24px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-subtitle {
+            color: var(--gold-accent);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .section-title {
+            color: var(--navy-primary);
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        /* About Section Cards */
+        .about-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 35px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--navy-primary), var(--gold-accent));
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 30px -5px rgba(11, 25, 44, 0.12);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(11, 25, 44, 0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--navy-primary);
+        }
+
+        .card h3 {
+            color: var(--navy-primary);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.975rem;
+            line-height: 1.7;
+        }
+
+        /* Enquiry Form Container */
+        .enquiry-wrapper {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            padding: 45px;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+            color: var(--navy-primary);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: #FAFAFA;
+            color: var(--text-dark);
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--navy-secondary);
+            background-color: var(--white);
+            box-shadow: 0 0 0 4px rgba(30, 62, 98, 0.1);
+        }
+
+        textarea {
+            height: 130px;
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, var(--navy-primary), var(--navy-secondary));
+            color: var(--white);
+            border: none;
+            padding: 15px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(11, 25, 44, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(11, 25, 44, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 25, 44, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 90%;
+            width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        /* Table Styles for Enquiries */
+        .enquiry-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.875rem;
+        }
+
+        .enquiry-table th, .enquiry-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .enquiry-table th {
+            background: var(--navy-primary);
+            color: var(--gold-accent);
+        }
+
+        .enquiry-table tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+
+        /* Alert Styling */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .alert-error {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--navy-primary);
+            color: #94A3B8;
+            padding: 50px 20px 30px;
+            border-top: 3px solid var(--gold-accent);
+        }
+
+        .footer-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-brand h2 {
+            color: var(--white);
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .footer-contact h3 {
+            color: var(--gold-accent);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .footer-contact p {
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .footer-contact a {
+            color: #E2E8F0;
+            text-decoration: none;
+        }
+
+        .footer-contact a:hover {
+            color: var(--gold-accent);
+        }
+
+        .footer-bottom {
+            max-width: 1100px;
+            margin: 20px auto 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748B;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            .enquiry-wrapper { padding: 25px; }
+            header { padding: 15px 20px; }
+            nav { gap: 10px; }
+        }
+    </style>
 </head>
 <body>
 
-    <header class="hero-header">
-        <h1>Welcome to DYNOLINKS GLOBAL COLLEGE</h1>
-        <p>Official Online Result Checking & Academic Management Portal</p>
+    <!-- Top Info Bar -->
+    <div class="top-bar">
+        <div>Admissions Open for <span>2025/2026 Academic Session</span></div>
+        <div>
+            Call: <a href="tel:+2348030634519">+234 803 063 4519</a> | <a href="tel:+2349167673507">+234 916 767 3507</a>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo-container">
+            <div class="logo-badge">DGC</div>
+            <div class="logo-text">Dynolinks Global</div>
+        </div>
+        <nav>
+            <a href="#about">About</a>
+            <a href="#enquiry">Enquiries</a>
+            <a href="/portal.html" class="btn-portal">Check Result</a>
+            <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal()">🔒 Admin Only</a>
+        </nav>
     </header>
 
-    <main class="main-container">
-        
-        <div class="tab-navigation">
-            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')">Student Portal</button>
-            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')">Staff / Admin Portal</button>
+    <!-- Hero Section -->
+    <div class="hero">
+        <span class="hero-badge">Welcome to Excellence</span>
+        <h1>Nurturing Minds, Shaping Tomorrow's Leaders</h1>
+        <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
+        <div class="hero-btns">
+            <a href="/portal.html" class="btn-primary">Check Student Result</a>
+            <a href="#enquiry" class="btn-secondary">Make an Enquiry</a>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="section-header">
+            <span class="section-subtitle">Who We Are</span>
+            <h2 class="section-title">Why Choose Dynolinks College</h2>
+        </div>
+        <div class="about-cards">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h3>Our Mission</h3>
+                <p>To cultivate academic mastery, moral integrity, and critical thinking skills required for lifelong personal and professional success.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📚</div>
+                <h3>Academic Quality</h3>
+                <p>Delivering a comprehensive curriculum integrated with technology, practical science applications, and holistic arts education.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌟</div>
+                <h3>Our Vision</h3>
+                <p>To stand out as a premier educational institution known for producing disciplined, inventive, and globally competitive scholars.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enquiry Section -->
+    <section id="enquiry">
+        <div class="section-header">
+            <span class="section-subtitle">Get in Touch</span>
+            <h2 class="section-title">School Enquiry Desk</h2>
         </div>
 
-        <div class="card-body">
+        <div class="enquiry-wrapper">
+            <div id="alertBox" class="alert"></div>
+
+            <form id="enquiryForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" required placeholder="e.g. John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" required placeholder="name@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" required placeholder="e.g. +234 801 234 5678">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Subject Category *</label>
+                        <select id="category" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Admissions">Admissions</option>
+                            <option value="Academics">Academics</option>
+                            <option value="Fees & Billing">Fees & Billing</option>
+                            <option value="General Enquiry">General Enquiry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="message">Your Message / Request *</label>
+                        <textarea id="message" required placeholder="How can we help you today?"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-card">
+            <span class="close-modal" onclick="closeAdminModal()">&times;</span>
             
-            <!-- STUDENT SECTION -->
-            <section id="student-section" class="portal-section active-section">
-                <form id="studentLoginForm">
-                    <h2 class="section-title">Check Student Result</h2>
-                    <div class="form-group">
-                        <label for="studentId">Student ID / Registration No.</label>
-                        <input type="text" id="studentId" placeholder="e.g., DGC/2026/001" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="pin">Access PIN</label>
-                        <input type="password" id="pin" placeholder="Enter Access PIN" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="studentSession">Academic Session</label>
-                            <select id="studentSession" required>
-                                <option value="2025/2026" selected>2025/2026</option>
-                                <option value="2026/2027">2026/2027</option>
-                                <option value="2027/2028">2027/2028</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="studentTerm">Academic Term</label>
-                            <select id="studentTerm" required>
-                                <option value="1st Term" selected>1st Term</option>
-                                <option value="2nd Term">2nd Term</option>
-                                <option value="3rd Term">3rd Term</option>
-                            </select>
-                        </div>
-                    </div>
+            <div id="authSection">
+                <h2 style="color: var(--navy-primary); margin-bottom: 10px;">Administrator Access</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Enter security password to view submitted enquiries.</p>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="adminPass" placeholder="Enter Admin Password">
+                </div>
+                <button type="button" onclick="verifyAdmin()" style="background: var(--navy-primary); color: var(--white); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">Login</button>
+                <p id="passErr" style="color: red; margin-top: 10px; display: none;">Invalid Password!</p>
+            </div>
 
-                    <button type="submit" class="btn btn-primary">Check Result</button>
-                </form>
+            <div id="enquiriesDashboard" style="display: none;">
+                <h2 style="color: var(--navy-primary); margin-bottom: 10px;">Submitted Enquiries</h2>
+                <div id="enquiryList">Loading enquiries...</div>
+            </div>
+        </div>
+    </div>
 
-                <div id="result-card" class="hidden" style="background: #fff; padding: 20px; border-radius: 8px;">
-                    <div class="school-header" style="text-align: center; margin-bottom: 20px;">
-                        <h2>DYNOLINKS GLOBAL COLLEGE</h2>
-                        <p class="sub-heading">Official Statement of Academic Results</p>
-                    </div>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h2>Dynolinks Global College</h2>
+                <p>Excellence, Discipline & Innovation</p>
+            </div>
 
-                    <div class="student-details">
-                        <p><strong>Name:</strong> <span id="resName">--</span></p>
-                        <p><strong>Student ID:</strong> <span id="resId">--</span></p>
-                        <p><strong>Class:</strong> <span id="resClass">--</span></p>
-                        <p><strong>Session:</strong> <span id="resSession">--</span></p>
-                        <p><strong>Term:</strong> <span id="resTerm">--</span></p>
-                        <p><strong>Overall Score:</strong> <span id="resTotalScore">--</span> (<span id="resPercentage">--</span>%)</p>
-                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky, #0288d1); font-weight: 600;">--</span></p>
-                    </div>
+            <div class="footer-contact">
+                <h3>Contact Information</h3>
+                <p>Phone: <a href="tel:+2348030634519">+234 803 063 4519</a> / <a href="tel:+2349167673507">+234 916 767 3507</a></p>
+                <p>Email: <a href="mailto:laoseodeyemi@gmail.com">laoseodeyemi@gmail.com</a></p>
+            </div>
 
-                    <table class="result-table">
+            <div>
+                <a href="/portal.html" style="color: var(--gold-accent); text-decoration: none; font-weight: 600;">Access Student Result Portal &rarr;</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Dynolinks Global College. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('enquiryForm');
+        const alertBox = document.getElementById('alertBox');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Sending Enquiry...';
+
+            const payload = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                category: document.getElementById('category').value,
+                message: document.getElementById('message').value
+            };
+
+            try {
+                const res = await fetch('/api/enquiries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alertBox.innerText = data.message;
+                    alertBox.className = 'alert alert-success';
+                    alertBox.style.display = 'block';
+                    form.reset();
+                } else {
+                    alertBox.innerText = data.message || 'Error submitting enquiry.';
+                    alertBox.className = 'alert alert-error';
+                    alertBox.style.display = 'block';
+                }
+            } catch (err) {
+                alertBox.innerText = 'Network connection issue. Please try again.';
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Send Message';
+            }
+        });
+
+        // Admin Modal Logic
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('enquiriesDashboard').style.display = 'none';
+            document.getElementById('adminPass').value = '';
+            document.getElementById('passErr').style.display = 'none';
+        }
+
+        async function verifyAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'adminAdvocates') {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('enquiriesDashboard').style.display = 'block';
+                fetchEnquiries();
+            } else {
+                document.getElementById('passErr').style.display = 'block';
+            }
+        }
+
+        async function fetchEnquiries() {
+            try {
+                const res = await fetch('/api/admin/enquiries');
+                const data = await res.json();
+
+                if (data.success && data.enquiries.length > 0) {
+                    let html = `<table class="enquiry-table">
                         <thead>
                             <tr>
-                                <th>Subject</th>
-                                <th>CA (40)</th>
-                                <th>Exam (60)</th>
-                                <th>Total (100)</th>
-                                <th>Grade</th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Category</th>
+                                <th>Message</th>
                             </tr>
                         </thead>
-                        <tbody id="resultBody"></tbody>
-                    </table>
+                        <tbody>`;
 
-                    <div class="action-buttons" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-success" onclick="downloadResultAsImage()">Save as Image (PNG)</button>
-                        <button class="btn btn-primary" onclick="downloadResultPDF()">Download PDF</button>
-                        <button class="btn btn-secondary" onclick="resetStudentForm()">Back to Search</button>
-                    </div>
-                </div>
-            </section>
+                    data.enquiries.forEach(e => {
+                        const date = new Date(e.createdAt).toLocaleDateString();
+                        html += `<tr>
+                            <td>${date}</td>
+                            <td><b>${e.fullName}</b></td>
+                            <td>${e.email}</td>
+                            <td>${e.phone}</td>
+                            <td>${e.category}</td>
+                            <td>${e.message}</td>
+                        </tr>`;
+                    });
 
-            <!-- STAFF / ADMIN SECTION -->
-            <section id="staff-section" class="portal-section" style="display: none;">
-                
-                <form id="adminAuthForm">
-                    <h2 class="section-title">Staff Portal Access</h2>
-                    <div class="form-group">
-                        <label for="adminPass">Admin Password</label>
-                        <input type="password" id="adminPass" placeholder="Enter Admin Password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Login to Dashboard</button>
-                </form>
-
-                <div id="admin-dashboard" class="hidden">
-                    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3>Staff Control Panel</h3>
-                        <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout</button>
-                    </div>
-
-                    <!-- Search Filter & Admin Summary Table -->
-                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                            <h4 style="margin: 0;">Uploaded Results & Check Status</h4>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Student Name or ID..." style="padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;">
-                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">Download All CSV</button>
-                            </div>
-                        </div>
-                        <div style="overflow-x: auto;">
-                            <table class="result-table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Full Name</th>
-                                        <th>Class</th>
-                                        <th>PIN Code</th>
-                                        <th>Checks Used</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminStudentList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <form id="addResultForm" class="admin-form">
-                        <h4>Student Information & Academic Period</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="admStudentId">Student ID</label>
-                                <input type="text" id="admStudentId" placeholder="DGC/2026/001" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="admFullName">Full Name</label>
-                                <input type="text" id="admFullName" placeholder="John Doe" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="admClassSelect">Class</label>
-                                <select id="admClassSelect" onchange="handleClassChange()" required>
-                                    <option value="" disabled selected>Select Class</option>
-                                    <option value="JSS1">JSS1</option>
-                                    <option value="JSS2">JSS2</option>
-                                    <option value="JSS3">JSS3</option>
-                                    <option value="SSS1">SSS1</option>
-                                    <option value="SSS2">SSS2</option>
-                                    <option value="SSS3">SSS3</option>
-                                    <option value="Custom">Custom Class...</option>
-                                </select>
-                                <input type="text" id="admCustomClass" class="hidden" placeholder="Type custom class name" style="margin-top: 5px;">
-                            </div>
-                            <div class="form-group hidden" id="departmentGroup">
-                                <label for="admDepartmentSelect">Department</label>
-                                <select id="admDepartmentSelect" onchange="handleDepartmentChange()">
-                                    <option value="" disabled selected>Select Department</option>
-                                    <option value="Science">Science</option>
-                                    <option value="Arts">Arts</option>
-                                    <option value="Commercial">Commercial</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="admSession">Academic Session</label>
-                                <select id="admSession" required>
-                                    <option value="2025/2026" selected>2025/2026</option>
-                                    <option value="2026/2027">2026/2027</option>
-                                    <option value="2027/2028">2027/2028</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="admTerm">Academic Term</label>
-                                <select id="admTerm" required>
-                                    <option value="1st Term" selected>1st Term</option>
-                                    <option value="2nd Term">2nd Term</option>
-                                    <option value="3rd Term">3rd Term</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- PIN Generator & Live Percentage Calculator Box -->
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
-                            <div class="pin-gen-box" style="flex: 1; min-width: 250px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
-                                <div class="form-group" style="margin-bottom: 10px;">
-                                    <label>Automated PIN (3 Uses Max)</label>
-                                    <input type="text" id="generatedPin" readonly placeholder="Click Generate PIN">
-                                </div>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="generateStudentPin()">Generate PIN</button>
-                            </div>
-
-                            <!-- Live Percentage Calculation Box -->
-                            <div class="calc-box" style="flex: 1; min-width: 250px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
-                                <h5 style="margin: 0 0 10px 0; color: #2e7d32;">Calculated Class Percentage</h5>
-                                <p style="margin: 0; font-size: 14px;">Total Score: <strong id="calcTotalScore">0</strong> / <span id="calcMaxScore">0</span></p>
-                                <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #1b5e20;">Percentage: <span id="calcPercentage">0.00</span>%</p>
-                            </div>
-                        </div>
-
-                        <h4>Subject Scores (Up to 20 Subjects)</h4>
-                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
-
-                        <button type="submit" class="btn btn-success" style="margin-top: 15px;">Save Complete Student Result & PIN</button>
-                    </form>
-                </div>
-
-            </section>
-
-        </div>
-    </main>
-
-    <script src="app.js"></script>
+                    html += `</tbody></table>`;
+                    document.getElementById('enquiryList').innerHTML = html;
+                } else {
+                    document.getElementById('enquiryList').innerHTML = '<p>No enquiries found yet.</p>';
+                }
+            } catch (err) {
+                document.getElementById('enquiryList').innerHTML = '<p style="color: red;">Error loading enquiries.</p>';
+            }
+        }
+    </script>
 </body>
 </html>

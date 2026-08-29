@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DYNOLINKS GLOBAL COLLEGE - Result Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <header class="hero-header">
+        <h1>Welcome to DYNOLINKS GLOBAL COLLEGE</h1>
+        <p>Official Online Result Checking & Academic Management Portal</p>
+    </header>
+
+    <main class="main-container">
+        
+        <div class="tab-navigation">
+            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')">Student Portal</button>
+            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')">Staff / Admin Portal</button>
+        </div>
+
+        <div class="card-body">
+            
+            <!-- STUDENT SECTION -->
+            <section id="student-section" class="portal-section active-section">
+                <form id="studentLoginForm">
+                    <h2 class="section-title">Check Student Result</h2>
+                    <div class="form-group">
+                        <label for="studentId">Student ID / Registration No.</label>
+                        <input type="text" id="studentId" placeholder="e.g., DGC/2026/001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pin">Access PIN</label>
+                        <input type="password" id="pin" placeholder="Enter Access PIN" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentSession">Academic Session</label>
+                            <select id="studentSession" required>
+                                <option value="2025/2026" selected>2025/2026</option>
+                                <option value="2026/2027">2026/2027</option>
+                                <option value="2027/2028">2027/2028</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentTerm">Academic Term</label>
+                            <select id="studentTerm" required>
+                                <option value="1st Term" selected>1st Term</option>
+                                <option value="2nd Term">2nd Term</option>
+                                <option value="3rd Term">3rd Term</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Check Result</button>
+                </form>
+
+                <div id="result-card" class="hidden" style="background: #fff; padding: 20px; border-radius: 8px;">
+                    <div class="school-header" style="text-align: center; margin-bottom: 20px;">
+                        <h2>DYNOLINKS GLOBAL COLLEGE</h2>
+                        <p class="sub-heading">Official Statement of Academic Results</p>
+                    </div>
+
+                    <div class="student-details">
+                        <p><strong>Name:</strong> <span id="resName">--</span></p>
+                        <p><strong>Student ID:</strong> <span id="resId">--</span></p>
+                        <p><strong>Class:</strong> <span id="resClass">--</span></p>
+                        <p><strong>Session:</strong> <span id="resSession">--</span></p>
+                        <p><strong>Term:</strong> <span id="resTerm">--</span></p>
+                        <p><strong>Overall Score:</strong> <span id="resTotalScore">--</span> (<span id="resPercentage">--</span>%)</p>
+                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky, #0288d1); font-weight: 600;">--</span></p>
+                    </div>
+
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>CA (40)</th>
+                                <th>Exam (60)</th>
+                                <th>Total (100)</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultBody"></tbody>
+                    </table>
+
+                    <div class="action-buttons" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="downloadResultAsImage()">Save as Image (PNG)</button>
+                        <button class="btn btn-primary" onclick="downloadResultPDF()">Download PDF</button>
+                        <button class="btn btn-secondary" onclick="resetStudentForm()">Back to Search</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAFF / ADMIN SECTION -->
+            <section id="staff-section" class="portal-section" style="display: none;">
+                
+                <form id="adminAuthForm">
+                    <h2 class="section-title">Staff Portal Access</h2>
+                    <div class="form-group">
+                        <label for="adminPass">Admin Password</label>
+                        <input type="password" id="adminPass" placeholder="Enter Admin Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login to Dashboard</button>
+                </form>
+
+                <div id="admin-dashboard" class="hidden">
+                    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Staff Control Panel</h3>
+                        <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout</button>
+                    </div>
+
+                    <!-- Search Filter & Admin Summary Table -->
+                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <h4 style="margin: 0;">Uploaded Results & Check Status</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Student Name or ID..." style="padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;">
+                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">Download All CSV</button>
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="result-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Full Name</th>
+                                        <th>Class</th>
+                                        <th>PIN Code</th>
+                                        <th>Checks Used</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminStudentList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <form id="addResultForm" class="admin-form">
+                        <h4>Student Information & Academic Period</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="admStudentId">Student ID</label>
+                                <input type="text" id="admStudentId" placeholder="DGC/2026/001" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admFullName">Full Name</label>
+                                <input type="text" id="admFullName" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admClassSelect">Class</label>
+                                <select id="admClassSelect" onchange="handleClassChange()" required>
+                                    <option value="" disabled selected>Select Class</option>
+                                    <option value="JSS1">JSS1</option>
+                                    <option value="JSS2">JSS2</option>
+                                    <option value="JSS3">JSS3</option>
+                                    <option value="SSS1">SSS1</option>
+                                    <option value="SSS2">SSS2</option>
+                                    <option value="SSS3">SSS3</option>
+                                    <option value="Custom">Custom Class...</option>
+                                </select>
+                                <input type="text" id="admCustomClass" class="hidden" placeholder="Type custom class name" style="margin-top: 5px;">
+                            </div>
+                            <div class="form-group hidden" id="departmentGroup">
+                                <label for="admDepartmentSelect">Department</label>
+                                <select id="admDepartmentSelect" onchange="handleDepartmentChange()">
+                                    <option value="" disabled selected>Select Department</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Commercial">Commercial</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="admSession">Academic Session</label>
+                                <select id="admSession" required>
+                                    <option value="2025/2026" selected>2025/2026</option>
+                                    <option value="2026/2027">2026/2027</option>
+                                    <option value="2027/2028">2027/2028</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="admTerm">Academic Term</label>
+                                <select id="admTerm" required>
+                                    <option value="1st Term" selected>1st Term</option>
+                                    <option value="2nd Term">2nd Term</option>
+                                    <option value="3rd Term">3rd Term</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- PIN Generator & Live Percentage Calculator Box -->
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <div class="pin-gen-box" style="flex: 1; min-width: 250px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label>Automated PIN (3 Uses Max)</label>
+                                    <input type="text" id="generatedPin" readonly placeholder="Click Generate PIN">
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="generateStudentPin()">Generate PIN</button>
+                            </div>
+
+                            <!-- Live Percentage Calculation Box -->
+                            <div class="calc-box" style="flex: 1; min-width: 250px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
+                                <h5 style="margin: 0 0 10px 0; color: #2e7d32;">Calculated Class Percentage</h5>
+                                <p style="margin: 0; font-size: 14px;">Total Score: <strong id="calcTotalScore">0</strong> / <span id="calcMaxScore">0</span></p>
+                                <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #1b5e20;">Percentage: <span id="calcPercentage">0.00</span>%</p>
+                            </div>
+                        </div>
+
+                        <h4>Subject Scores (Up to 20 Subjects)</h4>
+                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+
+                        <button type="submit" class="btn btn-success" style="margin-top: 15px;">Save Complete Student Result & PIN</button>
+                    </form>
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
