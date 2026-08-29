@@ -36,6 +36,7 @@
             background-color: var(--bg-light);
             color: var(--text-dark);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         /* Premium Top Bar */
@@ -73,10 +74,11 @@
             font-size: 0.85rem !important;
             font-weight: 700 !important;
             background: rgba(212, 175, 55, 0.1);
-            padding: 6px 14px;
+            padding: 8px 14px;
             border-radius: 6px;
             border: 1px dashed var(--gold-accent);
             cursor: pointer;
+            text-align: center;
         }
 
         .admin-link:hover {
@@ -88,7 +90,7 @@
         header {
             background-color: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
-            padding: 18px 5%;
+            padding: 16px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -109,18 +111,40 @@
             background: var(--navy-primary);
             color: var(--gold-accent);
             font-weight: 800;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             letter-spacing: 1px;
             border: 1px solid var(--gold-accent);
         }
 
         .logo-text {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--navy-primary);
             letter-spacing: -0.5px;
+        }
+
+        /* Mobile Menu Button */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1001;
+        }
+
+        .menu-toggle span {
+            width: 100%;
+            height: 3px;
+            background-color: var(--navy-primary);
+            border-radius: 2px;
+            transition: all 0.3s ease-in-out;
         }
 
         nav {
@@ -149,6 +173,7 @@
             font-weight: 700 !important;
             box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
             transition: transform 0.2s, box-shadow 0.2s !important;
+            text-align: center;
         }
 
         .btn-portal:hover {
@@ -162,7 +187,7 @@
                         url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
             color: var(--white);
             text-align: center;
-            padding: 110px 20px;
+            padding: clamp(60px, 12vw, 110px) 20px;
             position: relative;
         }
 
@@ -181,15 +206,15 @@
         }
 
         .hero h1 {
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 800;
-            line-height: 1.2;
+            line-height: 1.25;
             margin-bottom: 20px;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
         }
 
         .hero p {
-            font-size: 1.15rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
             max-width: 650px;
             margin: 0 auto 35px;
             color: #CBD5E1;
@@ -203,16 +228,25 @@
             flex-wrap: wrap;
         }
 
+        .btn-primary, .btn-secondary {
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 280px;
+            transition: all 0.2s ease;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
             color: var(--navy-primary);
-            padding: 14px 30px;
-            border-radius: 8px;
-            text-decoration: none;
             font-weight: 700;
-            font-size: 1rem;
             box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
-            transition: all 0.2s ease;
         }
 
         .btn-primary:hover {
@@ -225,12 +259,7 @@
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: var(--white);
-            padding: 14px 30px;
-            border-radius: 8px;
-            text-decoration: none;
             font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s ease;
         }
 
         .btn-secondary:hover {
@@ -241,13 +270,13 @@
         /* Section Global */
         section {
             max-width: 1100px;
-            margin: 90px auto;
-            padding: 0 24px;
+            margin: clamp(50px, 8vw, 90px) auto;
+            padding: 0 20px;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: clamp(30px, 5vw, 50px);
         }
 
         .section-subtitle {
@@ -262,7 +291,7 @@
 
         .section-title {
             color: var(--navy-primary);
-            font-size: 2.25rem;
+            font-size: clamp(1.6rem, 4vw, 2.25rem);
             font-weight: 800;
             letter-spacing: -0.5px;
         }
@@ -270,13 +299,13 @@
         /* About Section Cards */
         .about-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 28px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
         }
 
         .card {
             background: var(--white);
-            padding: 35px 30px;
+            padding: 30px 24px;
             border-radius: 12px;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border-color);
@@ -315,15 +344,15 @@
 
         .card h3 {
             color: var(--navy-primary);
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 12px;
         }
 
         .card p {
             color: var(--text-muted);
-            font-size: 0.975rem;
-            line-height: 1.7;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         /* Enquiry Form Container */
@@ -332,19 +361,19 @@
             border-radius: 16px;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border-color);
-            padding: 45px;
+            padding: clamp(20px, 5vw, 45px);
             max-width: 750px;
             margin: 0 auto;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group.full-width {
@@ -361,10 +390,11 @@
 
         input, select, textarea {
             width: 100%;
-            padding: 12px 16px;
+            min-height: 44px;
+            padding: 10px 14px;
             border: 1.5px solid var(--border-color);
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 1rem; /* Avoid iOS auto-zoom */
             background-color: #FAFAFA;
             color: var(--text-dark);
             transition: all 0.2s ease;
@@ -378,7 +408,7 @@
         }
 
         textarea {
-            height: 130px;
+            min-height: 120px;
             resize: vertical;
         }
 
@@ -386,7 +416,8 @@
             background: linear-gradient(135deg, var(--navy-primary), var(--navy-secondary));
             color: var(--white);
             border: none;
-            padding: 15px 28px;
+            min-height: 48px;
+            padding: 14px 28px;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: 700;
@@ -414,14 +445,15 @@
             z-index: 2000;
             align-items: center;
             justify-content: center;
+            padding: 16px;
         }
 
         .modal-card {
             background: var(--white);
             border-radius: 12px;
-            padding: 30px;
-            max-width: 90%;
-            width: 900px;
+            padding: clamp(20px, 4vw, 30px);
+            width: 100%;
+            max-width: 900px;
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: var(--shadow-lg);
@@ -430,30 +462,40 @@
 
         .close-modal {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 1.5rem;
+            top: 15px;
+            right: 15px;
+            font-size: 1.75rem;
+            line-height: 1;
             cursor: pointer;
             color: var(--text-muted);
+            padding: 5px;
         }
 
-        /* Table Styles for Enquiries */
+        /* Responsive Table Container */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 20px;
+        }
+
         .enquiry-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
             font-size: 0.875rem;
+            min-width: 650px;
         }
 
         .enquiry-table th, .enquiry-table td {
             border: 1px solid var(--border-color);
-            padding: 12px;
+            padding: 10px 12px;
             text-align: left;
         }
 
         .enquiry-table th {
             background: var(--navy-primary);
             color: var(--gold-accent);
+            white-space: nowrap;
         }
 
         .enquiry-table tr:nth-child(even) {
@@ -486,7 +528,7 @@
         footer {
             background-color: var(--navy-primary);
             color: #94A3B8;
-            padding: 50px 20px 30px;
+            padding: 40px 20px 30px;
             border-top: 3px solid var(--gold-accent);
         }
 
@@ -537,13 +579,64 @@
             color: #64748B;
         }
 
+        /* Mobile & Tablet Specific Queries */
+        @media (max-width: 900px) {
+            .top-bar {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.full-width { grid-column: span 1; }
-            .enquiry-wrapper { padding: 25px; }
-            header { padding: 15px 20px; }
-            nav { gap: 10px; }
+            .menu-toggle {
+                display: flex;
+            }
+
+            nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: #FFFFFF;
+                flex-direction: column;
+                padding: 20px;
+                gap: 16px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            nav.active {
+                display: flex;
+            }
+
+            nav a {
+                width: 100%;
+                text-align: center;
+                padding: 8px 0;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            .hero-btns {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                max-width: 100%;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 24px;
+            }
         }
     </style>
 </head>
@@ -563,11 +656,18 @@
             <div class="logo-badge">DGC</div>
             <div class="logo-text">Dynolinks Global</div>
         </div>
-        <nav>
-            <a href="#about">About</a>
-            <a href="#enquiry">Enquiries</a>
+        
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="navMenu">
+            <a href="#about" onclick="closeMobileMenu()">About</a>
+            <a href="#enquiry" onclick="closeMobileMenu()">Enquiries</a>
             <a href="/portal.html" class="btn-portal">Check Result</a>
-            <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal()">🔒 Admin Only</a>
+            <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();">🔒 Admin Only</a>
         </nav>
     </header>
 
@@ -677,7 +777,7 @@
                 <div style="margin-bottom: 15px;">
                     <input type="password" id="adminPass" placeholder="Enter Admin Password">
                 </div>
-                <button type="button" onclick="verifyAdmin()" style="background: var(--navy-primary); color: var(--white); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">Login</button>
+                <button type="button" onclick="verifyAdmin()" style="background: var(--navy-primary); color: var(--white); border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">Login</button>
                 <p id="passErr" style="color: red; margin-top: 10px; display: none;">Invalid Password!</p>
             </div>
 
@@ -712,6 +812,21 @@
     </footer>
 
     <script>
+        // Mobile Navigation Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        function closeMobileMenu() {
+            if (navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+            }
+        }
+
+        // Enquiry Form logic
         const form = document.getElementById('enquiryForm');
         const alertBox = document.getElementById('alertBox');
         const submitBtn = document.getElementById('submitBtn');
@@ -790,7 +905,7 @@
                 const data = await res.json();
 
                 if (data.success && data.enquiries.length > 0) {
-                    let html = `<table class="enquiry-table">
+                    let html = `<div class="table-responsive"><table class="enquiry-table">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -819,7 +934,7 @@
                         </tr>`;
                     });
 
-                    html += `</tbody></table>`;
+                    html += `</tbody></table></div>`;
                     document.getElementById('enquiryList').innerHTML = html;
                 } else {
                     document.getElementById('enquiryList').innerHTML = '<p>No enquiries found yet.</p>';

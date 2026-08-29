@@ -11,8 +11,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+        pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
     }
 });
 
@@ -43,12 +43,14 @@ const StudentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', StudentSchema);
 
-// Enquiry Schema
+// Enquiry Schema (Updated with childClass and childAge)
 const EnquirySchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },
     category: { type: String, required: true },
+    childClass: { type: String, default: 'N/A' },
+    childAge: { type: String, default: 'N/A' },
     message: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
@@ -206,30 +208,47 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// Enquiry API Endpoint with Gmail Notification
+// Enquiry API Endpoint with Gmail Notification (Updated)
 app.post('/api/enquiries', async (req, res) => {
     try {
-        const { fullName, email, phone, category, message } = req.body;
+        const { fullName, email, phone, category, childClass, childAge, message } = req.body;
         if (!fullName || !email || !phone || !category || !message) {
             return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
         }
 
-        const newEnquiry = new Enquiry({ fullName, email, phone, category, message });
+        const newEnquiry = new Enquiry({ 
+            fullName, 
+            email, 
+            phone, 
+            category, 
+            childClass: childClass || 'N/A', 
+            childAge: childAge || 'N/A', 
+            message 
+        });
         await newEnquiry.save();
+
+        const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
 
         // Send Email Alert to Admin
         const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
+            from: recipientEmail,
+            to: recipientEmail,
+            replyTo: email,
             subject: `🔔 New Enquiry: ${category} from ${fullName}`,
             html: `
-                <h3>New Portal Enquiry Submitted</h3>
-                <p><strong>Name:</strong> ${fullName}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Phone:</strong> ${phone}</p>
-                <p><strong>Category:</strong> ${category}</p>
-                <p><strong>Message:</strong></p>
-                <blockquote style="background:#f4f4f4; padding:12px; border-left:4px solid #007bff;">${message}</blockquote>
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #0F172A;">
+                    <h3 style="color: #0B192C; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">
+                        New School Enquiry Submitted
+                    </h3>
+                    <p><strong>Name:</strong> ${fullName}</p>
+                    <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></p>
+                    <p><strong>Category:</strong> ${category}</p>
+                    <p><strong>Proposed Class:</strong> ${childClass || 'N/A'}</p>
+                    <p><strong>Child's Age:</strong> ${childAge || 'N/A'}</p>
+                    <p><strong>Message:</strong></p>
+                    <blockquote style="background:#f4f4f4; padding:12px; border-left:4px solid #D4AF37; border-radius: 4px;">${message}</blockquote>
+                </div>
             `
         };
 
