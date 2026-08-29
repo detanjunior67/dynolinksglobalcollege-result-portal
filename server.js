@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 1. Updated Transporter explicitly configured for Cloud Hosts (Render/Heroku)
+// 1. Transporter configuration for Cloud Hosts (Render/Heroku)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -219,7 +219,7 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// 2. Updated Enquiry API Endpoint with Async Await Email Dispatch
+// Non-Blocking Enquiry API Endpoint
 app.post('/api/enquiries', async (req, res) => {
     try {
         const { fullName, email, phone, category, childClass, childAge, message } = req.body;
@@ -227,7 +227,7 @@ app.post('/api/enquiries', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
         }
 
-        // Save enquiry to MongoDB
+        // Save enquiry to MongoDB database
         const newEnquiry = new Enquiry({ 
             fullName, 
             email, 
@@ -239,8 +239,11 @@ app.post('/api/enquiries', async (req, res) => {
         });
         await newEnquiry.save();
 
-        const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
+        // Send success response immediately to unfreeze frontend button
+        res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
 
+        // Send Email in the background without blocking HTTP response
+        const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         const mailOptions = {
             from: `"Dynolinks Portal" <${recipientEmail}>`,
             to: recipientEmail,
@@ -263,15 +266,12 @@ app.post('/api/enquiries', async (req, res) => {
             `
         };
 
-        // Await email delivery so cloud functions don't terminate prematurely
-        try {
-            await transporter.sendMail(mailOptions);
-            console.log('Enquiry email notification sent successfully.');
-        } catch (mailErr) {
+        transporter.sendMail(mailOptions).then(() => {
+            console.log('Enquiry background email notification sent successfully.');
+        }).catch(mailErr => {
             console.error('Email Notification Error on Render:', mailErr);
-        }
+        });
 
-        res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
     } catch (err) {
         console.error('Enquiry Save Error:', err);
         res.status(500).json({ success: false, message: 'Failed to record enquiry.' });
