@@ -14,7 +14,7 @@
             --navy-primary: #0B192C;
             --navy-secondary: #1E3E62;
             --gold-accent: #D4AF37;
-            --gold-hover: #B89628;
+            --gold-hover: #F3C623;
             --bg-light: #F8FAFC;
             --text-dark: #0F172A;
             --text-muted: #64748B;
@@ -39,7 +39,7 @@
             overflow-x: hidden;
         }
 
-        /* Premium Top Bar */
+        /* Top Bar */
         .top-bar {
             background: var(--navy-primary);
             color: rgba(255, 255, 255, 0.75);
@@ -68,7 +68,6 @@
             color: var(--gold-accent);
         }
 
-        /* Admin Link in Header Top Right */
         .admin-link {
             color: var(--gold-accent) !important;
             font-size: 0.85rem !important;
@@ -86,7 +85,7 @@
             color: var(--navy-primary) !important;
         }
 
-        /* Navigation Header */
+        /* Header Navigation */
         header {
             background-color: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
@@ -125,7 +124,6 @@
             letter-spacing: -0.5px;
         }
 
-        /* Mobile Menu Button */
         .menu-toggle {
             display: none;
             flex-direction: column;
@@ -159,6 +157,7 @@
             font-weight: 600;
             font-size: 0.95rem;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         nav a:hover {
@@ -181,90 +180,163 @@
             box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
         }
 
-        /* Hero Section */
+        /* --- UPGRADED FANCY HERO SECTION --- */
         .hero {
-            background: linear-gradient(135deg, rgba(11, 25, 44, 0.92), rgba(30, 62, 98, 0.88)), 
-                        url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+            position: relative;
+            background: radial-gradient(circle at 50% 20%, #1A365D 0%, #0B192C 75%, #050C16 100%);
             color: var(--white);
             text-align: center;
-            padding: clamp(60px, 12vw, 110px) 20px;
+            padding: clamp(80px, 14vw, 130px) 20px;
+            overflow: hidden;
+        }
+
+        /* Ambient glowing circles */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: 5%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(30, 62, 98, 0.4) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
             position: relative;
+            z-index: 2;
+            max-width: 850px;
+            margin: 0 auto;
         }
 
         .hero-badge {
-            display: inline-block;
-            background: rgba(212, 175, 55, 0.15);
-            border: 1px solid var(--gold-accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
             color: var(--gold-accent);
-            padding: 6px 16px;
+            padding: 8px 20px;
             border-radius: 50px;
             font-size: 0.85rem;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: var(--gold-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold-accent);
         }
 
         .hero h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
+            font-size: clamp(2.2rem, 5.5vw, 3.8rem);
             font-weight: 800;
-            line-height: 1.25;
-            margin-bottom: 20px;
-            letter-spacing: -0.5px;
+            line-height: 1.15;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero p {
-            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-            max-width: 650px;
-            margin: 0 auto 35px;
-            color: #CBD5E1;
+            font-size: clamp(1rem, 2.2vw, 1.25rem);
+            max-width: 680px;
+            margin: 0 auto 40px;
+            color: #94A3B8;
             font-weight: 400;
+            line-height: 1.7;
         }
 
         .hero-btns {
             display: flex;
             justify-content: center;
-            gap: 16px;
+            gap: 18px;
             flex-wrap: wrap;
         }
 
         .btn-primary, .btn-secondary {
-            min-height: 48px;
+            min-height: 52px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 28px;
-            border-radius: 8px;
-            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 10px;
             font-size: 1rem;
             width: 100%;
-            max-width: 280px;
-            transition: all 0.2s ease;
+            max-width: 260px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+            background: linear-gradient(135deg, #E6C250, #D4AF37);
             color: var(--navy-primary);
-            font-weight: 700;
-            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+            font-weight: 800;
+            box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.4);
+            border: none;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, #F3C623, #E6C250);
+            box-shadow: 0 15px 30px -5px rgba(212, 175, 55, 0.5);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             color: var(--white);
             font-weight: 600;
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Bottom Hero Decorative Wave */
+        .hero-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+
+        .hero-wave svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 45px;
+        }
+
+        .hero-wave .shape-fill {
+            fill: var(--bg-light);
         }
 
         /* Section Global */
@@ -355,15 +427,114 @@
             line-height: 1.6;
         }
 
-        /* Enquiry Form Container */
-        .enquiry-wrapper {
+        /* Academic Programs Section */
+        .programs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .program-card {
             background: var(--white);
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
+            border-radius: 12px;
             border: 1px solid var(--border-color);
-            padding: clamp(20px, 5vw, 45px);
+            box-shadow: var(--shadow-sm);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .program-card:hover {
+            border-color: var(--gold-accent);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .program-tag {
+            align-self: flex-start;
+            background: rgba(11, 25, 44, 0.06);
+            color: var(--navy-primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .program-card h3 {
+            font-size: 1.3rem;
+            color: var(--navy-primary);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .program-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .program-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .program-features li {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .program-features li::before {
+            content: "✓";
+            color: var(--gold-accent);
+            font-weight: 800;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 25, 44, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: clamp(20px, 4vw, 30px);
+            width: 100%;
             max-width: 750px;
-            margin: 0 auto;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 5px;
         }
 
         .form-grid {
@@ -394,7 +565,7 @@
             padding: 10px 14px;
             border: 1.5px solid var(--border-color);
             border-radius: 8px;
-            font-size: 1rem; /* Avoid iOS auto-zoom */
+            font-size: 1rem;
             background-color: #FAFAFA;
             color: var(--text-dark);
             transition: all 0.2s ease;
@@ -432,46 +603,6 @@
             box-shadow: 0 6px 18px rgba(11, 25, 44, 0.3);
         }
 
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(11, 25, 44, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-        .modal-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: clamp(20px, 4vw, 30px);
-            width: 100%;
-            max-width: 900px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.75rem;
-            line-height: 1;
-            cursor: pointer;
-            color: var(--text-muted);
-            padding: 5px;
-        }
-
-        /* Responsive Table Container */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -502,7 +633,6 @@
             background-color: #F8FAFC;
         }
 
-        /* Alert Styling */
         .alert {
             padding: 14px 18px;
             border-radius: 8px;
@@ -524,7 +654,33 @@
             border: 1px solid #FECACA;
         }
 
-        /* Footer */
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--gold-accent);
+            color: var(--navy-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         footer {
             background-color: var(--navy-primary);
             color: #94A3B8;
@@ -579,7 +735,6 @@
             color: #64748B;
         }
 
-        /* Mobile & Tablet Specific Queries */
         @media (max-width: 900px) {
             .top-bar {
                 justify-content: center;
@@ -644,7 +799,7 @@
 
     <!-- Top Info Bar -->
     <div class="top-bar">
-        <div>Admissions Open for <span>2025/2026 Academic Session</span></div>
+        <div>Admissions Open for <span>Academic Session</span></div>
         <div>
             Call: <a href="tel:+2348030634519">+234 803 063 4519</a> | <a href="tel:+2349167673507">+234 916 767 3507</a>
         </div>
@@ -654,7 +809,7 @@
     <header>
         <div class="logo-container">
             <div class="logo-badge">DGC</div>
-            <div class="logo-text">Dynolinks Global</div>
+            <div class="logo-text">Dynolinks Global College</div>
         </div>
         
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
@@ -665,20 +820,28 @@
 
         <nav id="navMenu">
             <a href="#about" onclick="closeMobileMenu()">About</a>
-            <a href="#enquiry" onclick="closeMobileMenu()">Enquiries</a>
+            <a href="#programs" onclick="closeMobileMenu()">Programs</a>
+            <a onclick="openEnquiryModal(); closeMobileMenu();">Enquiries</a>
             <a href="/portal.html" class="btn-portal">Check Result</a>
             <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();">🔒 Admin Only</a>
         </nav>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Fancy Hero Section -->
     <div class="hero">
-        <span class="hero-badge">Welcome to Excellence</span>
-        <h1>Nurturing Minds, Shaping Tomorrow's Leaders</h1>
-        <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
-        <div class="hero-btns">
-            <a href="/portal.html" class="btn-primary">Check Student Result</a>
-            <a href="#enquiry" class="btn-secondary">Make an Enquiry</a>
+        <div class="hero-content">
+            <span class="hero-badge">Welcome to Dynolinks Global College</span>
+            <h1>Nurturing Minds, Shaping Tomorrow's Leaders</h1>
+            <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
+            <div class="hero-btns">
+                <a href="/portal.html" class="btn-primary">Check Student Result</a>
+                <button class="btn-secondary" onclick="openEnquiryModal()">Make an Enquiry</button>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.06,150.3,121.72,217,112.5C252.12,107.65,286.82,85.22,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
         </div>
     </div>
 
@@ -686,7 +849,7 @@
     <section id="about">
         <div class="section-header">
             <span class="section-subtitle">Who We Are</span>
-            <h2 class="section-title">Why Choose Dynolinks College</h2>
+            <h2 class="section-title">Why Choose Dynolinks Global College</h2>
         </div>
         <div class="about-cards">
             <div class="card">
@@ -707,14 +870,66 @@
         </div>
     </section>
 
-    <!-- Enquiry Section -->
-    <section id="enquiry">
+    <!-- Programs & Curriculum Section -->
+    <section id="programs">
         <div class="section-header">
-            <span class="section-subtitle">Get in Touch</span>
-            <h2 class="section-title">School Enquiry Desk</h2>
+            <span class="section-subtitle">Academic Pathways</span>
+            <h2 class="section-title">Programs Offered at Dynolinks Global College</h2>
         </div>
+        <div class="programs-grid">
+            <div class="program-card">
+                <div>
+                    <span class="program-tag">Junior High</span>
+                    <h3>Junior Secondary (JSS 1 - JSS 3)</h3>
+                    <p>Building strong foundational knowledge across core sciences, humanities, business, and vocational studies.</p>
+                    <ul class="program-features">
+                        <li>Core Mathematics & English Proficiency</li>
+                        <li>Basic Science & Technology Labs</li>
+                        <li>Introductory Business & ICT Skills</li>
+                    </ul>
+                </div>
+                <button onclick="openEnquiryModal()" class="btn-primary" style="width: 100%;">Enquire for JSS</button>
+            </div>
 
-        <div class="enquiry-wrapper">
+            <div class="program-card">
+                <div>
+                    <span class="program-tag">Senior High</span>
+                    <h3>Sciences Track (SS 1 - SS 3)</h3>
+                    <p>Designed for aspiring engineers, medical professionals, research scientists, and technology innovators.</p>
+                    <ul class="program-features">
+                        <li>Advanced Physics, Chemistry & Biology</li>
+                        <li>Practical Laboratory Work</li>
+                        <li>Technical & Applied Science Studies</li>
+                    </ul>
+                </div>
+                <button onclick="openEnquiryModal()" class="btn-primary" style="width: 100%;">Enquire for Science</button>
+            </div>
+
+            <div class="program-card">
+                <div>
+                    <span class="program-tag">Senior High</span>
+                    <h3>Arts & Commercial Track (SS 1 - SS 3)</h3>
+                    <p>Preparing future leaders in law, business management, economics, literature, and international relations.</p>
+                    <ul class="program-features">
+                        <li>Financial Accounting & Economics</li>
+                        <li>Literature, Government & History</li>
+                        <li>Public Speaking & Debating Club</li>
+                    </ul>
+                </div>
+                <button onclick="openEnquiryModal()" class="btn-primary" style="width: 100%;">Enquire for Arts/Comm</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enquiry Modal -->
+    <div id="enquiryModal" class="modal-overlay">
+        <div class="modal-card">
+            <span class="close-modal" onclick="closeEnquiryModal()">&times;</span>
+            <div class="section-header" style="margin-bottom: 25px;">
+                <span class="section-subtitle">Get in Touch</span>
+                <h2 class="section-title">School Enquiry Desk</h2>
+            </div>
+
             <div id="alertBox" class="alert"></div>
 
             <form id="enquiryForm">
@@ -757,18 +972,18 @@
 
                     <div class="form-group full-width">
                         <label for="message">Your Message / Request *</label>
-                        <textarea id="message" required placeholder="How can we help you today?"></textarea>
+                        <textarea id="message" required placeholder="How can Dynolinks Global College assist you?"></textarea>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn">Send Message</button>
             </form>
         </div>
-    </section>
+    </div>
 
     <!-- Admin Modal -->
     <div id="adminModal" class="modal-overlay">
-        <div class="modal-card">
+        <div class="modal-card" style="max-width: 900px;">
             <span class="close-modal" onclick="closeAdminModal()">&times;</span>
             
             <div id="authSection">
@@ -782,11 +997,16 @@
             </div>
 
             <div id="enquiriesDashboard" style="display: none;">
-                <h2 style="color: var(--navy-primary); margin-bottom: 10px;">Submitted Enquiries</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="color: var(--navy-primary);">Submitted Enquiries</h2>
+                    <button type="button" onclick="exportTableToCSV()" style="background: var(--gold-accent); color: var(--navy-primary); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer;">📥 Export to CSV</button>
+                </div>
                 <div id="enquiryList">Loading enquiries...</div>
             </div>
         </div>
     </div>
+
+    <div class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</div>
 
     <!-- Footer -->
     <footer>
@@ -807,12 +1027,11 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Dynolinks Global College. All Rights Reserved.</p>
+            <p>&copy; Dynolinks Global College. All Rights Reserved.</p>
         </div>
     </footer>
 
     <script>
-        // Mobile Navigation Toggle
         const menuToggle = document.getElementById('menuToggle');
         const navMenu = document.getElementById('navMenu');
 
@@ -826,7 +1045,14 @@
             }
         }
 
-        // Enquiry Form logic
+        function openEnquiryModal() {
+            document.getElementById('enquiryModal').style.display = 'flex';
+        }
+
+        function closeEnquiryModal() {
+            document.getElementById('enquiryModal').style.display = 'none';
+        }
+
         const form = document.getElementById('enquiryForm');
         const alertBox = document.getElementById('alertBox');
         const submitBtn = document.getElementById('submitBtn');
@@ -875,7 +1101,19 @@
             }
         });
 
-        // Admin Modal Logic
+        const backToTopBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'flex';
         }
@@ -899,13 +1137,16 @@
             }
         }
 
+        let currentEnquiries = [];
+
         async function fetchEnquiries() {
             try {
                 const res = await fetch('/api/admin/enquiries');
                 const data = await res.json();
 
                 if (data.success && data.enquiries.length > 0) {
-                    let html = `<div class="table-responsive"><table class="enquiry-table">
+                    currentEnquiries = data.enquiries;
+                    let html = `<div class="table-responsive"><table class="enquiry-table" id="adminTable">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -942,6 +1183,33 @@
             } catch (err) {
                 document.getElementById('enquiryList').innerHTML = '<p style="color: red;">Error loading enquiries.</p>';
             }
+        }
+
+        function exportTableToCSV() {
+            if (currentEnquiries.length === 0) return alert('No data available to export.');
+            
+            let csvContent = "data:text/csv;charset=utf-8,Date,Full Name,Email,Phone,Category,Class,Age,Message\n";
+            currentEnquiries.forEach(e => {
+                const row = [
+                    new Date(e.createdAt).toLocaleDateString(),
+                    `"${e.fullName}"`,
+                    `"${e.email}"`,
+                    `"${e.phone}"`,
+                    `"${e.category}"`,
+                    `"${e.childClass}"`,
+                    `"${e.childAge}"`,
+                    `"${e.message.replace(/"/g, '""')}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Dynolinks_Enquiries.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>

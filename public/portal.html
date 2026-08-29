@@ -3,39 +3,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DYNOLINKS GLOBAL COLLEGE - Result Portal</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>DYNOLINKS GLOBAL COLLEGE - Modern Result Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --navy-dark: #050C16;
+            --navy-primary: #0B192C;
+            --navy-surface: #112239;
+            --navy-card: rgba(17, 34, 57, 0.75);
+            --gold-accent: #D4AF37;
+            --gold-hover: #F3C623;
+            --gold-glow: rgba(212, 175, 55, 0.25);
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --border-gold-glass: rgba(212, 175, 55, 0.3);
+            --success-color: #10B981;
+            --danger-color: #EF4444;
+            --shadow-glass: 0 20px 50px rgba(0, 0, 0, 0.4);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--navy-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow-x: hidden;
+            padding: 20px 15px 60px;
+        }
+
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            top: -100px;
+            left: 10%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+
+        .orb-2 {
+            bottom: -50px;
+            right: 5%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(30, 62, 98, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
+            animation-delay: -9s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(30px) scale(1.08); }
+            100% { transform: translateY(-20px) scale(0.95); }
+        }
+
+        .home-nav-bar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .brand-badge {
+            background: var(--navy-primary);
+            color: var(--gold-accent);
+            border: 1px solid var(--gold-accent);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+        }
+
+        .btn-back-home {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back-home:hover {
+            color: var(--gold-accent);
+            border-color: var(--gold-accent);
+            background: rgba(212, 175, 55, 0.08);
+        }
+
+        .hero-header {
+            text-align: center;
+            margin-bottom: 35px;
+            position: relative;
+            z-index: 2;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero-header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .hero-header p {
+            color: var(--text-muted);
+            font-size: clamp(0.9rem, 2vw, 1.05rem);
+            font-weight: 500;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--navy-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glass);
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .tab-navigation {
+            display: flex;
+            background: rgba(5, 12, 22, 0.6);
+            border: 1px solid var(--border-glass);
+            padding: 6px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--navy-primary), var(--navy-surface));
+            color: var(--gold-accent);
+            border: 1px solid var(--border-gold-glass);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .portal-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .portal-section.active-section {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--gold-accent);
+            border-radius: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            background: rgba(5, 12, 22, 0.5);
+            border: 1.5px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            color: var(--text-light);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        select option {
+            background-color: var(--navy-primary);
+            color: var(--text-light);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 15px var(--gold-glow);
+            background: rgba(11, 25, 44, 0.8);
+        }
+
+        input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 48px;
+            padding: 0 24px;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+            color: var(--navy-dark);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(212, 175, 55, 0.45);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: #FFFFFF;
+        }
+
+        .btn-sm {
+            height: 38px;
+            padding: 0 14px;
+            font-size: 0.825rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #result-card {
+            background: #FFFFFF !important;
+            color: #0F172A !important;
+            padding: 30px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 10px;
+        }
+
+        .school-header h2 {
+            color: #0B192C;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .school-header .sub-heading {
+            color: #64748B;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .student-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #E2E8F0;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .student-details p {
+            color: #334155;
+        }
+
+        .student-details strong {
+            color: #0B192C;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .result-table th, .result-table td {
+            border: 1px solid #E2E8F0;
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .result-table th {
+            background: #0B192C;
+            color: #D4AF37;
+            font-weight: 700;
+        }
+
+        .result-table tbody tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+
+        .admin-summary-box {
+            background: rgba(5, 12, 22, 0.5) !important;
+            border: 1px solid var(--border-glass) !important;
+            color: var(--text-light);
+            border-radius: var(--radius-md);
+            padding: 20px;
+        }
+
+        /* Admin Table Styling Fixes */
+        .admin-summary-box .result-table {
+            background: transparent !important;
+            width: 100%;
+        }
+
+        .admin-summary-box .result-table tbody tr {
+            background-color: rgba(11, 25, 44, 0.4) !important;
+        }
+
+        .admin-summary-box .result-table tbody tr:nth-child(even) {
+            background-color: rgba(5, 12, 22, 0.6) !important;
+        }
+
+        .admin-summary-box .result-table th {
+            background: var(--navy-primary);
+            color: var(--gold-accent);
+            border-color: var(--border-glass);
+        }
+
+        .admin-summary-box .result-table td {
+            border-color: var(--border-glass) !important;
+            color: var(--text-light) !important;
+            vertical-align: middle;
+        }
+
+        /* Align Action Buttons Side-by-Side */
+        .admin-summary-box .result-table td.actions-cell {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+            white-space: nowrap;
+        }
+
+        .admin-form {
+            background: rgba(5, 12, 22, 0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .admin-form h4 {
+            color: var(--gold-accent);
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+        }
+
+        .pin-gen-box {
+            background: rgba(11, 25, 44, 0.7) !important;
+            border: 1px solid var(--border-gold-glass) !important;
+        }
+
+        .calc-box {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .subject-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 1fr 1fr 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .row-num {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .btn-remove-row {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: var(--radius-sm);
+            height: 48px;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .btn-remove-row:hover {
+            background: var(--danger-color);
+            color: #FFFFFF;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 20px 15px;
+            }
+
+            .tab-btn {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            .subject-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.02);
+                padding: 10px;
+                border-radius: var(--radius-sm);
+                margin-bottom: 12px;
+            }
+
+            .btn-remove-row {
+                height: 38px;
+            }
+        }
+    </style>
 </head>
 <body>
 
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <div class="home-nav-bar">
+        <a href="/" class="brand-logo">
+            <span class="brand-badge">DGC</span>
+            <span>Dynolinks Portal</span>
+        </a>
+        <a href="/" class="btn-back-home">&larr; Back to Main Website</a>
+    </div>
+
     <header class="hero-header">
-        <h1>Welcome to DYNOLINKS GLOBAL COLLEGE</h1>
-        <p>Official Online Result Checking & Academic Management Portal</p>
+        <h1>DYNOLINKS GLOBAL COLLEGE</h1>
+        <p>Official Online Result Checking & Academic Portal</p>
     </header>
 
     <main class="main-container">
         
         <div class="tab-navigation">
-            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')">Student Portal</button>
-            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')">Staff / Admin Portal</button>
+            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')">🎓 Student Portal</button>
+            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')">🔑 Staff / Admin Portal</button>
         </div>
 
         <div class="card-body">
             
-            <!-- STUDENT SECTION -->
             <section id="student-section" class="portal-section active-section">
                 <form id="studentLoginForm">
-                    <h2 class="section-title">Check Student Result</h2>
+                    <h2 class="section-title">Check Academic Result</h2>
+                    
                     <div class="form-group">
                         <label for="studentId">Student ID / Registration No.</label>
                         <input type="text" id="studentId" placeholder="e.g., DGC/2026/001" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="pin">Access PIN</label>
-                        <input type="password" id="pin" placeholder="Enter Access PIN" required>
+                        <label for="pin">Access Scratch PIN</label>
+                        <input type="password" id="pin" placeholder="Enter Access PIN Code" required>
                     </div>
                     
                     <div class="form-row">
@@ -57,10 +615,10 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Check Result</button>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Check Result Now</button>
                 </form>
 
-                <div id="result-card" class="hidden" style="background: #fff; padding: 20px; border-radius: 8px;">
+                <div id="result-card" class="hidden">
                     <div class="school-header" style="text-align: center; margin-bottom: 20px;">
                         <h2>DYNOLINKS GLOBAL COLLEGE</h2>
                         <p class="sub-heading">Official Statement of Academic Results</p>
@@ -73,7 +631,7 @@
                         <p><strong>Session:</strong> <span id="resSession">--</span></p>
                         <p><strong>Term:</strong> <span id="resTerm">--</span></p>
                         <p><strong>Overall Score:</strong> <span id="resTotalScore">--</span> (<span id="resPercentage">--</span>%)</p>
-                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: var(--primary-sky, #0288d1); font-weight: 600;">--</span></p>
+                        <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: #0288D1; font-weight: 700;">--</span></p>
                     </div>
 
                     <table class="result-table">
@@ -89,39 +647,37 @@
                         <tbody id="resultBody"></tbody>
                     </table>
 
-                    <div class="action-buttons" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-success" onclick="downloadResultAsImage()">Save as Image (PNG)</button>
-                        <button class="btn btn-primary" onclick="downloadResultPDF()">Download PDF</button>
+                    <div class="action-buttons" style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="downloadResultAsImage()">📷 Save as Image (PNG)</button>
+                        <button class="btn btn-primary" onclick="downloadResultPDF()" style="width: auto;">📄 Download PDF Document</button>
                         <button class="btn btn-secondary" onclick="resetStudentForm()">Back to Search</button>
                     </div>
                 </div>
             </section>
 
-            <!-- STAFF / ADMIN SECTION -->
-            <section id="staff-section" class="portal-section" style="display: none;">
+            <section id="staff-section" class="portal-section">
                 
                 <form id="adminAuthForm">
-                    <h2 class="section-title">Staff Portal Access</h2>
+                    <h2 class="section-title">Staff Portal Authentication</h2>
                     <div class="form-group">
-                        <label for="adminPass">Admin Password</label>
-                        <input type="password" id="adminPass" placeholder="Enter Admin Password" required>
+                        <label for="adminPass">Administrator Password</label>
+                        <input type="password" id="adminPass" placeholder="Enter Security Password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login to Dashboard</button>
+                    <button type="submit" class="btn btn-primary">Login to Control Panel</button>
                 </form>
 
                 <div id="admin-dashboard" class="hidden">
                     <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3>Staff Control Panel</h3>
-                        <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout</button>
+                        <h3 style="color: var(--gold-accent); font-size: 1.2rem;">Staff Control Panel</h3>
+                        <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout Panel</button>
                     </div>
 
-                    <!-- Search Filter & Admin Summary Table -->
-                    <div class="admin-summary-box" style="margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                    <div class="admin-summary-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                            <h4 style="margin: 0;">Uploaded Results & Check Status</h4>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Student Name or ID..." style="padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;">
-                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">Download All CSV</button>
+                            <h4 style="margin: 0; color: var(--text-light);">Uploaded Results & PIN Tracker</h4>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Name or ID..." style="height: 38px; font-size: 0.85rem; width: 180px;">
+                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">📥 Export CSV</button>
                             </div>
                         </div>
                         <div style="overflow-x: auto;">
@@ -142,7 +698,8 @@
                     </div>
                     
                     <form id="addResultForm" class="admin-form">
-                        <h4>Student Information & Academic Period</h4>
+                        <h4>Upload / Update Student Result</h4>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="admStudentId">Student ID</label>
@@ -150,7 +707,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="admFullName">Full Name</label>
-                                <input type="text" id="admFullName" placeholder="John Doe" required>
+                                <input type="text" id="admFullName" placeholder="e.g. John Doe" required>
                             </div>
                             <div class="form-group">
                                 <label for="admClassSelect">Class</label>
@@ -196,28 +753,30 @@
                             </div>
                         </div>
 
-                        <!-- PIN Generator & Live Percentage Calculator Box -->
                         <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
-                            <div class="pin-gen-box" style="flex: 1; min-width: 250px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                            <div class="pin-gen-box" style="flex: 1; min-width: 240px; padding: 15px; border-radius: var(--radius-sm);">
                                 <div class="form-group" style="margin-bottom: 10px;">
                                     <label>Automated PIN (3 Uses Max)</label>
                                     <input type="text" id="generatedPin" readonly placeholder="Click Generate PIN">
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="generateStudentPin()">Generate PIN</button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="generateStudentPin()">Generate PIN Code</button>
                             </div>
 
-                            <!-- Live Percentage Calculation Box -->
-                            <div class="calc-box" style="flex: 1; min-width: 250px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
-                                <h5 style="margin: 0 0 10px 0; color: #2e7d32;">Calculated Class Percentage</h5>
-                                <p style="margin: 0; font-size: 14px;">Total Score: <strong id="calcTotalScore">0</strong> / <span id="calcMaxScore">0</span></p>
-                                <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #1b5e20;">Percentage: <span id="calcPercentage">0.00</span>%</p>
+                            <div class="calc-box" style="flex: 1; min-width: 240px; padding: 15px; border-radius: var(--radius-sm);">
+                                <h5 style="margin: 0 0 8px 0; color: #10B981; font-size: 0.9rem;">Calculated Class Percentage</h5>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Total Score: <strong id="calcTotalScore" style="color: #FFF;">0</strong> / <span id="calcMaxScore">0</span></p>
+                                <p style="margin: 5px 0 0 0; font-size: 1.15rem; font-weight: 800; color: #10B981;">Percentage: <span id="calcPercentage">0.00</span>%</p>
                             </div>
                         </div>
 
-                        <h4>Subject Scores (Up to 20 Subjects)</h4>
-                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0;">Subject Scores (20 Boxes Available)</h4>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearAllScores()">Clear All Scores</button>
+                        </div>
 
-                        <button type="submit" class="btn btn-success" style="margin-top: 15px;">Save Complete Student Result & PIN</button>
+                        <div id="subjectsContainer" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+
+                        <button type="submit" class="btn btn-success" style="margin-top: 20px; width: 100%;">Save Complete Student Result</button>
                     </form>
                 </div>
 
@@ -226,6 +785,408 @@
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script>
+        const SUBJECT_LISTS = {
+            JSS: [
+                "Maths", "English", "Basic Science", "Basic Technology", "Creative Arts",
+                "Home Economics", "Business Studies", "Religious Studies", "Social Studies", "Agricultural Science",
+                "Nigerian Language", "French", "Physical and Health Education", "Civic Education", "Information Technology",
+                "History", "Discovery"
+            ],
+            SCIENCE: [
+                "Maths", "English", "Chemistry", "Physics", "Biology",
+                "Agricultural Science", "Marketing", "Civic Education", "Economics", "Discovery"
+            ],
+            ARTS: [
+                "Maths", "English", "Literature in English", "Biology", "Economics",
+                "Religious Studies", "Agric", "Government", "Discovery", "Civic",
+                "Marketing"
+            ],
+            COMMERCIAL: [
+                "Maths", "English", "Commerce", "Accounting", "Agric",
+                "Civic", "Economics", "Lit in English", "Marketing", "Discovery"
+            ]
+        };
+
+        function switchTab(tab) {
+            const studentTabBtn = document.getElementById('studentTabBtn');
+            const staffTabBtn = document.getElementById('staffTabBtn');
+            const studentSection = document.getElementById('student-section');
+            const staffSection = document.getElementById('staff-section');
+
+            if (tab === 'student') {
+                studentTabBtn.classList.add('active');
+                staffTabBtn.classList.remove('active');
+                studentSection.classList.add('active-section');
+                staffSection.classList.remove('active-section');
+            } else {
+                staffTabBtn.classList.add('active');
+                studentTabBtn.classList.remove('active');
+                staffSection.classList.add('active-section');
+                studentSection.classList.remove('active-section');
+            }
+        }
+
+        function build20Boxes(subjects = []) {
+            const container = document.getElementById('subjectsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 20; i++) {
+                const subjectName = subjects[i] || '';
+                const row = document.createElement('div');
+                row.className = 'subject-row';
+                row.innerHTML = `
+                    <span class="row-num">${i + 1}.</span>
+                    <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}">
+                    <input type="number" placeholder="CA (40)" class="subj-ca" min="0" max="40" oninput="recalculateTotals()">
+                    <input type="number" placeholder="Exam (60)" class="subj-exam" min="0" max="60" oninput="recalculateTotals()">
+                    <button type="button" class="btn-remove-row" onclick="clearRow(this)">&times;</button>
+                `;
+                container.appendChild(row);
+            }
+            recalculateTotals();
+        }
+
+        function clearRow(btn) {
+            const row = btn.parentElement;
+            row.querySelector('.subj-name').value = '';
+            row.querySelector('.subj-ca').value = '';
+            row.querySelector('.subj-exam').value = '';
+            recalculateTotals();
+        }
+
+        function clearAllScores() {
+            document.querySelectorAll('.subj-ca').forEach(el => el.value = '');
+            document.querySelectorAll('.subj-exam').forEach(el => el.value = '');
+            recalculateTotals();
+        }
+
+        function handleClassChange() {
+            const classVal = document.getElementById('admClassSelect').value;
+            const deptGroup = document.getElementById('departmentGroup');
+            const customClass = document.getElementById('admCustomClass');
+
+            if (classVal.startsWith('SSS')) {
+                deptGroup.classList.remove('hidden');
+            } else {
+                deptGroup.classList.add('hidden');
+                document.getElementById('admDepartmentSelect').value = '';
+            }
+
+            if (classVal === 'Custom') {
+                customClass.classList.remove('hidden');
+            } else {
+                customClass.classList.add('hidden');
+            }
+
+            if (classVal.startsWith('JSS')) {
+                build20Boxes(SUBJECT_LISTS.JSS);
+            }
+        }
+
+        function handleDepartmentChange() {
+            const deptVal = document.getElementById('admDepartmentSelect').value;
+
+            if (deptVal === 'Science') {
+                build20Boxes(SUBJECT_LISTS.SCIENCE);
+            } else if (deptVal === 'Arts') {
+                build20Boxes(SUBJECT_LISTS.ARTS);
+            } else if (deptVal === 'Commercial') {
+                build20Boxes(SUBJECT_LISTS.COMMERCIAL);
+            }
+        }
+
+        function recalculateTotals() {
+            const caInputs = document.querySelectorAll('.subj-ca');
+            const examInputs = document.querySelectorAll('.subj-exam');
+            const nameInputs = document.querySelectorAll('.subj-name');
+            
+            let totalAchieved = 0;
+            let activeSubjectCount = 0;
+
+            caInputs.forEach((caInput, index) => {
+                const nameVal = nameInputs[index].value.trim();
+                const caVal = parseFloat(caInput.value) || 0;
+                const examVal = parseFloat(examInputs[index].value) || 0;
+
+                if (nameVal !== "") {
+                    totalAchieved += (caVal + examVal);
+                    activeSubjectCount++;
+                }
+            });
+
+            const maxPossible = activeSubjectCount * 100;
+            const percentage = maxPossible > 0 ? ((totalAchieved / maxPossible) * 100).toFixed(2) : '0.00';
+
+            document.getElementById('calcTotalScore').innerText = totalAchieved;
+            document.getElementById('calcMaxScore').innerText = maxPossible;
+            document.getElementById('calcPercentage').innerText = percentage;
+        }
+
+        function generateStudentPin() {
+            const pin = 'DGC-' + Math.floor(100000 + Math.random() * 900000);
+            document.getElementById('generatedPin').value = pin;
+        }
+
+        // Admin Login
+        document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'adminDGC') {
+                document.getElementById('adminAuthForm').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                build20Boxes();
+                fetchAdminStudentList();
+            } else {
+                alert('Invalid Administrator Password!');
+            }
+        });
+
+        // Save Student Result (Prevents Reload)
+        document.getElementById('addResultForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const studentId = document.getElementById('admStudentId').value;
+            const fullName = document.getElementById('admFullName').value;
+            
+            let studentClass = document.getElementById('admClassSelect').value;
+            if (studentClass === 'Custom') {
+                studentClass = document.getElementById('admCustomClass').value;
+            }
+            const department = document.getElementById('admDepartmentSelect').value;
+            if (department && studentClass.startsWith('SSS')) {
+                studentClass += ` (${department})`;
+            }
+
+            const session = document.getElementById('admSession').value;
+            const term = document.getElementById('admTerm').value;
+            const pin = document.getElementById('generatedPin').value;
+
+            const subjects = [];
+            const rows = document.querySelectorAll('.subject-row');
+
+            rows.forEach(row => {
+                const name = row.querySelector('.subj-name').value.trim();
+                const ca = row.querySelector('.subj-ca').value;
+                const exam = row.querySelector('.subj-exam').value;
+
+                if (name !== '') {
+                    subjects.push({
+                        subjectName: name,
+                        caScore: ca,
+                        examScore: exam
+                    });
+                }
+            });
+
+            if (subjects.length === 0) {
+                alert('Please fill in at least one subject!');
+                return;
+            }
+
+            if (!pin) {
+                alert('Please click "Generate PIN Code" before submitting!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/add-full-result', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        studentId,
+                        fullName,
+                        studentClass,
+                        session,
+                        term,
+                        pin,
+                        subjects
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    fetchAdminStudentList();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error('Submission error:', err);
+                alert('Failed to connect to the backend server.');
+            }
+        });
+
+        // Load Student Table Overview
+        async function fetchAdminStudentList() {
+            try {
+                const res = await fetch('/api/admin/student-status');
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('adminStudentList');
+                    tbody.innerHTML = '';
+
+                    if (data.students.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                    No student records found.
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    data.students.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${s.student_id}</td>
+                            <td>${s.full_name}</td>
+                            <td>${s.student_class}</td>
+                            <td><strong style="color: var(--gold-accent);">${s.pin_code}</strong></td>
+                            <td>${s.usage_count} / ${s.max_usage}</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-secondary btn-sm" onclick="resetPin('${s.student_id}')">Reset Usage</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.student_id}')">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load student status overview:', err);
+            }
+        }
+
+        // Student Check Result Search
+        document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('studentId').value;
+            const pin = document.getElementById('pin').value;
+            const session = document.getElementById('studentSession').value;
+            const term = document.getElementById('studentTerm').value;
+
+            try {
+                const response = await fetch('/api/check-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, pin, session, term })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('studentLoginForm').classList.add('hidden');
+                    document.getElementById('result-card').classList.remove('hidden');
+
+                    document.getElementById('resName').innerText = data.student.name;
+                    document.getElementById('resId').innerText = data.student.id;
+                    document.getElementById('resClass').innerText = data.student.class;
+                    document.getElementById('resSession').innerText = data.student.session;
+                    document.getElementById('resTerm').innerText = data.student.term;
+                    document.getElementById('resRemaining').innerText = `${data.remainingChecks} checks left`;
+
+                    const body = document.getElementById('resultBody');
+                    body.innerHTML = '';
+                    let totalObtained = 0;
+                    let totalPossible = data.results.length * 100;
+
+                    data.results.forEach(r => {
+                        totalObtained += r.total;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${r.subject}</td>
+                            <td>${r.ca}</td>
+                            <td>${r.exam}</td>
+                            <td><strong>${r.total}</strong></td>
+                            <td><strong>${r.grade}</strong></td>
+                        `;
+                        body.appendChild(row);
+                    });
+
+                    document.getElementById('resTotalScore').innerText = `${totalObtained} / ${totalPossible}`;
+                    const perc = totalPossible > 0 ? ((totalObtained / totalPossible) * 100).toFixed(2) : 0;
+                    document.getElementById('resPercentage').innerText = perc;
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                console.error('Error fetching result:', err);
+                alert('Could not retrieve results. Check server connection.');
+            }
+        });
+
+        async function resetPin(studentId) {
+            if (!confirm(`Reset PIN usage count for ${studentId}?`)) return;
+            try {
+                const res = await fetch('/api/admin/reset-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+                const data = await res.json();
+                alert(data.message);
+                fetchAdminStudentList();
+            } catch (err) {
+                alert('Failed to reset PIN.');
+            }
+        }
+
+        async function deleteStudent(studentId) {
+            if (!confirm(`Are you sure you want to permanently delete record for ${studentId}?`)) return;
+            try {
+                const res = await fetch('/api/admin/delete-student', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+                const data = await res.json();
+                alert(data.message);
+                fetchAdminStudentList();
+            } catch (err) {
+                alert('Failed to delete student.');
+            }
+        }
+
+        function logoutAdmin() {
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('adminAuthForm').classList.remove('hidden');
+            document.getElementById('adminPass').value = '';
+        }
+
+        function resetStudentForm() {
+            document.getElementById('studentLoginForm').classList.remove('hidden');
+            document.getElementById('result-card').classList.add('hidden');
+        }
+
+        function downloadResultPDF() {
+            window.print();
+        }
+
+        function downloadResultAsImage() {
+            const element = document.getElementById('result-card');
+            html2canvas(element).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Dynolinks_Student_Result.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function filterAdminTable() {
+            const val = document.getElementById('adminSearchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#adminStudentList tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(val) ? '' : 'none';
+            });
+        }
+
+        function exportAdminResultsCSV() {
+            window.location.href = '/api/admin/export-results';
+        }
+    </script>
 </body>
 </html>

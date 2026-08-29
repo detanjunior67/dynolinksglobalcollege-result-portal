@@ -4,7 +4,23 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 
 const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Enable basic CORS headers to handle client requests from different ports/origins
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// Serve static frontend files from 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Single Transporter configuration (Port 587 STARTTLS for Render compatibility)
@@ -53,7 +69,7 @@ const StudentSchema = new mongoose.Schema({
         total: Number,
         grade: String
     }]
-});
+}, { timestamps: true });
 
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -71,7 +87,7 @@ const EnquirySchema = new mongoose.Schema({
 
 const Enquiry = mongoose.model('Enquiry', EnquirySchema);
 
-// Admin Save Endpoint
+// Admin Save/Update Result Endpoint
 app.post('/api/admin/add-full-result', async (req, res) => {
     try {
         const { studentId, fullName, studentClass, session, term, pin, subjects } = req.body;
@@ -80,39 +96,49 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide all required student details and scores.' });
         }
 
-        const formattedResults = subjects.map(sub => {
-            const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
-            let grade = 'F';
-            if (total >= 70) grade = 'A';
-            else if (total >= 60) grade = 'B';
-            else if (total >= 50) grade = 'C';
-            else if (total >= 45) grade = 'D';
-            else if (total >= 40) grade = 'E';
+        // Filter out empty subject rows and construct results
+        const formattedResults = subjects
+            .filter(sub => sub.subjectName && sub.subjectName.trim() !== '')
+            .map(sub => {
+                const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
+                let grade = 'F';
+                if (total >= 70) grade = 'A';
+                else if (total >= 60) grade = 'B';
+                else if (total >= 50) grade = 'C';
+                else if (total >= 45) grade = 'D';
+                else if (total >= 40) grade = 'E';
 
-            return {
-                subject: sub.subjectName,
-                ca: Number(sub.caScore) || 0,
-                exam: Number(sub.examScore) || 0,
-                total: total,
-                grade: grade
-            };
-        });
+                return {
+                    subject: sub.subjectName.trim(),
+                    ca: Number(sub.caScore) || 0,
+                    exam: Number(sub.examScore) || 0,
+                    total: total,
+                    grade: grade
+                };
+            });
 
-        await Student.deleteOne({ student_id: String(studentId).trim() });
+        if (formattedResults.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please include at least one subject with a valid name.' });
+        }
 
-        const newStudent = new Student({
-            student_id: String(studentId).trim(),
-            full_name: fullName,
-            student_class: studentClass,
-            session: session,
-            term: term,
-            pin_code: String(pin).trim(),
-            usage_count: 0,
-            max_usage: 3,
-            results: formattedResults
-        });
+        const cleanId = String(studentId).trim();
+        const cleanPin = String(pin).trim();
 
-        await newStudent.save();
+        // Upsert logic: Update if student ID exists, otherwise create a new entry
+        await Student.findOneAndUpdate(
+            { student_id: new RegExp(`^${cleanId}$`, 'i') },
+            {
+                student_id: cleanId,
+                full_name: fullName.trim(),
+                student_class: studentClass,
+                session: session,
+                term: term,
+                pin_code: cleanPin,
+                results: formattedResults
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+
         res.json({ success: true, message: 'Result and PIN saved successfully!' });
     } catch (err) {
         console.error('Save student error detailed:', err);
@@ -123,7 +149,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
 // Admin List Endpoint
 app.get('/api/admin/student-status', async (req, res) => {
     try {
-        const students = await Student.find({}, 'student_id full_name student_class pin_code usage_count max_usage');
+        const students = await Student.find({}, 'student_id full_name student_class pin_code usage_count max_usage').sort({ createdAt: -1 });
         res.json({ success: true, students });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Error fetching student list.' });
@@ -180,6 +206,10 @@ app.get('/api/admin/export-results', async (req, res) => {
 app.post('/api/check-result', async (req, res) => {
     try {
         const { studentId, pin, session, term } = req.body;
+
+        if (!studentId || !pin || !session || !term) {
+            return res.status(400).json({ success: false, message: 'Please provide all search credentials.' });
+        }
 
         const student = await Student.findOne({
             student_id: new RegExp(`^${studentId.trim()}$`, 'i'),
@@ -241,10 +271,9 @@ app.post('/api/enquiries', async (req, res) => {
         });
         await newEnquiry.save();
 
-        // Immediate response to frontend
         res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
 
-        // Background email send
+        // Background email processing
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         const mailOptions = {
             from: `"Dynolinks Portal" <${recipientEmail}>`,
@@ -288,6 +317,11 @@ app.get('/api/admin/enquiries', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, message: 'Failed to fetch enquiries.' });
     }
+});
+
+// Fallback route for single-page client loading
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start Server
