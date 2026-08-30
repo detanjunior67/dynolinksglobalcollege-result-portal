@@ -124,6 +124,36 @@ body {
     flex: 1;
 }
 
+/* EMAIL NOTIFICATION & STATUS UTILITIES */
+.email-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    background-color: #e3f2fd;
+    color: var(--primary-sky);
+    font-weight: 600;
+}
+
+.alert-toast {
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.alert-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
 .btn {
     display: inline-block;
     padding: 10px 20px;
@@ -239,7 +269,6 @@ body {
         flex-direction: column;
     }
 
-    /* Keep table structured and enable clean scrolling on small screens */
     .result-table {
         display: table;
         min-width: 500px;

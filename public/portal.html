@@ -426,7 +426,6 @@
             padding: 20px;
         }
 
-        /* Admin Table Styling Fixes */
         .admin-summary-box .result-table {
             background: transparent !important;
             width: 100%;
@@ -452,7 +451,6 @@
             vertical-align: middle;
         }
 
-        /* Align Action Buttons Side-by-Side */
         .admin-summary-box .result-table td.actions-cell {
             display: flex;
             gap: 8px;
@@ -677,7 +675,7 @@
                             <h4 style="margin: 0; color: var(--text-light);">Uploaded Results & PIN Tracker</h4>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Name or ID..." style="height: 38px; font-size: 0.85rem; width: 180px;">
-                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">📥 Export CSV</button>
+                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">📊 Export CSV</button>
                             </div>
                         </div>
                         <div style="overflow-x: auto;">
@@ -837,7 +835,7 @@
                 row.className = 'subject-row';
                 row.innerHTML = `
                     <span class="row-num">${i + 1}.</span>
-                    <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}">
+                    <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}" oninput="recalculateTotals()">
                     <input type="number" placeholder="CA (40)" class="subj-ca" min="0" max="40" oninput="recalculateTotals()">
                     <input type="number" placeholder="Exam (60)" class="subj-exam" min="0" max="60" oninput="recalculateTotals()">
                     <button type="button" class="btn-remove-row" onclick="clearRow(this)">&times;</button>
