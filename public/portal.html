@@ -395,10 +395,20 @@
             color: #0B192C;
         }
 
+        /* TABLE RESPONSIVE WRAPPER */
+        .table-responsive {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+            display: block;
+        }
+
         .result-table {
             width: 100%;
+            min-width: 520px;
             border-collapse: collapse;
-            margin-top: 15px;
             font-size: 0.9rem;
         }
 
@@ -406,6 +416,7 @@
             border: 1px solid #E2E8F0;
             padding: 10px 14px;
             text-align: left;
+            white-space: nowrap;
         }
 
         .result-table th {
@@ -429,6 +440,7 @@
         .admin-summary-box .result-table {
             background: transparent !important;
             width: 100%;
+            min-width: 550px;
         }
 
         .admin-summary-box .result-table tbody tr {
@@ -550,6 +562,27 @@
             .btn-remove-row {
                 height: 38px;
             }
+
+            .result-table th, .result-table td {
+                padding: 8px 10px;
+                font-size: 0.825rem;
+            }
+        }
+
+        /* PRINT & PDF GENERATION SETTINGS */
+        @media print {
+            .table-responsive {
+                overflow-x: visible !important;
+            }
+            .result-table {
+                min-width: 100% !important;
+                width: 100% !important;
+            }
+            .result-table th, 
+            .result-table td {
+                white-space: normal !important;
+                font-size: 10px !important;
+            }
         }
     </style>
 </head>
@@ -574,8 +607,8 @@
     <main class="main-container">
         
         <div class="tab-navigation">
-            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')">🎓 Student Portal</button>
-            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')">🔑 Staff / Admin Portal</button>
+            <button class="tab-btn active" id="studentTabBtn" onclick="switchTab('student')"> Student Portal</button>
+            <button class="tab-btn" id="staffTabBtn" onclick="switchTab('staff')"> Staff / Admin Portal</button>
         </div>
 
         <div class="card-body">
@@ -632,22 +665,24 @@
                         <p><strong>PIN Status:</strong> <span id="resRemaining" style="color: #0288D1; font-weight: 700;">--</span></p>
                     </div>
 
-                    <table class="result-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>CA (40)</th>
-                                <th>Exam (60)</th>
-                                <th>Total (100)</th>
-                                <th>Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultBody"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>CA (40)</th>
+                                    <th>Exam (60)</th>
+                                    <th>Total (100)</th>
+                                    <th>Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultBody"></tbody>
+                        </table>
+                    </div>
 
                     <div class="action-buttons" style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button class="btn btn-success" onclick="downloadResultAsImage()">📷 Save as Image (PNG)</button>
-                        <button class="btn btn-primary" onclick="downloadResultPDF()" style="width: auto;">📄 Download PDF Document</button>
+                        <button class="btn btn-success" onclick="downloadResultAsImage()"> Save as Image (PNG)</button>
+                        <button class="btn btn-primary" onclick="downloadResultPDF()" style="width: auto;"> Download PDF Document</button>
                         <button class="btn btn-secondary" onclick="resetStudentForm()">Back to Search</button>
                     </div>
                 </div>
@@ -675,10 +710,10 @@
                             <h4 style="margin: 0; color: var(--text-light);">Uploaded Results & PIN Tracker</h4>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Search Name or ID..." style="height: 38px; font-size: 0.85rem; width: 180px;">
-                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()">📊 Export CSV</button>
+                                <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()"> Export CSV</button>
                             </div>
                         </div>
-                        <div style="overflow-x: auto;">
+                        <div class="table-responsive">
                             <table class="result-table">
                                 <thead>
                                     <tr>
@@ -940,7 +975,7 @@
             }
         });
 
-        // Save Student Result (Prevents Reload)
+        // Save Student Result
         document.getElementById('addResultForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
