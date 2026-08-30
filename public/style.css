@@ -212,6 +212,7 @@ body {
 
 .result-table {
     width: 100%;
+    table-layout: auto;
     border-collapse: collapse;
 }
 
@@ -220,6 +221,7 @@ body {
     border: 1px solid #e0e0e0;
     text-align: left;
     font-size: 13px;
+    white-space: nowrap;
 }
 
 .result-table th {
@@ -271,13 +273,14 @@ body {
 
     .result-table {
         display: table;
-        min-width: 500px;
-        white-space: normal;
+        width: 100%;
+        min-width: 100%;
     }
 
     .result-table th, .result-table td {
-        padding: 8px 6px;
+        padding: 8px 10px;
         font-size: 12px;
+        white-space: nowrap;
     }
 
     .action-buttons {
@@ -288,5 +291,14 @@ body {
 
     .action-buttons .btn {
         width: 100%;
+    }
+}
+
+/* PRINT / PDF STYLING */
+@media print {
+    .result-table th, 
+    .result-table td {
+        white-space: normal !important;
+        font-size: 10px !important;
     }
 }
