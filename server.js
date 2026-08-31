@@ -88,6 +88,39 @@ const EnquirySchema = new mongoose.Schema({
 
 const Enquiry = mongoose.model('Enquiry', EnquirySchema);
 
+// Helper function to build flexible query for student lookup
+const buildStudentQuery = (studentId) => {
+    const cleanId = decodeURIComponent(String(studentId)).trim();
+    // Escape regular expression special characters to avoid invalid regex crashes
+    const escapedId = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    const queryConditions = [
+        { student_id: cleanId },
+        { student_id: new RegExp(`^${escapedId}$`, 'i') }
+    ];
+    if (mongoose.Types.ObjectId.isValid(cleanId)) {
+        queryConditions.push({ _id: cleanId });
+    }
+    return { $or: queryConditions };
+};
+
+// GET Single Student Record for Editing
+app.get('/api/admin/student/:studentId', async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const student = await Student.findOne(buildStudentQuery(studentId));
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: `Student record not found for ID: ${decodeURIComponent(studentId)}` });
+        }
+
+        res.json({ success: true, student });
+    } catch (err) {
+        console.error('Fetch student error:', err);
+        res.status(500).json({ success: false, message: 'Error retrieving student record for editing.' });
+    }
+});
+
 // Admin Save/Update Result Endpoint with Gmail Notification
 app.post('/api/admin/add-full-result', async (req, res) => {
     try {
@@ -126,7 +159,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
         const studentEmail = email ? email.trim() : '';
 
         const updatedStudent = await Student.findOneAndUpdate(
-            { student_id: new RegExp(`^${cleanId}$`, 'i') },
+            buildStudentQuery(cleanId),
             {
                 student_id: cleanId,
                 full_name: fullName.trim(),
@@ -140,7 +173,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             { upsert: true, new: true, runValidators: true }
         );
 
-        res.json({ success: true, message: 'Result and PIN saved successfully!' });
+        res.json({ success: true, message: 'Result and PIN saved successfully!', student: updatedStudent });
 
         if (studentEmail) {
             const senderEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
@@ -178,10 +211,70 @@ app.post('/api/admin/add-full-result', async (req, res) => {
     }
 });
 
+// Admin Dedicated PUT Update Endpoint (With Upsert Fallback)
+app.put('/api/admin/update-student', async (req, res) => {
+    try {
+        const { studentId, fullName, email, studentClass, session, term, pin, subjects } = req.body;
+
+        if (!studentId) {
+            return res.status(400).json({ success: false, message: 'Student ID is required for update.' });
+        }
+
+        const cleanId = String(studentId).trim();
+        const updateData = { student_id: cleanId };
+
+        if (fullName) updateData.full_name = fullName.trim();
+        if (email !== undefined) updateData.email = email.trim();
+        if (studentClass) updateData.student_class = studentClass;
+        if (session) updateData.session = session;
+        if (term) updateData.term = term;
+        if (pin) updateData.pin_code = String(pin).trim();
+
+        if (subjects && Array.isArray(subjects)) {
+            updateData.results = subjects
+                .filter(sub => sub.subjectName && sub.subjectName.trim() !== '')
+                .map(sub => {
+                    const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
+                    let grade = 'F';
+                    if (total >= 70) grade = 'A';
+                    else if (total >= 60) grade = 'B';
+                    else if (total >= 50) grade = 'C';
+                    else if (total >= 45) grade = 'D';
+                    else if (total >= 40) grade = 'E';
+
+                    return {
+                        subject: sub.subjectName.trim(),
+                        ca: Number(sub.caScore) || 0,
+                        exam: Number(sub.examScore) || 0,
+                        total: total,
+                        grade: grade
+                    };
+                });
+        }
+
+        // Search and update, or upsert (create new record) if it doesn't exist
+        const updatedStudent = await Student.findOneAndUpdate(
+            buildStudentQuery(cleanId),
+            { $set: updateData },
+            { upsert: true, new: true, runValidators: true }
+        );
+
+        res.json({ 
+            success: true, 
+            message: 'Student record saved/updated successfully!', 
+            student: updatedStudent 
+        });
+
+    } catch (err) {
+        console.error('Update student error:', err);
+        res.status(500).json({ success: false, message: 'Failed to update student record.' });
+    }
+});
+
 // Admin List Endpoint
 app.get('/api/admin/student-status', async (req, res) => {
     try {
-        const students = await Student.find({}, 'student_id full_name email student_class pin_code usage_count max_usage').sort({ createdAt: -1 });
+        const students = await Student.find({}, 'student_id full_name email student_class pin_code usage_count max_usage results session term').sort({ createdAt: -1 });
         res.json({ success: true, students });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Error fetching student list.' });
@@ -192,7 +285,8 @@ app.get('/api/admin/student-status', async (req, res) => {
 app.post('/api/admin/reset-pin', async (req, res) => {
     try {
         const { studentId } = req.body;
-        await Student.findOneAndUpdate({ student_id: studentId }, { usage_count: 0 });
+        if (!studentId) return res.status(400).json({ success: false, message: 'Student ID required.' });
+        await Student.findOneAndUpdate(buildStudentQuery(studentId), { usage_count: 0 });
         res.json({ success: true, message: `PIN check count reset to 0 for ${studentId}.` });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Could not reset PIN.' });
@@ -203,7 +297,8 @@ app.post('/api/admin/reset-pin', async (req, res) => {
 app.delete('/api/admin/delete-student', async (req, res) => {
     try {
         const { studentId } = req.body;
-        await Student.deleteOne({ student_id: studentId });
+        if (!studentId) return res.status(400).json({ success: false, message: 'Student ID required.' });
+        await Student.deleteOne(buildStudentQuery(studentId));
         res.json({ success: true, message: `Student ${studentId} deleted successfully.` });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Failed to delete student.' });
@@ -269,7 +364,7 @@ app.post('/api/check-result', async (req, res) => {
                 email: student.email,
                 class: student.student_class,
                 session: student.session,
-                term: student.term
+                term: term
             },
             remainingChecks: student.max_usage - student.usage_count,
             results: student.results.map(r => ({

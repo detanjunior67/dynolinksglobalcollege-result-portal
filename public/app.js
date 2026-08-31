@@ -33,6 +33,9 @@ const SSS_DEPARTMENTS = {
     Commercial: ["Financial Accounting", "Commerce", "Literature in English"]
 };
 
+// State variable to track edit mode
+let isEditingMode = false;
+
 // Dynamic Subject Fields Generator
 function generateSubjectFields(presetSubjects = []) {
     const container = document.getElementById('subjectsContainer');
@@ -125,9 +128,13 @@ function recalculatePercentage() {
     const maxScore = validSubjectCount * 100;
     const percentage = maxScore > 0 ? ((totalScore / maxScore) * 100).toFixed(2) : '0.00';
 
-    document.getElementById('calcTotalScore').textContent = totalScore;
-    document.getElementById('calcMaxScore').textContent = maxScore;
-    document.getElementById('calcPercentage').textContent = percentage;
+    const calcTotalScore = document.getElementById('calcTotalScore');
+    const calcMaxScore = document.getElementById('calcMaxScore');
+    const calcPercentage = document.getElementById('calcPercentage');
+
+    if (calcTotalScore) calcTotalScore.textContent = totalScore;
+    if (calcMaxScore) calcMaxScore.textContent = maxScore;
+    if (calcPercentage) calcPercentage.textContent = percentage;
 }
 
 // Tab Switcher
@@ -180,11 +187,12 @@ async function loadStudentStatuses() {
             tbody.innerHTML = '';
 
             if (data.students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #777;">No student results uploaded yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #777;">No student results uploaded yet.</td></tr>`;
                 return;
             }
 
             data.students.forEach(student => {
+                const safeStudentId = encodeURIComponent(student.student_id);
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${student.student_id}</strong></td>
@@ -193,8 +201,9 @@ async function loadStudentStatuses() {
                         <td><code>${student.pin_code || 'N/A'}</code></td>
                         <td>${student.usage_count} / ${student.max_usage}</td>
                         <td>
-                            <button type="button" class="btn btn-sm btn-primary" onclick="resetPin('${student.student_id}')">Reset PIN</button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteStudent('${student.student_id}')">Delete</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="editStudent('${safeStudentId}')">Edit Scores</button>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="resetPin('${safeStudentId}')">Reset PIN</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteStudent('${safeStudentId}')">Delete</button>
                         </td>
                     </tr>
                 `;
@@ -205,8 +214,93 @@ async function loadStudentStatuses() {
     }
 }
 
+// Edit Student Record Handler
+async function editStudent(encodedStudentId) {
+    const studentId = decodeURIComponent(encodedStudentId);
+    try {
+        const res = await fetch(`/api/admin/student/${encodeURIComponent(studentId)}`);
+        const data = await res.json();
+
+        if (data.success && data.student) {
+            const student = data.student;
+            isEditingMode = true;
+
+            // Populate main fields
+            document.getElementById('admStudentId').value = student.student_id;
+            document.getElementById('admFullName').value = student.full_name;
+            if (document.getElementById('admEmail')) {
+                document.getElementById('admEmail').value = student.email || '';
+            }
+            if (document.getElementById('admSession')) {
+                document.getElementById('admSession').value = student.session || '';
+            }
+            if (document.getElementById('admTerm')) {
+                document.getElementById('admTerm').value = student.term || '';
+            }
+            document.getElementById('generatedPin').value = student.pin_code || '';
+
+            // Set Class & Department options
+            const classSelect = document.getElementById('admClassSelect');
+            const rawClass = student.student_class || '';
+
+            let baseClass = rawClass;
+            let dept = '';
+
+            if (rawClass.includes('(') && rawClass.includes(')')) {
+                const parts = rawClass.split('(');
+                baseClass = parts[0].trim();
+                dept = parts[1].replace(')', '').trim();
+            }
+
+            if (['JSS1', 'JSS2', 'JSS3', 'SSS1', 'SSS2', 'SSS3'].includes(baseClass)) {
+                classSelect.value = baseClass;
+                handleClassChange();
+                if (dept) {
+                    const deptSelect = document.getElementById('admDepartmentSelect');
+                    if (deptSelect) {
+                        deptSelect.value = dept;
+                        handleDepartmentChange();
+                    }
+                }
+            } else {
+                classSelect.value = 'Custom';
+                handleClassChange();
+                const customInput = document.getElementById('admCustomClass');
+                if (customInput) customInput.value = baseClass;
+            }
+
+            // Populate subject scores
+            const subjectRows = document.querySelectorAll('.subject-row');
+            if (student.results && student.results.length > 0) {
+                student.results.forEach((resItem, index) => {
+                    if (subjectRows[index]) {
+                        subjectRows[index].querySelector('.sub-name').value = resItem.subject || '';
+                        subjectRows[index].querySelector('.sub-ca').value = resItem.ca !== undefined ? resItem.ca : '';
+                        subjectRows[index].querySelector('.sub-exam').value = resItem.exam !== undefined ? resItem.exam : '';
+                    }
+                });
+            }
+
+            recalculatePercentage();
+
+            // Change button label and scroll up to the editor form
+            const submitBtn = document.querySelector('#addResultForm button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Update Student Result';
+
+            document.getElementById('addResultForm').scrollIntoView({ behavior: 'smooth' });
+
+        } else {
+            alert(data.message || 'Could not fetch student record for editing.');
+        }
+    } catch (err) {
+        console.error('Error fetching student details:', err);
+        alert('Could not fetch student record for editing.');
+    }
+}
+
 // Admin Actions: Reset PIN and Delete Record
-async function resetPin(studentId) {
+async function resetPin(encodedStudentId) {
+    const studentId = decodeURIComponent(encodedStudentId);
     if (!confirm(`Reset PIN checks for ${studentId}?`)) return;
     try {
         const res = await fetch('/api/admin/reset-pin', {
@@ -222,7 +316,8 @@ async function resetPin(studentId) {
     }
 }
 
-async function deleteStudent(studentId) {
+async function deleteStudent(encodedStudentId) {
+    const studentId = decodeURIComponent(encodedStudentId);
     if (!confirm(`Delete all records for ${studentId}? This action cannot be undone.`)) return;
     try {
         const res = await fetch('/api/admin/delete-student', {
@@ -355,16 +450,17 @@ function generateStudentPin() {
     document.getElementById('generatedPin').value = Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Submit Result Form
+// Submit Result Form (Handles Save and Edit updates)
 document.getElementById('addResultForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const studentId = document.getElementById('admStudentId').value.trim();
     const fullName = document.getElementById('admFullName').value.trim();
-    
+    const email = document.getElementById('admEmail') ? document.getElementById('admEmail').value.trim() : '';
+
     const selectClass = document.getElementById('admClassSelect').value;
     const customClass = document.getElementById('admCustomClass').value.trim();
     const deptSelect = document.getElementById('admDepartmentSelect').value;
-    
+
     let studentClass = selectClass === 'Custom' ? customClass : selectClass;
     if (['SSS1', 'SSS2', 'SSS3'].includes(selectClass) && deptSelect) {
         studentClass += ` (${deptSelect})`;
@@ -400,19 +496,29 @@ document.getElementById('addResultForm').addEventListener('submit', async functi
         return;
     }
 
+    const payload = { studentId, fullName, email, studentClass, session, term, pin, subjects };
+    const targetEndpoint = isEditingMode ? '/api/admin/update-student' : '/api/admin/add-full-result';
+    const httpMethod = isEditingMode ? 'PUT' : 'POST';
+
     try {
-        const res = await fetch('/api/admin/add-full-result', {
-            method: 'POST',
+        const res = await fetch(targetEndpoint, {
+            method: httpMethod,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, fullName, studentClass, session, term, pin, subjects })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         alert(data.message);
+
         if (data.success) {
+            isEditingMode = false;
             document.getElementById('addResultForm').reset();
             document.getElementById('generatedPin').value = '';
             document.getElementById('admCustomClass').classList.add('hidden');
             document.getElementById('departmentGroup').classList.add('hidden');
+
+            const submitBtn = document.querySelector('#addResultForm button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Save Student Result';
+
             generateSubjectFields();
             recalculatePercentage();
             loadStudentStatuses();
