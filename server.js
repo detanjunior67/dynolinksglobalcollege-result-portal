@@ -30,8 +30,8 @@ const emailPass = (process.env.EMAIL_PASS || 'rckcxosjytwobqmv').replace(/\s+/g,
 
 const transporter = nodemailer.createTransport({
     host: smtpHost,
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
         user: emailUser,
         pass: emailPass
