@@ -26,15 +26,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Google OAuth2 & Gmail HTTP API Configuration
 const OAuth2 = google.auth.OAuth2;
 const oauth2Client = new OAuth2(
-    process.env.GMAIL_CLIENT_ID || '925402893739-c9vf97nlcelrp6608n8bp08g8mu8p07j.apps.googleusercontent.com',
-    process.env.GMAIL_CLIENT_SECRET || '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',
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
     'https://developers.google.com/oauthplayground'
 );
 
 oauth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN || '1//04FC9GqABQYA-CgYIARAAGAQSNwF-L9IrIAwF7vxPrZettna4ucCzGa6EQrevDw0dcU41UTcM2w6K5B1ISXMbzeCDIkbkxCUD-6Y'
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN
 });
 
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
 // Helper function to send email using Gmail REST API (Bypasses SMTP completely)
