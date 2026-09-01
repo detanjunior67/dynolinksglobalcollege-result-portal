@@ -36,7 +36,6 @@ oauth2Client.setCredentials({
 });
 
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
 // Helper function to send email using Gmail REST API (Bypasses SMTP completely)
 async function sendEmail({ to, subject, html, replyTo }) {
