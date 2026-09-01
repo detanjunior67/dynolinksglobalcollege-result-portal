@@ -24,34 +24,38 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Nodemailer Gmail Transporter Configuration
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+const emailUser = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
+const emailPass = (process.env.EMAIL_PASS || 'rckcxosjytwobqmv').replace(/\s+/g, '');
+
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // false for port 587
+    host: smtpHost,
+    port: 465,
+    secure: true,
     auth: {
-        user: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-        pass: process.env.EMAIL_PASS || 'rckcxosjytwobqmv'
+        user: emailUser,
+        pass: emailPass
     },
     tls: {
         rejectUnauthorized: false
     }
 });
 
-// Verify connection configuration on startup
+// Safe verification (prevents process exit on error)
 transporter.verify((error, success) => {
     if (error) {
-        console.error('SMTP Connection Error:', error);
+        console.error('SMTP Verification Failed:', error.message);
     } else {
-        console.log('Nodemailer SMTP Transporter ready to send emails via Gmail.');
+        console.log('Nodemailer SMTP Transporter ready to send emails.');
     }
 });
 
-// MongoDB Connection
+// MongoDB Connection (Safe handling)
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
-    .catch(err => console.error('MongoDB Connection Error Detailed:', err));
-
+    .catch(err => console.error('MongoDB Connection Error Detailed:', err.message));
+    
 // Student Schema
 const StudentSchema = new mongoose.Schema({
     student_id: { type: String, required: true, unique: true },
