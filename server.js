@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 const app = express();
 
@@ -23,34 +23,57 @@ app.use((req, res, next) => {
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Nodemailer Gmail Transporter Configuration
-const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-const emailUser = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
-const emailPass = (process.env.EMAIL_PASS || 'rckcxosjytwobqmv').replace(/\s+/g, '');
+// Google OAuth2 & Gmail HTTP API Configuration
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+    process.env.GMAIL_CLIENT_ID || '925402893739-c9vf97nlcelrp6608n8bp08g8mu8p07j.apps.googleusercontent.com',
+    process.env.GMAIL_CLIENT_SECRET || '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',
+    'https://developers.google.com/oauthplayground'
+);
 
-const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: 587,
-    secure: false,
-    auth: {
-        user: emailUser,
-        pass: emailPass
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
+oauth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN || '1//04FC9GqABQYA-CgYIARAAGAQSNwF-L9IrIAwF7vxPrZettna4ucCzGa6EQrevDw0dcU41UTcM2w6K5B1ISXMbzeCDIkbkxCUD-6Y'
 });
 
-// Safe verification (prevents process exit on error)
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('SMTP Verification Failed:', error.message);
-    } else {
-        console.log('Nodemailer SMTP Transporter ready to send emails via Gmail.');
-    }
-});
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-// MongoDB Connection (Safe handling)
+// Helper function to send email using Gmail REST API (Bypasses SMTP completely)
+async function sendEmail({ to, subject, html, replyTo }) {
+    try {
+        const senderEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
+        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+        
+        const messageParts = [
+            `From: Dynolinks Portal <${senderEmail}>`,
+            `To: ${to}`,
+            ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
+            'Content-Type: text/html; charset=utf-8',
+            'MIME-Version: 1.0',
+            `Subject: ${utf8Subject}`,
+            '',
+            html
+        ];
+        
+        const message = messageParts.join('\n');
+        const encodedMessage = Buffer.from(message)
+            .toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        const res = await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: { raw: encodedMessage }
+        });
+
+        console.log(`Gmail API Email sent successfully. Message ID: ${res.data.id}`);
+        return res.data;
+    } catch (err) {
+        console.error('Gmail API Email Error:', err.message);
+    }
+}
+
+// MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
@@ -178,10 +201,9 @@ app.post('/api/admin/add-full-result', async (req, res) => {
 
         res.json({ success: true, message: 'Result and PIN saved successfully!', student: updatedStudent });
 
+        // Non-blocking HTTP email dispatch
         if (studentEmail) {
-            const senderEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
-            const mailOptions = {
-                from: `"Dynolinks Academic Portal" <${senderEmail}>`,
+            sendEmail({
                 to: studentEmail,
                 subject: `Academic Result Published - ${session} (${term})`,
                 html: `
@@ -199,12 +221,6 @@ app.post('/api/admin/add-full-result', async (req, res) => {
                         <p>Use your Student ID and Access PIN to view your full result card on the portal.</p>
                     </div>
                 `
-            };
-
-            transporter.sendMail(mailOptions).then(() => {
-                console.log(`Result notification email sent to ${studentEmail}`);
-            }).catch(mailErr => {
-                console.error('Email Notification Error:', mailErr);
             });
         }
 
@@ -403,10 +419,9 @@ app.post('/api/enquiries', async (req, res) => {
 
         res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
 
-        // Background email processing
+        // Non-blocking HTTP email dispatch
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
-        const mailOptions = {
-            from: `"Dynolinks Portal" <${recipientEmail}>`,
+        sendEmail({
             to: recipientEmail,
             replyTo: email,
             subject: `New Enquiry: ${category} from ${fullName}`,
@@ -425,12 +440,6 @@ app.post('/api/enquiries', async (req, res) => {
                     <blockquote style="background:#f4f4f4; padding:12px; border-left:4px solid #D4AF37; border-radius: 4px;">${message}</blockquote>
                 </div>
             `
-        };
-
-        transporter.sendMail(mailOptions).then(() => {
-            console.log('Enquiry background email notification sent successfully.');
-        }).catch(mailErr => {
-            console.error('Email Notification Error on Render:', mailErr);
         });
 
     } catch (err) {
