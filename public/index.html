@@ -10,32 +10,31 @@
     
     <style>
         :root {
-            /* Rich Vibrant Dark Base */
-            --bg-dark: #070D1E;          /* Deepest Navy */
-            --bg-body: #0E172A;          /* Slate Dark Background */
-            --card-dark: #1E293B;        /* High-contrast Card Surface */
+            /* Vibrant Dark Base */
+            --bg-dark: #070D1E;
+            --bg-body: #0E172A;
+            --card-dark: #1E293B;
             --card-glass: rgba(30, 41, 59, 0.7);
 
             /* Multi-Color Palette */
-            --crest-blue-light: #38BDF8; /* Cyan/Light Blue */
-            --crest-blue-mid: #0284C7;   /* Medium Blue */
-            --crest-blue-dark: #1E3A8A;  /* Deep Crest Blue */
-            --crest-red-bright: #E11D48; /* Vibrant Red Banner Accent */
-            --crest-red-dark: #9F1239;   /* Deep Crimson */
-            --crest-gold: #F59E0B;       /* Warm Gold Accent */
+            --crest-blue-light: #38BDF8;
+            --crest-blue-mid: #0284C7;
+            --crest-blue-dark: #1E3A8A;
+            --crest-red-bright: #E11D48;
+            --crest-red-dark: #9F1239;
+            --crest-gold: #F59E0B;
 
             /* Vibrant Gradients */
             --grad-primary: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
             --grad-red: linear-gradient(135deg, #9F1239 0%, #E11D48 100%);
             --grad-gold: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
-            --grad-card-border: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(225, 29, 72, 0.3));
 
             /* Text Colors */
-            --text-light: #F8FAFC;       /* Off-White Primary Text */
-            --text-muted: #94A3B8;       /* Slate Grey Secondary Text */
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
             --border-dark: rgba(255, 255, 255, 0.1);
 
-            /* Colorful Glows & Shadows */
+            /* Shadow Effects */
             --shadow-glow-blue: 0 8px 25px -4px rgba(56, 189, 248, 0.4);
             --shadow-glow-red: 0 8px 25px -4px rgba(225, 29, 72, 0.4);
             --shadow-glow-gold: 0 8px 25px -4px rgba(245, 158, 11, 0.4);
@@ -65,7 +64,12 @@
             position: relative;
         }
 
-        /* Ambient Multi-Color Gradient Blobs */
+        /* Prevent background scroll when modal is active */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* Ambient Blobs */
         .ambient-blob {
             position: absolute;
             width: 650px;
@@ -129,7 +133,7 @@
             box-shadow: var(--shadow-glow-gold);
         }
 
-        /* Glass Header Navigation */
+        /* Glass Navigation Bar */
         header {
             background: rgba(14, 23, 42, 0.85);
             backdrop-filter: blur(20px);
@@ -250,7 +254,7 @@
             box-shadow: 0 10px 25px rgba(56, 189, 248, 0.5);
         }
 
-        /* Vibrant Hero Section */
+        /* Hero Section */
         .hero {
             position: relative;
             background: linear-gradient(135deg, #070D1E 0%, #0E172A 50%, #1E3A8A 100%);
@@ -670,6 +674,7 @@
             margin-bottom: 16px;
         }
 
+        /* Fixed Overlay Scroll Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -682,7 +687,7 @@
             z-index: 2000;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 20px 16px;
             animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             box-sizing: border-box;
         }
@@ -1645,6 +1650,7 @@
         }
 
         function openEnquiryModal(proposedClass = '', proposedTrack = '') {
+            document.body.classList.add('modal-open');
             document.getElementById('enquiryModal').style.display = 'flex';
             if (proposedClass) {
                 const classSelect = document.getElementById('classAdmitted');
@@ -1658,6 +1664,7 @@
         }
 
         function closeEnquiryModal() {
+            document.body.classList.remove('modal-open');
             document.getElementById('enquiryModal').style.display = 'none';
         }
 
@@ -1717,10 +1724,12 @@
         });
 
         function openAdminModal() {
+            document.body.classList.add('modal-open');
             document.getElementById('adminModal').style.display = 'flex';
         }
 
         function closeAdminModal() {
+            document.body.classList.remove('modal-open');
             document.getElementById('adminModal').style.display = 'none';
         }
 
@@ -1799,10 +1808,12 @@
                 trackContainer.style.display = 'none';
             }
 
+            document.body.classList.add('modal-open');
             document.getElementById('adminViewFormModal').style.display = 'flex';
         }
 
         function closeAdminViewFormModal() {
+            document.body.classList.remove('modal-open');
             document.getElementById('adminViewFormModal').style.display = 'none';
         }
     </script>
