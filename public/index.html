@@ -12,11 +12,11 @@
         :root {
             /* Rich Vibrant Dark Base */
             --bg-dark: #070D1E;          /* Deepest Navy */
-            --bg-body: #0E172A;          /* Slate Dark Background (No White BG) */
+            --bg-body: #0E172A;          /* Slate Dark Background */
             --card-dark: #1E293B;        /* High-contrast Card Surface */
             --card-glass: rgba(30, 41, 59, 0.7);
 
-            /* Multi-Color Palette (Extracted from Crest) */
+            /* Multi-Color Palette */
             --crest-blue-light: #38BDF8; /* Cyan/Light Blue */
             --crest-blue-mid: #0284C7;   /* Medium Blue */
             --crest-blue-dark: #1E3A8A;  /* Deep Crest Blue */
@@ -108,41 +108,6 @@
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-12px); }
-        }
-
-        /* Top Bar Gradient */
-        .top-bar {
-            background: linear-gradient(90deg, #070D1E 0%, #1E293B 50%, #070D1E 100%);
-            color: rgba(255, 255, 255, 0.9);
-            padding: 12px 6%;
-            font-size: 0.85rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid;
-            border-image: var(--grad-red) 1;
-            position: relative;
-            z-index: 1002;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .top-bar span {
-            background: var(--grad-gold);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
-
-        .top-bar a {
-            color: var(--crest-blue-light);
-            text-decoration: none;
-            transition: color 0.2s;
-            font-weight: 600;
-        }
-
-        .top-bar a:hover {
-            color: var(--crest-gold);
         }
 
         .admin-link {
@@ -396,7 +361,6 @@
             box-shadow: 0 12px 30px rgba(225, 29, 72, 0.5);
         }
 
-        /* Section Layouts & Typography */
         section {
             max-width: 1140px;
             margin: clamp(50px, 8vw, 110px) auto;
@@ -427,7 +391,6 @@
             letter-spacing: -0.5px;
         }
 
-        /* About Cards (Dark Surface Cards) */
         .about-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -488,7 +451,6 @@
             font-weight: 500;
         }
 
-        /* Academic Programs Grid */
         .programs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -576,7 +538,6 @@
             font-weight: 800;
         }
 
-        /* ADMISSION FORM STYLING (Dark High-Contrast Theme) */
         .admission-paper {
             background: var(--card-dark);
             border-radius: var(--radius-lg);
@@ -584,6 +545,7 @@
             box-shadow: var(--shadow-float);
             position: relative;
             border: 1px solid var(--border-dark);
+            width: 100%;
         }
 
         .admission-paper-header {
@@ -663,7 +625,6 @@
             font-size: 0.9rem;
         }
 
-        /* SSS Track Box Selector */
         .sss-track-box {
             display: none;
             grid-column: span 2;
@@ -696,7 +657,6 @@
             color: var(--text-light);
         }
 
-        /* Office Section */
         .office-use-section {
             margin-top: 32px;
             padding-top: 24px;
@@ -710,7 +670,6 @@
             margin-bottom: 16px;
         }
 
-        /* Modern Modals */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -725,6 +684,7 @@
             justify-content: center;
             padding: 16px;
             animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
         }
 
         @keyframes fadeIn {
@@ -743,6 +703,7 @@
             position: relative;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
             border: 1px solid var(--border-dark);
+            box-sizing: border-box;
         }
 
         .close-modal {
@@ -783,11 +744,12 @@
             padding: 12px 16px;
             border: 1px solid var(--border-dark);
             border-radius: 10px;
-            font-size: 1rem; /* Prevent iOS zoom */
+            font-size: 1rem;
             background-color: var(--bg-body);
             color: var(--text-light);
             transition: all 0.25s ease;
             font-weight: 500;
+            box-sizing: border-box;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -822,7 +784,6 @@
             box-shadow: 0 12px 25px rgba(56, 189, 248, 0.5);
         }
 
-        /* Admin Table Styling */
         .admin-summary-box {
             background: var(--bg-dark) !important;
             border-radius: var(--radius-md);
@@ -830,6 +791,8 @@
             overflow: hidden;
             border: 1px solid var(--border-dark);
             position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .table-responsive {
@@ -843,7 +806,6 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9rem;
-            min-width: 600px;
         }
 
         .enquiry-table th, .enquiry-table td {
@@ -985,15 +947,7 @@
             font-weight: 600;
         }
 
-        /* Mobile Responsive Media Queries */
         @media (max-width: 768px) {
-            .top-bar {
-                flex-direction: column;
-                text-align: center;
-                gap: 6px;
-                padding: 10px 16px;
-            }
-
             .logo-text {
                 font-size: 1.1rem;
             }
@@ -1064,8 +1018,14 @@
             }
 
             .modal-card {
-                padding: 24px 16px 20px;
+                padding: 24px 12px 20px;
                 max-height: 94vh;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .enquiry-table {
+                min-width: 500px;
             }
 
             .close-modal {
@@ -1087,16 +1047,9 @@
     <div class="ambient-blob blob-2"></div>
     <div class="ambient-blob blob-3"></div>
 
-    <div class="top-bar">
-        <div>Admissions Open for <span>Academic Session</span></div>
-        <div>
-            Call: <a href="tel:+2348030634519">+234 803 063 4519</a> | <a href="tel:+2349167673507">+234 916 767 3507</a>
-        </div>
-    </div>
-
     <header>
         <div class="logo-container">
-            <img class="logo-img" src="C:\Users\TOSHIBA\Videos\XenderDownload\phone\image\2026-09\IMG-20260901-WA0213.jpg" alt="Dynolinks Global College Crest">
+            <img class="logo-img" src="logo.jpg" alt="Dynolinks Global College Crest">
             <div class="logo-text-group">
                 <div class="logo-text">Dynolinks Global College</div>
                 <div class="logo-motto">Go forth and reign</div>
@@ -1684,7 +1637,7 @@
 
         function checkSssClass(selectedClass) {
             const trackBox = document.getElementById('sssTrackBox');
-            if (selectedClass.startsWith('SS')) {
+            if (selectedClass && selectedClass.startsWith('SS')) {
                 trackBox.style.display = 'block';
             } else {
                 trackBox.style.display = 'none';

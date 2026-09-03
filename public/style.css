@@ -382,7 +382,6 @@ input::placeholder {
     color: #0B192C;
 }
 
-/* TABLE RESPONSIVE WRAPPER */
 .table-responsive {
     width: 100%;
     max-width: 100%;
@@ -394,7 +393,7 @@ input::placeholder {
 
 .result-table {
     width: 100%;
-    min-width: 520px; /* Ensures columns stay properly formatted on small screens */
+    min-width: 520px;
     border-collapse: collapse;
     font-size: 0.9rem;
 }
@@ -556,7 +555,6 @@ input::placeholder {
     }
 }
 
-/* PRINT & PDF GENERATION SETTINGS */
 @media print {
     .table-responsive {
         overflow-x: visible !important;
