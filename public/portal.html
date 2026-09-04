@@ -12,13 +12,12 @@
 
     <style>
         :root {
-            /* Vibrant Color Palette */
             --navy-dark: #090A16;
             --navy-primary: #12132C;
             --navy-surface: #1C1E3D;
             --navy-card: rgba(28, 30, 61, 0.85);
-            --gold-accent: #00F0FF; /* Cyan Glow */
-            --gold-hover: #7000FF;  /* Electric Purple */
+            --gold-accent: #00F0FF;
+            --gold-hover: #7000FF;
             --gold-glow: rgba(0, 240, 255, 0.4);
             --text-light: #FFFFFF;
             --text-muted: #A0A5C3;
@@ -256,6 +255,7 @@
         input[type="text"],
         input[type="password"],
         input[type="number"],
+        input[type="file"],
         select {
             width: 100%;
             height: 48px;
@@ -267,6 +267,10 @@
             font-size: 0.95rem;
             outline: none;
             transition: all 0.25s ease;
+        }
+
+        input[type="file"] {
+            padding-top: 10px;
         }
 
         select option {
@@ -356,6 +360,8 @@
             border-radius: var(--radius-md);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .school-header img.result-logo {
@@ -528,6 +534,18 @@
             color: #FFFFFF;
         }
 
+        .bulk-student-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -560,6 +578,10 @@
                 padding: 10px;
                 border-radius: var(--radius-sm);
                 margin-bottom: 12px;
+            }
+
+            .bulk-student-row {
+                grid-template-columns: 1fr;
             }
 
             .btn-remove-row {
@@ -733,8 +755,94 @@
                         </div>
                     </div>
 
-                    <!-- SEARCH & EDIT EXISTING RESULT SECTION -->
-                    <div class="admin-form" style="border-color: var(--border-gold-glass);">
+                    <!-- TOGGLE BUTTONS FOR HIDDEN SECTIONS -->
+                    <div style="display: flex; gap: 12px; margin-top: 25px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnToggleBulk" onclick="toggleBulkUploadSection()">
+                            📂 Bulk Upload
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnToggleEdit" onclick="toggleEditResultSection()">
+                            🔍 Edit Result
+                        </button>
+                    </div>
+
+                    <!-- BULK RESULT UPLOAD & FILE GENERATOR (HIDDEN BY DEFAULT) -->
+                    <div id="bulkUploadSection" class="admin-form hidden" style="border-color: var(--gold-accent);">
+                        <h4 style="color: var(--gold-accent);">📁 Interactive Bulk Setup & Excel/CSV Generator</h4>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Set up class subjects, student count, auto-generate PINs, and download a pre-filled Excel/CSV template.</p>
+                        
+                        <!-- Dynamic Setup Form -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bulkClassSelect">Class Level</label>
+                                <select id="bulkClassSelect" onchange="handleBulkClassChange()">
+                                    <option value="" disabled selected>Select Class Level</option>
+                                    <option value="JSS1">JSS1 (17 Subjects)</option>
+                                    <option value="JSS2">JSS2 (17 Subjects)</option>
+                                    <option value="JSS3">JSS3 (17 Subjects)</option>
+                                    <option value="SSS1">SSS1</option>
+                                    <option value="SSS2">SSS2</option>
+                                    <option value="SSS3">SSS3</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group hidden" id="bulkDeptGroup">
+                                <label for="bulkDeptSelect">Department</label>
+                                <select id="bulkDeptSelect" onchange="updateBulkSubjectInfo()">
+                                    <option value="" disabled selected>Select Department</option>
+                                    <option value="Science">Science (10 Subjects)</option>
+                                    <option value="Arts">Arts (10 Subjects)</option>
+                                    <option value="Commercial">Commercial (10 Subjects)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bulkSession">Session</label>
+                                <select id="bulkSession">
+                                    <option value="2025/2026" selected>2025/2026</option>
+                                    <option value="2026/2027">2026/2027</option>
+                                    <option value="2027/2028">2027/2028</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bulkTerm">Term</label>
+                                <select id="bulkTerm">
+                                    <option value="1st Term" selected>1st Term</option>
+                                    <option value="2nd Term">2nd Term</option>
+                                    <option value="3rd Term">3rd Term</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bulkStudentCount">Number of Students</label>
+                            <input type="number" id="bulkStudentCount" min="1" max="100" placeholder="e.g. 20" oninput="generateStudentInputRows()">
+                        </div>
+
+                        <div id="bulkSubjectNotice" style="margin-bottom: 15px; color: var(--gold-accent); font-size: 0.85rem; font-weight: 600;"></div>
+
+                        <!-- Dynamic Inputs Area for Admission Numbers and Full Names -->
+                        <div id="bulkStudentRowsContainer" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="downloadInteractiveBulkCSV()">Generate & Download Bulk File (CSV/Excel)</button>
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px dashed var(--border-glass); margin: 20px 0;">
+
+                        <!-- File Upload Control -->
+                        <h5 style="color: var(--text-light); margin-bottom: 10px;">Upload Filled Bulk File to Portal</h5>
+                        <div class="form-row" style="align-items: flex-end;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="bulkCsvFile">Select Ready CSV/Excel File</label>
+                                <input type="file" id="bulkCsvFile" accept=".csv">
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm" style="height: 48px;" onclick="uploadBulkCSV()">Upload Bulk Results</button>
+                        </div>
+                    </div>
+
+                    <!-- EDIT EXISTING RESULT SECTION (HIDDEN BY DEFAULT) -->
+                    <div id="editResultSection" class="admin-form hidden" style="border-color: var(--border-gold-glass);">
                         <h4 style="color: var(--gold-accent);">🔍 Edit Existing Student Result</h4>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Enter a student ID along with the session and term to retrieve their saved details and update their subject scores.</p>
                         
@@ -763,9 +871,9 @@
                         </div>
                     </div>
 
-                    <!-- UPLOAD / UPDATE RESULT FORM -->
+                    <!-- SINGLE UPLOAD / UPDATE RESULT FORM -->
                     <form id="addResultForm" class="admin-form">
-                        <h4 id="formHeadingTitle">Upload / Update Student Result</h4>
+                        <h4 id="formHeadingTitle">Upload / Update Single Student Result</h4>
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -866,8 +974,7 @@
             ],
             ARTS: [
                 "Maths", "English", "Literature in English", "Biology", "Economics",
-                "Religious Studies", "Agric", "Government", "Discovery", "Civic",
-                "Marketing"
+                "Religious Studies", "Agric", "Government", "Discovery", "Civic"
             ],
             COMMERCIAL: [
                 "Maths", "English", "Commerce", "Accounting", "Agric",
@@ -876,6 +983,16 @@
         };
 
         let isEditingMode = false;
+
+        function toggleBulkUploadSection() {
+            const section = document.getElementById('bulkUploadSection');
+            section.classList.toggle('hidden');
+        }
+
+        function toggleEditResultSection() {
+            const section = document.getElementById('editResultSection');
+            section.classList.toggle('hidden');
+        }
 
         function switchTab(tab) {
             const studentTabBtn = document.getElementById('studentTabBtn');
@@ -894,6 +1011,115 @@
                 staffSection.classList.add('active-section');
                 studentSection.classList.remove('active-section');
             }
+        }
+
+        // Interactive Bulk Setup Helper Logic
+        function handleBulkClassChange() {
+            const classVal = document.getElementById('bulkClassSelect').value;
+            const deptGroup = document.getElementById('bulkDeptGroup');
+
+            if (classVal.startsWith('SSS')) {
+                deptGroup.classList.remove('hidden');
+            } else {
+                deptGroup.classList.add('hidden');
+                document.getElementById('bulkDeptSelect').value = '';
+            }
+            updateBulkSubjectInfo();
+        }
+
+        function updateBulkSubjectInfo() {
+            const classVal = document.getElementById('bulkClassSelect').value;
+            const deptVal = document.getElementById('bulkDeptSelect').value;
+            const notice = document.getElementById('bulkSubjectNotice');
+
+            if (classVal.startsWith('JSS')) {
+                notice.innerText = `✔️ Selected Class Level (${classVal}): Standard 17 Junior Secondary subjects loaded automatically.`;
+            } else if (classVal.startsWith('SSS') && deptVal) {
+                notice.innerText = `✔️ Selected Class Level (${classVal} - ${deptVal}): Standard 10 Senior Secondary subjects loaded automatically.`;
+            } else if (classVal.startsWith('SSS')) {
+                notice.innerText = `⚠️ Please select a Department (Science, Arts, or Commercial) to attach the 10 subjects.`;
+            } else {
+                notice.innerText = '';
+            }
+        }
+
+        function generateStudentInputRows() {
+            const count = parseInt(document.getElementById('bulkStudentCount').value) || 0;
+            const container = document.getElementById('bulkStudentRowsContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                const row = document.createElement('div');
+                row.className = 'bulk-student-row';
+                row.innerHTML = `
+                    <span style="font-weight:700; color:var(--text-muted); text-align:center;">${i}.</span>
+                    <input type="text" class="bulk-adm-no" placeholder="Admission No. (e.g., DGC/2026/${String(i).padStart(3, '0')})" required>
+                    <input type="text" class="bulk-full-name" placeholder="Full Student Name ${i}" required>
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        function downloadInteractiveBulkCSV() {
+            const classVal = document.getElementById('bulkClassSelect').value;
+            const deptVal = document.getElementById('bulkDeptSelect').value;
+            const session = document.getElementById('bulkSession').value;
+            const term = document.getElementById('bulkTerm').value;
+            const admInputs = document.querySelectorAll('.bulk-adm-no');
+            const nameInputs = document.querySelectorAll('.bulk-full-name');
+
+            if (!classVal) {
+                alert('Please select a Class Level!');
+                return;
+            }
+            if (classVal.startsWith('SSS') && !deptVal) {
+                alert('Please select a Department for SSS Class!');
+                return;
+            }
+
+            if (admInputs.length === 0) {
+                alert('Please enter the Number of Students to generate entry boxes!');
+                return;
+            }
+
+            let subjects = [];
+            if (classVal.startsWith('JSS')) {
+                subjects = SUBJECT_LISTS.JSS;
+            } else if (deptVal === 'Science') {
+                subjects = SUBJECT_LISTS.SCIENCE;
+            } else if (deptVal === 'Arts') {
+                subjects = SUBJECT_LISTS.ARTS;
+            } else if (deptVal === 'Commercial') {
+                subjects = SUBJECT_LISTS.COMMERCIAL;
+            }
+
+            const fullClassName = classVal.startsWith('SSS') ? `${classVal} (${deptVal})` : classVal;
+            let csvRows = ["Student ID,Full Name,Class,Session,Term,PIN,Subject,CA Score,Exam Score"];
+
+            for (let i = 0; i < admInputs.length; i++) {
+                const admNo = admInputs[i].value.trim();
+                const fullName = nameInputs[i].value.trim();
+
+                if (!admNo || !fullName) {
+                    alert(`Please fill in both Admission Number and Full Name for Student #${i + 1}`);
+                    return;
+                }
+
+                const generatedPin = 'DGC-' + Math.floor(100000 + Math.random() * 900000);
+
+                subjects.forEach(subj => {
+                    csvRows.push(`"${admNo}","${fullName}","${fullClassName}","${session}","${term}","${generatedPin}","${subj}",0,0`);
+                });
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Bulk_Results_${fullClassName.replace(/[^a-zA-Z0-9]/g, '_')}_${session.replace('/', '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function build20Boxes(subjectData = []) {
@@ -1008,7 +1234,6 @@
             document.getElementById('generatedPin').value = pin;
         }
 
-        // FETCH EXISTING RESULT FOR EDITING
         async function loadResultForEdit(studentIdFromTable = null) {
             const studentId = studentIdFromTable || document.getElementById('editSearchId').value.trim();
             const session = document.getElementById('editSearchSession').value;
@@ -1021,6 +1246,12 @@
 
             try {
                 const response = await fetch(`/api/admin/student/${encodeURIComponent(studentId)}`);
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Server returned non-JSON response (${response.status} ${response.statusText}).`);
+                }
+
                 const data = await response.json();
 
                 if (data.success && data.student) {
@@ -1055,7 +1286,7 @@
                 }
             } catch (err) {
                 console.error('Error fetching student details:', err);
-                alert('Could not fetch student record for editing.');
+                alert(`Could not fetch student record: ${err.message}`);
             }
         }
 
@@ -1073,7 +1304,94 @@
             }
         });
 
-        // Save or Update Student Result
+        function parseCSV(text) {
+            const lines = text.split(/\r\n|\n/);
+            const records = {};
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+
+                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, '').trim());
+                
+                if (cols.length < 9) continue;
+
+                const [studentId, fullName, studentClass, session, term, pin, subject, ca, exam] = cols;
+                const key = `${studentId}_${session}_${term}`;
+
+                if (!records[key]) {
+                    records[key] = {
+                        studentId: studentId,
+                        fullName: fullName,
+                        studentClass: studentClass,
+                        session: session,
+                        term: term,
+                        pin: pin,
+                        subjects: []
+                    };
+                }
+
+                if (subject) {
+                    records[key].subjects.push({
+                        subjectName: subject,
+                        caScore: Number(ca) || 0,
+                        examScore: Number(exam) || 0
+                    });
+                }
+            }
+
+            return Object.values(records);
+        }
+
+        async function uploadBulkCSV() {
+            const fileInput = document.getElementById('bulkCsvFile');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select a CSV file first.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const text = e.target.result;
+                    const bulkData = parseCSV(text);
+
+                    if (bulkData.length === 0) {
+                        alert('No valid student records found in the uploaded file.');
+                        return;
+                    }
+
+                    const response = await fetch('/api/admin/bulk-upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ students: bulkData })
+                    });
+
+                    // Validate Content-Type before calling response.json()
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error(`Server returned HTTP ${response.status} (${response.statusText}). Route endpoint may be missing or failing.`);
+                    }
+
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        alert(data.message || 'Bulk upload processed successfully!');
+                        fileInput.value = '';
+                        fetchAdminStudentList();
+                    } else {
+                        alert(data.message || 'Failed to process bulk upload.');
+                    }
+                } catch (err) {
+                    console.error('Bulk upload error details:', err);
+                    alert(`Upload failed: ${err.message}`);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Save or Update Single Student Result
         document.getElementById('addResultForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -1140,20 +1458,25 @@
                     })
                 });
 
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Server returned HTTP ${response.status} (${response.statusText}).`);
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
                     alert(data.message);
                     fetchAdminStudentList();
                     isEditingMode = false;
-                    document.getElementById('formHeadingTitle').innerText = 'Upload / Update Student Result';
+                    document.getElementById('formHeadingTitle').innerText = 'Upload / Update Single Student Result';
                     document.getElementById('submitResultBtn').textContent = 'Save Complete Student Result';
                 } else {
                     alert('Error: ' + data.message);
                 }
             } catch (err) {
                 console.error('Submission error:', err);
-                alert('Failed to connect to the backend server.');
+                alert(`Failed to save record: ${err.message}`);
             }
         });
 
@@ -1161,6 +1484,11 @@
         async function fetchAdminStudentList() {
             try {
                 const res = await fetch('/api/admin/student-status');
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Server returned HTTP ${res.status}.`);
+                }
+
                 const data = await res.json();
                 if (data.success) {
                     const tbody = document.getElementById('adminStudentList');
@@ -1213,6 +1541,11 @@
                     body: JSON.stringify({ studentId, pin, session, term })
                 });
 
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Server returned HTTP ${response.status}.`);
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
@@ -1252,7 +1585,7 @@
                 }
             } catch (err) {
                 console.error('Error fetching result:', err);
-                alert('Could not retrieve results. Check server connection.');
+                alert(`Could not retrieve results: ${err.message}`);
             }
         });
 
@@ -1305,11 +1638,44 @@
 
         function downloadResultAsImage() {
             const element = document.getElementById('result-card');
-            html2canvas(element).then(canvas => {
+            const actionButtons = element.querySelector('.action-buttons');
+            
+            if (actionButtons) actionButtons.style.display = 'none';
+
+            const originalWidth = element.style.width;
+            const originalMaxHeight = element.style.maxHeight;
+            const originalOverflow = element.style.overflow;
+
+            element.style.width = '800px';
+            element.style.maxHeight = 'none';
+            element.style.overflow = 'visible';
+
+            html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                windowWidth: 1000,
+                width: element.scrollWidth,
+                height: element.scrollHeight
+            }).then(canvas => {
+                element.style.width = originalWidth;
+                element.style.maxHeight = originalMaxHeight;
+                element.style.overflow = originalOverflow;
+                if (actionButtons) actionButtons.style.display = 'flex';
+
                 const link = document.createElement('a');
-                link.download = 'Dynolinks_Student_Result.png';
-                link.href = canvas.toDataURL();
+                link.download = `Dynolinks_Result_${document.getElementById('resId').innerText.replace(/\//g, '_')}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
+            }).catch(err => {
+                element.style.width = originalWidth;
+                element.style.maxHeight = originalMaxHeight;
+                element.style.overflow = originalOverflow;
+                if (actionButtons) actionButtons.style.display = 'flex';
+                console.error('Image generation error:', err);
+                alert('Failed to save image. Please try again.');
             });
         }
 

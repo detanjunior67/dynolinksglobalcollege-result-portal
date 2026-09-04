@@ -5,9 +5,9 @@ const { google } = require('googleapis');
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware with increased payload size limits for large bulk uploads (50mb)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -72,6 +72,34 @@ async function sendEmail({ to, subject, html, replyTo }) {
         console.error('Gmail API Email Error:', err.message);
     }
 }
+
+// Helper function to format and grade subjects
+const processSubjectScores = (subjects) => {
+    if (!Array.isArray(subjects)) return [];
+    return subjects
+        .filter(sub => sub && ((sub.subjectName && sub.subjectName.trim() !== '') || (sub.subject && sub.subject.trim() !== '')))
+        .map(sub => {
+            const name = (sub.subjectName || sub.subject || '').trim();
+            const caVal = Number(sub.caScore !== undefined ? sub.caScore : sub.ca) || 0;
+            const examVal = Number(sub.examScore !== undefined ? sub.examScore : sub.exam) || 0;
+            const total = caVal + examVal;
+
+            let grade = 'F';
+            if (total >= 70) grade = 'A';
+            else if (total >= 60) grade = 'B';
+            else if (total >= 50) grade = 'C';
+            else if (total >= 45) grade = 'D';
+            else if (total >= 40) grade = 'E';
+
+            return {
+                subject: name,
+                ca: caVal,
+                exam: examVal,
+                total: total,
+                grade: grade
+            };
+        });
+};
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
@@ -156,25 +184,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide all required student details and scores.' });
         }
 
-        const formattedResults = subjects
-            .filter(sub => sub.subjectName && sub.subjectName.trim() !== '')
-            .map(sub => {
-                const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
-                let grade = 'F';
-                if (total >= 70) grade = 'A';
-                else if (total >= 60) grade = 'B';
-                else if (total >= 50) grade = 'C';
-                else if (total >= 45) grade = 'D';
-                else if (total >= 40) grade = 'E';
-
-                return {
-                    subject: sub.subjectName.trim(),
-                    ca: Number(sub.caScore) || 0,
-                    exam: Number(sub.examScore) || 0,
-                    total: total,
-                    grade: grade
-                };
-            });
+        const formattedResults = processSubjectScores(subjects);
 
         if (formattedResults.length === 0) {
             return res.status(400).json({ success: false, message: 'Please include at least one subject with a valid name.' });
@@ -230,6 +240,62 @@ app.post('/api/admin/add-full-result', async (req, res) => {
     }
 });
 
+// Robust Admin Bulk Upload Endpoint
+app.post('/api/admin/bulk-upload', async (req, res) => {
+    try {
+        const { students } = req.body;
+
+        if (!students || !Array.isArray(students) || students.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid student data received for bulk upload.' });
+        }
+
+        let processCount = 0;
+
+        for (const item of students) {
+            try {
+                const cleanId = item.studentId ? String(item.studentId).trim() : (item.student_id ? String(item.student_id).trim() : '');
+                const cleanPin = item.pin ? String(item.pin).trim() : (item.pin_code ? String(item.pin_code).trim() : '');
+                const fullName = item.fullName || item.full_name || '';
+
+                if (!cleanId || !fullName) continue;
+
+                const formattedResults = processSubjectScores(item.subjects || []);
+
+                await Student.findOneAndUpdate(
+                    buildStudentQuery(cleanId),
+                    {
+                        student_id: cleanId,
+                        full_name: String(fullName).trim(),
+                        student_class: String(item.studentClass || item.student_class || '').trim(),
+                        session: String(item.session || '').trim(),
+                        term: String(item.term || '').trim(),
+                        pin_code: cleanPin,
+                        results: formattedResults
+                    },
+                    { upsert: true, new: true, runValidators: true }
+                );
+
+                processCount++;
+            } catch (singleItemErr) {
+                console.error(`Failed to process student item during bulk upload:`, singleItemErr);
+            }
+        }
+
+        if (processCount === 0) {
+            return res.status(400).json({ success: false, message: 'Failed to upload any records. Ensure fields like Student ID and Full Name are populated.' });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Bulk upload completed successfully! Uploaded ${processCount} student record(s).`
+        });
+
+    } catch (err) {
+        console.error('Bulk upload server error:', err);
+        return res.status(500).json({ success: false, message: 'Server error processing bulk result upload.' });
+    }
+});
+
 // Admin Dedicated PUT Update Endpoint
 app.put('/api/admin/update-student', async (req, res) => {
     try {
@@ -250,25 +316,7 @@ app.put('/api/admin/update-student', async (req, res) => {
         if (pin) updateData.pin_code = String(pin).trim();
 
         if (subjects && Array.isArray(subjects)) {
-            updateData.results = subjects
-                .filter(sub => sub.subjectName && sub.subjectName.trim() !== '')
-                .map(sub => {
-                    const total = (Number(sub.caScore) || 0) + (Number(sub.examScore) || 0);
-                    let grade = 'F';
-                    if (total >= 70) grade = 'A';
-                    else if (total >= 60) grade = 'B';
-                    else if (total >= 50) grade = 'C';
-                    else if (total >= 45) grade = 'D';
-                    else if (total >= 40) grade = 'E';
-
-                    return {
-                        subject: sub.subjectName.trim(),
-                        ca: Number(sub.caScore) || 0,
-                        exam: Number(sub.examScore) || 0,
-                        total: total,
-                        grade: grade
-                    };
-                });
+            updateData.results = processSubjectScores(subjects);
         }
 
         const updatedStudent = await Student.findOneAndUpdate(
@@ -458,9 +506,9 @@ app.get('/api/admin/enquiries', async (req, res) => {
     }
 });
 
-// Fallback route
+// Fallback route for SPA / static routing
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'portal.html'));
 });
 
 // Start Server
