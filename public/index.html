@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            /* Vibrant Dark Base */
+            /* Vibrant Dark Base (Default) */
             --bg-dark: #070D1E;
             --bg-body: #0E172A;
             --card-dark: #1E293B;
@@ -33,6 +33,7 @@
             --text-light: #F8FAFC;
             --text-muted: #94A3B8;
             --border-dark: rgba(255, 255, 255, 0.1);
+            --header-bg: rgba(14, 23, 42, 0.85);
 
             /* Shadow Effects */
             --shadow-glow-blue: 0 8px 25px -4px rgba(56, 189, 248, 0.4);
@@ -44,12 +45,43 @@
             --radius-md: 10px;
         }
 
+        /* Light Mode Theme Overrides with Rich Gradients */
+        body.light-mode {
+            --bg-dark: #eef2f6;
+            --bg-body: #f8fafc;
+            --card-dark: #ffffff;
+            --card-glass: rgba(255, 255, 255, 0.85);
+
+            --crest-blue-light: #0284c7;
+            --crest-blue-mid: #0369a1;
+            --crest-blue-dark: #bae6fd;
+            --crest-red-bright: #e11d48;
+            --crest-red-dark: #9f1239;
+            --crest-gold: #d97706;
+
+            /* High-Energy Vibrant Gradients for Light Mode */
+            --grad-primary: linear-gradient(135deg, #4f46e5 0%, #06b6d4 50%, #3b82f6 100%);
+            --grad-red: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #8b5cf6 100%);
+            --grad-gold: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ef4444 100%);
+
+            --text-light: #0f172a;
+            --text-muted: #475569;
+            --border-dark: rgba(15, 23, 42, 0.12);
+            --header-bg: rgba(248, 250, 252, 0.85);
+
+            --shadow-glow-blue: 0 10px 25px -4px rgba(79, 70, 229, 0.25);
+            --shadow-glow-red: 0 10px 25px -4px rgba(244, 63, 94, 0.25);
+            --shadow-glow-gold: 0 10px 25px -4px rgba(245, 158, 11, 0.25);
+            --shadow-float: 0 15px 35px -5px rgba(15, 23, 42, 0.08);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             scroll-behavior: smooth;
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
         }
 
         h1, h2, h3, .logo-text, .hero-badge {
@@ -138,7 +170,7 @@
 
         /* Glass Navigation Bar */
         header {
-            background: rgba(14, 23, 42, 0.85);
+            background: var(--header-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: 14px 6%;
@@ -148,7 +180,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border-bottom: 1px solid var(--border-dark);
         }
 
@@ -188,6 +220,62 @@
             text-transform: uppercase;
         }
 
+        /* Theme Toggle Switch Styles */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 30px;
+            border: 1px solid var(--border-dark);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌙";
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 2px;
+            background: white;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        input:checked + .slider {
+            background: var(--grad-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(29px);
+            content: "☀️";
+        }
+
         .menu-toggle {
             display: none;
             flex-direction: column;
@@ -212,7 +300,7 @@
         nav {
             display: flex;
             align-items: center;
-            gap: 28px;
+            gap: 24px;
         }
 
         nav a {
@@ -260,7 +348,7 @@
         /* Hero Section */
         .hero {
             position: relative;
-            background: linear-gradient(135deg, #070D1E 0%, #0E172A 50%, #1E3A8A 100%);
+            background: var(--grad-primary);
             color: var(--text-light);
             text-align: center;
             padding: clamp(60px, 10vw, 120px) 24px;
@@ -283,10 +371,10 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(225, 29, 72, 0.15);
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(225, 29, 72, 0.4);
-            color: #FF708A;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #FFFFFF;
             padding: 8px 24px;
             border-radius: 50px;
             font-size: 0.85rem;
@@ -307,7 +395,7 @@
         }
 
         .hero h1 span {
-            background: var(--grad-primary);
+            background: linear-gradient(135deg, #ffffff 0%, #fde047 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -316,7 +404,7 @@
             font-size: clamp(0.95rem, 2.2vw, 1.25rem);
             max-width: 680px;
             margin: 0 auto 40px;
-            color: #CBD5E1;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
         }
 
@@ -343,16 +431,16 @@
         }
 
         .btn-primary {
-            background: var(--grad-primary);
-            color: #FFFFFF;
+            background: #ffffff;
+            color: #0f172a;
             font-weight: 800;
-            box-shadow: var(--shadow-glow-blue);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             border: none;
         }
 
         .btn-primary:hover {
             transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 12px 30px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         }
 
         .btn-secondary {
@@ -612,7 +700,7 @@
         }
 
         .note-box {
-            background: rgba(15, 23, 42, 0.6);
+            background: var(--bg-body);
             border-left: 4px solid var(--crest-blue-light);
             padding: 18px;
             border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -627,7 +715,7 @@
 
         .declaration-text {
             font-weight: 800;
-            color: #FF708A;
+            color: var(--crest-red-bright);
             margin-top: 14px;
             font-size: 0.9rem;
         }
@@ -685,7 +773,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(7, 13, 30, 0.88);
+            background: rgba(7, 13, 30, 0.75);
             backdrop-filter: blur(12px);
             z-index: 2000;
             align-items: center;
@@ -709,7 +797,7 @@
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-dark);
             box-sizing: border-box;
         }
@@ -763,7 +851,6 @@
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--crest-blue-light);
-            background-color: #121E36;
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
         }
 
@@ -793,7 +880,7 @@
         }
 
         .admin-summary-box {
-            background: var(--bg-dark) !important;
+            background: var(--bg-body) !important;
             border-radius: var(--radius-md);
             padding: 16px;
             overflow: hidden;
@@ -823,7 +910,7 @@
         }
 
         .enquiry-table th {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(120, 120, 120, 0.1);
             color: var(--crest-blue-light);
             font-weight: 800;
         }
@@ -897,7 +984,7 @@
         }
 
         footer {
-            background: var(--bg-dark);
+            background: var(--card-dark);
             color: var(--text-muted);
             padding: 50px 24px 35px;
             border-top: 2px solid;
@@ -993,7 +1080,7 @@
                 flex-direction: column;
                 padding: 24px;
                 gap: 18px;
-                box-shadow: 0 20px 30px rgba(0, 0, 0, 0.5);
+                box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
                 border-bottom: 2px solid;
                 border-image: var(--grad-primary) 1;
             }
@@ -1136,11 +1223,21 @@
             </div>
         </div>
         
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <!-- Light/Dark Theme Toggle Switch -->
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider"></div>
+                </label>
+            </div>
+
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
 
         <nav id="navMenu">
             <a href="#about" onclick="closeMobileMenu()">About</a>
@@ -1204,7 +1301,7 @@
                         <li>Introductory Business & ICT Skills</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('JSS 1')" class="btn-primary" style="width: 100%;">Enquire for JSS</button>
+                <button onclick="openEnquiryModal('JSS 1')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for JSS</button>
             </div>
 
             <div class="program-card">
@@ -1218,7 +1315,7 @@
                         <li>Technical & Applied Science Studies</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('SS 1', 'Science')" class="btn-primary" style="width: 100%;">Enquire for Science</button>
+                <button onclick="openEnquiryModal('SS 1', 'Science')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Science</button>
             </div>
 
             <div class="program-card">
@@ -1232,7 +1329,7 @@
                         <li>Public Speaking & Debating Club</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('SS 1', 'Art')" class="btn-primary" style="width: 100%;">Enquire for Arts/Comm</button>
+                <button onclick="openEnquiryModal('SS 1', 'Art')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Arts/Comm</button>
             </div>
         </div>
     </section>
@@ -1657,6 +1754,35 @@
 
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        /* Theme Toggle Logic with System Default and Smooth Transition */
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            if (currentTheme === 'light') {
+                document.body.classList.add('light-mode');
+                toggleSwitch.checked = true;
+            }
+        } else {
+            // Check System Default Preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.body.classList.add('light-mode');
+                toggleSwitch.checked = true;
+            }
+        }
+
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.body.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-mode');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        toggleSwitch.addEventListener('change', switchTheme);
 
         let enquiriesList = [
             {
