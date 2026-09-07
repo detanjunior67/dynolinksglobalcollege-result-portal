@@ -68,7 +68,6 @@
             position: relative;
         }
 
-        /* Prevent background scroll when modal is active */
         body.modal-open {
             overflow: hidden;
         }
@@ -1023,7 +1022,6 @@
                 gap: 12px;
             }
 
-            /* Responsive sizing for mobile phone screen length */
             .modal-overlay {
                 padding: 6px;
             }
@@ -1147,7 +1145,7 @@
         <nav id="navMenu">
             <a href="#about" onclick="closeMobileMenu()">About</a>
             <a href="#programs" onclick="closeMobileMenu()">Programs</a>
-            <a onclick="openEnquiryModal(); closeMobileMenu();">Enquiries</a>
+            <a href="#programs" onclick="closeMobileMenu()">Enquiries</a>
             <a href="/portal.html" class="btn-portal">Check Result</a>
             <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();">🔒 Admin Only</a>
         </nav>
@@ -1160,7 +1158,7 @@
             <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
             <div class="hero-btns">
                 <a href="/portal.html" class="btn-primary">Check Student Result</a>
-                <button class="btn-secondary" onclick="openEnquiryModal()">Make an Enquiry</button>
+                <a href="#programs" class="btn-secondary">Make an Enquiry</a>
             </div>
         </div>
     </div>
