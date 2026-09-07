@@ -228,7 +228,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
                             <p style="margin: 5px 0;"><strong>Access PIN:</strong> ${cleanPin}</p>
                             <p style="margin: 5px 0;"><strong>Class:</strong> ${studentClass}</p>
                         </div>
-                        <p>Use your Student ID and Access PIN to view your full result card on the portal.</p>
+                        <p>For enquiries, reach out to us via WhatsApp at <strong>+234 807 983 1549</strong>.</p>
                     </div>
                 `
             });

@@ -1126,6 +1126,9 @@
             const container = document.getElementById('subjectsContainer');
             container.innerHTML = '';
 
+            const selectedClass = document.getElementById('admClassSelect') ? document.getElementById('admClassSelect').value : '';
+            const isCustom = selectedClass === 'Custom';
+
             for (let i = 0; i < 20; i++) {
                 let subjectName = '';
                 let caVal = '';
@@ -1141,13 +1144,27 @@
 
                 const row = document.createElement('div');
                 row.className = 'subject-row';
-                row.innerHTML = `
-                    <span class="row-num">${i + 1}.</span>
-                    <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}" oninput="recalculateTotals()">
-                    <input type="number" placeholder="CA (40)" class="subj-ca" min="0" max="40" value="${caVal}" oninput="recalculateTotals()">
-                    <input type="number" placeholder="Exam (60)" class="subj-exam" min="0" max="60" value="${examVal}" oninput="recalculateTotals()">
-                    <button type="button" class="btn-remove-row" onclick="clearRow(this)">&times;</button>
-                `;
+
+                if (isCustom) {
+                    row.style.gridTemplateColumns = '30px 2fr 1fr 40px';
+                    row.innerHTML = `
+                        <span class="row-num">${i + 1}.</span>
+                        <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}" oninput="recalculateTotals()">
+                        <input type="hidden" class="subj-ca" value="0">
+                        <input type="number" placeholder="Exam (100)" class="subj-exam" min="0" max="100" value="${examVal}" oninput="recalculateTotals()">
+                        <button type="button" class="btn-remove-row" onclick="clearRow(this)">&times;</button>
+                    `;
+                } else {
+                    row.style.gridTemplateColumns = '30px 2fr 1fr 1fr 40px';
+                    row.innerHTML = `
+                        <span class="row-num">${i + 1}.</span>
+                        <input type="text" placeholder="Subject Name ${i + 1}" class="subj-name" value="${subjectName}" oninput="recalculateTotals()">
+                        <input type="number" placeholder="CA (40)" class="subj-ca" min="0" max="40" value="${caVal}" oninput="recalculateTotals()">
+                        <input type="number" placeholder="Exam (60)" class="subj-exam" min="0" max="60" value="${examVal}" oninput="recalculateTotals()">
+                        <button type="button" class="btn-remove-row" onclick="clearRow(this)">&times;</button>
+                    `;
+                }
+
                 container.appendChild(row);
             }
             recalculateTotals();
@@ -1156,13 +1173,16 @@
         function clearRow(btn) {
             const row = btn.parentElement;
             row.querySelector('.subj-name').value = '';
-            row.querySelector('.subj-ca').value = '';
+            const caInput = row.querySelector('.subj-ca');
+            if (caInput && caInput.type !== 'hidden') caInput.value = '';
             row.querySelector('.subj-exam').value = '';
             recalculateTotals();
         }
 
         function clearAllScores() {
-            document.querySelectorAll('.subj-ca').forEach(el => el.value = '');
+            document.querySelectorAll('.subj-ca').forEach(el => {
+                if (el.type !== 'hidden') el.value = '';
+            });
             document.querySelectorAll('.subj-exam').forEach(el => el.value = '');
             recalculateTotals();
         }
@@ -1181,12 +1201,14 @@
 
             if (classVal === 'Custom') {
                 customClass.classList.remove('hidden');
+                build20Boxes();
             } else {
                 customClass.classList.add('hidden');
-            }
-
-            if (classVal.startsWith('JSS')) {
-                build20Boxes(SUBJECT_LISTS.JSS);
+                if (classVal.startsWith('JSS')) {
+                    build20Boxes(SUBJECT_LISTS.JSS);
+                } else {
+                    build20Boxes();
+                }
             }
         }
 
@@ -1368,7 +1390,6 @@
                         body: JSON.stringify({ students: bulkData })
                     });
 
-                    // Validate Content-Type before calling response.json()
                     const contentType = response.headers.get("content-type");
                     if (!contentType || !contentType.includes("application/json")) {
                         throw new Error(`Server returned HTTP ${response.status} (${response.statusText}). Route endpoint may be missing or failing.`);

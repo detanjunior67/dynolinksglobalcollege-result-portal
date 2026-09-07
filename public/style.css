@@ -1,3 +1,6 @@
+/* ==========================================
+   Project Design Variables & Base Resets
+   ========================================== */
 :root {
     --navy-dark: #050C16;
     --navy-primary: #0B192C;
@@ -39,7 +42,7 @@ body {
     padding: 20px 15px 60px;
 }
 
-/* Ambient Orbs */
+/* Ambient Background Animation Orbs */
 .ambient-orb {
     position: fixed;
     border-radius: 50%;
@@ -146,7 +149,7 @@ body {
     font-weight: 500;
 }
 
-/* Main Portal Container */
+/* Main Container & Tab Panels */
 .main-container {
     width: 100%;
     max-width: 900px;
@@ -162,7 +165,6 @@ body {
     animation: fadeInUp 0.8s ease-out;
 }
 
-/* Tab Navigation */
 .tab-navigation {
     display: flex;
     background: rgba(5, 12, 22, 0.6);
@@ -226,7 +228,7 @@ body {
     border-radius: 4px;
 }
 
-/* Form Controls */
+/* Standard Inputs & Controls */
 .form-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -286,7 +288,146 @@ input::placeholder, textarea::placeholder {
     color: rgba(148, 163, 184, 0.5);
 }
 
-/* Buttons */
+/* ==========================================
+   Admission Form & Paper Styles
+   ========================================== */
+.admission-paper {
+    background: var(--navy-card);
+    border-radius: var(--radius-lg);
+    padding: clamp(18px, 4vw, 36px);
+    box-shadow: var(--shadow-glass);
+    position: relative;
+    border: 1px solid var(--border-glass);
+    width: 100%;
+}
+
+.admission-paper-header {
+    text-align: center;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+}
+
+.admission-paper-header h2 {
+    color: var(--text-light);
+    font-size: clamp(1.3rem, 3.5vw, 2.1rem);
+    font-weight: 800;
+}
+
+.admission-paper-header p {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+.admission-title-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+    color: var(--navy-dark);
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin-top: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px var(--gold-glow);
+}
+
+.admission-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-row-full {
+    grid-column: span 2;
+}
+
+.form-sub-header {
+    color: var(--gold-accent);
+    font-weight: 800;
+    text-align: left;
+    font-size: 0.95rem;
+    margin: 24px 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-gold-glass);
+    padding-bottom: 8px;
+}
+
+/* Admission Track & Note Components */
+.note-box {
+    background: rgba(5, 12, 22, 0.6);
+    border-left: 4px solid var(--gold-accent);
+    padding: 16px;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin: 20px 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.note-box strong {
+    color: var(--gold-accent);
+}
+
+.declaration-text {
+    font-weight: 700;
+    color: #F87171;
+    margin-top: 12px;
+    font-size: 0.875rem;
+}
+
+.sss-track-box {
+    display: none;
+    grid-column: span 2;
+    background: rgba(212, 175, 55, 0.08);
+    border: 1.5px dashed var(--gold-accent);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-top: 12px;
+}
+
+.sss-track-box h4 {
+    color: var(--gold-accent);
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    font-weight: 800;
+}
+
+.track-options {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.track-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-light);
+    text-transform: none;
+}
+
+.office-use-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px dashed var(--border-glass);
+}
+
+.office-use-title {
+    color: var(--gold-accent);
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+/* ==========================================
+   Buttons
+   ========================================== */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -397,6 +538,9 @@ input::placeholder, textarea::placeholder {
     color: #0B192C;
 }
 
+/* ==========================================
+   Table Components & Admin Tables
+   ========================================== */
 .table-responsive {
     width: 100%;
     max-width: 100%;
@@ -406,21 +550,24 @@ input::placeholder, textarea::placeholder {
     display: block;
 }
 
-.result-table {
+.result-table,
+.enquiry-table {
     width: 100%;
     min-width: 520px;
     border-collapse: collapse;
     font-size: 0.9rem;
 }
 
-.result-table th, .result-table td {
+.result-table th, .result-table td,
+.enquiry-table th, .enquiry-table td {
     border: 1px solid #E2E8F0;
     padding: 10px 14px;
     text-align: left;
     white-space: nowrap;
 }
 
-.result-table th {
+.result-table th,
+.enquiry-table th {
     background: #0B192C;
     color: #D4AF37;
     font-weight: 700;
@@ -430,36 +577,43 @@ input::placeholder, textarea::placeholder {
     background-color: #F8FAFC;
 }
 
-/* Admin Dashboard Tables */
+/* Admin Dashboard Overrides */
 .admin-summary-box {
     background: rgba(5, 12, 22, 0.5) !important;
     border: 1px solid var(--border-glass) !important;
     color: var(--text-light);
     border-radius: var(--radius-md);
     padding: 20px;
+    position: relative;
+    width: 100%;
 }
 
-.admin-summary-box .result-table {
+.admin-summary-box .result-table,
+.admin-summary-box .enquiry-table {
     background: transparent !important;
     width: 100%;
     min-width: 550px;
 }
 
-.admin-summary-box .result-table tbody tr {
+.admin-summary-box .result-table tbody tr,
+.admin-summary-box .enquiry-table tbody tr {
     background-color: rgba(11, 25, 44, 0.4) !important;
 }
 
-.admin-summary-box .result-table tbody tr:nth-child(even) {
+.admin-summary-box .result-table tbody tr:nth-child(even),
+.admin-summary-box .enquiry-table tbody tr:nth-child(even) {
     background-color: rgba(5, 12, 22, 0.6) !important;
 }
 
-.admin-summary-box .result-table th {
+.admin-summary-box .result-table th,
+.admin-summary-box .enquiry-table th {
     background: var(--navy-primary);
     color: var(--gold-accent);
     border-color: var(--border-glass);
 }
 
-.admin-summary-box .result-table td {
+.admin-summary-box .result-table td,
+.admin-summary-box .enquiry-table td {
     border-color: var(--border-glass) !important;
     color: var(--text-light) !important;
     vertical-align: middle;
@@ -473,6 +627,7 @@ input::placeholder, textarea::placeholder {
     white-space: nowrap;
 }
 
+/* Admin Specific Modules */
 .admin-form {
     background: rgba(5, 12, 22, 0.3);
     border: 1px solid var(--border-glass);
@@ -527,7 +682,9 @@ input::placeholder, textarea::placeholder {
     color: #FFFFFF;
 }
 
-/* Animations */
+/* ==========================================
+   Animations
+   ========================================== */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -543,7 +700,31 @@ input::placeholder, textarea::placeholder {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive Rules */
+/* ==========================================
+   Responsive & Print Rules
+   ========================================== */
+@media (max-width: 768px) {
+    .admission-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .form-row-full, 
+    .sss-track-box {
+        grid-column: span 1;
+    }
+
+    .track-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .admission-paper {
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
+}
+
 @media (max-width: 600px) {
     .main-container {
         padding: 20px 15px;
@@ -567,7 +748,8 @@ input::placeholder, textarea::placeholder {
         height: 38px;
     }
 
-    .result-table th, .result-table td {
+    .result-table th, .result-table td,
+    .enquiry-table th, .enquiry-table td {
         padding: 8px 10px;
         font-size: 0.825rem;
     }
@@ -582,7 +764,7 @@ input::placeholder, textarea::placeholder {
     .ambient-orb, .home-nav-bar, .hero-header, .tab-navigation, .btn {
         display: none !important;
     }
-    .main-container {
+    .main-container, .admission-paper {
         box-shadow: none !important;
         border: none !important;
         background: transparent !important;
@@ -591,12 +773,14 @@ input::placeholder, textarea::placeholder {
     .table-responsive {
         overflow-x: visible !important;
     }
-    .result-table {
+    .result-table, .enquiry-table {
         min-width: 100% !important;
         width: 100% !important;
     }
     .result-table th, 
-    .result-table td {
+    .result-table td,
+    .enquiry-table th,
+    .enquiry-table td {
         white-space: normal !important;
         font-size: 10px !important;
     }
