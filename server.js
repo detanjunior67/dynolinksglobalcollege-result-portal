@@ -101,6 +101,13 @@ const processSubjectScores = (subjects) => {
         });
 };
 
+// Helper function to safely escape CSV cell values
+const sanitizeCsvField = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+};
+
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
 mongoose.connect(MONGO_URI)
@@ -129,21 +136,43 @@ const StudentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', StudentSchema);
 
-// Enquiry Schema
+// Comprehensive Admission & Enquiry Schema
 const EnquirySchema = new mongoose.Schema({
     fullName: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
-    category: { type: String, required: true },
-    childClass: { type: String, default: 'N/A' },
-    childAge: { type: String, default: 'N/A' },
-    message: { type: String, required: true },
+    sex: { type: String, default: '' },
+    dob: { type: String, default: '' },
+    state: { type: String, default: '' },
+    town: { type: String, default: '' },
+    lga: { type: String, default: '' },
+    livesWith: { type: String, default: '' },
+    parents: { type: String, default: '' },
+    position: { type: String, default: '' },
+    language: { type: String, default: '' },
+    fatherOcc: { type: String, default: '' },
+    motherOcc: { type: String, default: '' },
+    address: { type: String, default: '' },
+    fatherPhone: { type: String, default: '' },
+    motherPhone: { type: String, default: '' },
+    siblingsNo: { type: String, default: '0' },
+    siblingsNames: { type: String, default: '' },
+    healthCondition: { type: String, default: '' },
+    immunized: { type: String, default: 'Yes' },
+    immunizedDisease: { type: String, default: '' },
+    restrictedActivities: { type: String, default: '' },
+    otherHealthInfo: { type: String, default: '' },
+    parentSign: { type: String, default: '' },
+    parentSignDate: { type: String, default: '' },
+    classAdmitted: { type: String, default: '' },
+    sssTrack: { type: String, default: '' },
+    email: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    category: { type: String, default: 'Admission Form' },
+    message: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 });
 
 const Enquiry = mongoose.model('Enquiry', EnquirySchema);
 
-// Helper function to build flexible query for student lookup
 const buildStudentQuery = (studentId) => {
     const cleanId = decodeURIComponent(String(studentId)).trim();
     const escapedId = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -158,7 +187,7 @@ const buildStudentQuery = (studentId) => {
     return { $or: queryConditions };
 };
 
-// GET Single Student Record for Editing
+// GET Single Student Record
 app.get('/api/admin/student/:studentId', async (req, res) => {
     try {
         const { studentId } = req.params;
@@ -175,7 +204,7 @@ app.get('/api/admin/student/:studentId', async (req, res) => {
     }
 });
 
-// Admin Save/Update Result Endpoint with Gmail Notification
+// Admin Save/Update Result Endpoint
 app.post('/api/admin/add-full-result', async (req, res) => {
     try {
         const { studentId, fullName, email, studentClass, session, term, pin, subjects } = req.body;
@@ -211,7 +240,6 @@ app.post('/api/admin/add-full-result', async (req, res) => {
 
         res.json({ success: true, message: 'Result and PIN saved successfully!', student: updatedStudent });
 
-        // Non-blocking HTTP email dispatch
         if (studentEmail) {
             sendEmail({
                 to: studentEmail,
@@ -240,7 +268,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
     }
 });
 
-// Robust Admin Bulk Upload Endpoint
+// Admin Bulk Upload Endpoint
 app.post('/api/admin/bulk-upload', async (req, res) => {
     try {
         const { students } = req.body;
@@ -296,7 +324,7 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
     }
 });
 
-// Admin Dedicated PUT Update Endpoint
+// Admin PUT Update Endpoint
 app.put('/api/admin/update-student', async (req, res) => {
     try {
         const { studentId, fullName, email, studentClass, session, term, pin, subjects } = req.body;
@@ -371,27 +399,105 @@ app.delete('/api/admin/delete-student', async (req, res) => {
     }
 });
 
-// Export CSV Endpoint
+// Export Results CSV Endpoint (Fixed UTF-8 Encoding & BOM for Excel)
 app.get('/api/admin/export-results', async (req, res) => {
     try {
         const students = await Student.find({});
-        let csv = 'Student ID,Full Name,Email,Class,Session,Term,PIN,Subject,CA Score,Exam Score,Total Score,Grade\n';
+        const headers = ['Student ID', 'Full Name', 'Email', 'Class', 'Session', 'Term', 'PIN', 'Subject', 'CA Score', 'Exam Score', 'Total Score', 'Grade'];
+        
+        let csv = '\uFEFF' + headers.map(sanitizeCsvField).join(',') + '\n';
 
         students.forEach(s => {
             if (s.results && s.results.length > 0) {
                 s.results.forEach(r => {
-                    csv += `"${s.student_id}","${s.full_name}","${s.email || ''}","${s.student_class}","${s.session}","${s.term}","${s.pin_code || ''}","${r.subject || ''}",${r.ca || 0},${r.exam || 0},${r.total || 0},"${r.grade || ''}"\n`;
+                    const row = [
+                        sanitizeCsvField(s.student_id),
+                        sanitizeCsvField(s.full_name),
+                        sanitizeCsvField(s.email),
+                        sanitizeCsvField(s.student_class),
+                        sanitizeCsvField(s.session),
+                        sanitizeCsvField(s.term),
+                        sanitizeCsvField(s.pin_code),
+                        sanitizeCsvField(r.subject),
+                        r.ca || 0,
+                        r.exam || 0,
+                        r.total || 0,
+                        sanitizeCsvField(r.grade)
+                    ];
+                    csv += row.join(',') + '\n';
                 });
             } else {
-                csv += `"${s.student_id}","${s.full_name}","${s.email || ''}","${s.student_class}","${s.session}","${s.term}","${s.pin_code || ''}","","","","",""\n`;
+                const row = [
+                    sanitizeCsvField(s.student_id),
+                    sanitizeCsvField(s.full_name),
+                    sanitizeCsvField(s.email),
+                    sanitizeCsvField(s.student_class),
+                    sanitizeCsvField(s.session),
+                    sanitizeCsvField(s.term),
+                    sanitizeCsvField(s.pin_code),
+                    '""', 0, 0, 0, '""'
+                ];
+                csv += row.join(',') + '\n';
             }
         });
 
-        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="Dynolinks_Results_Export.csv"');
         res.status(200).send(csv);
     } catch (err) {
+        console.error('Export results error:', err);
         res.status(500).send('Error generating CSV.');
+    }
+});
+
+// Export Admission Enquiries CSV Endpoint (Fixed UTF-8 Encoding & BOM for Excel)
+app.get('/api/admin/export-enquiries', async (req, res) => {
+    try {
+        const enquiries = await Enquiry.find({}).sort({ createdAt: -1 });
+
+        const headers = [
+            'Full Name', 'Sex', 'DOB', 'State', 'Town', 'LGA', 'Class Admitted',
+            'SSS Track', 'Email', 'Phone / Father Phone', 'Mother Phone', 'Parents / Guardian',
+            'Father Occupation', 'Mother Occupation', 'Address', 'Health Condition',
+            'Immunized', 'Category', 'Date Submitted'
+        ];
+
+        let csv = '\uFEFF' + headers.map(sanitizeCsvField).join(',') + '\n';
+
+        enquiries.forEach(e => {
+            const row = [
+                sanitizeCsvField(e.fullName),
+                sanitizeCsvField(e.sex),
+                sanitizeCsvField(e.dob),
+                sanitizeCsvField(e.state),
+                sanitizeCsvField(e.town),
+                sanitizeCsvField(e.lga),
+                sanitizeCsvField(e.classAdmitted),
+                sanitizeCsvField(e.sssTrack),
+                sanitizeCsvField(e.email),
+                sanitizeCsvField(e.fatherPhone || e.phone),
+                sanitizeCsvField(e.motherPhone),
+                sanitizeCsvField(e.parents),
+                sanitizeCsvField(e.fatherOcc),
+                sanitizeCsvField(e.motherOcc),
+                sanitizeCsvField(e.address),
+                sanitizeCsvField(e.healthCondition),
+                sanitizeCsvField(e.immunized),
+                sanitizeCsvField(e.category),
+                sanitizeCsvField(e.createdAt ? new Date(e.createdAt).toLocaleDateString() : '')
+            ];
+            csv += row.join(',') + '\n';
+        });
+
+        const currentDate = new Date().toISOString().split('T')[0];
+        const fileName = `Dynolinks_Admission_Enquiries_${currentDate}.csv`;
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.status(200).send(csv);
+    } catch (err) {
+        console.error('Export enquiries error:', err);
+        res.status(500).send('Error generating enquiries CSV.');
     }
 });
 
@@ -446,53 +552,80 @@ app.post('/api/check-result', async (req, res) => {
     }
 });
 
-// Non-Blocking Enquiry API Endpoint
+// Admission Form / Enquiry API Endpoint
 app.post('/api/enquiries', async (req, res) => {
     try {
-        const { fullName, email, phone, category, childClass, childAge, message } = req.body;
-        if (!fullName || !email || !phone || !category || !message) {
-            return res.status(400).json({ success: false, message: 'Please complete all required fields.' });
+        const {
+            fullName, sex, dob, state, town, lga, livesWith, parents, position, language,
+            fatherOcc, motherOcc, address, fatherPhone, motherPhone, siblingsNo, siblingsNames,
+            healthCondition, immunized, immunizedDisease, restrictedActivities, otherHealthInfo,
+            parentSign, parentSignDate, classAdmitted, sssTrack, email, phone, category, message
+        } = req.body;
+
+        if (!fullName) {
+            return res.status(400).json({ success: false, message: 'Full name is required.' });
         }
 
-        const newEnquiry = new Enquiry({ 
-            fullName, 
-            email, 
-            phone, 
-            category, 
-            childClass: childClass || 'N/A', 
-            childAge: childAge || 'N/A', 
-            message 
+        const newEnquiry = new Enquiry({
+            fullName: fullName.trim(),
+            sex: sex || '',
+            dob: dob || '',
+            state: state || '',
+            town: town || '',
+            lga: lga || '',
+            livesWith: livesWith || '',
+            parents: parents || '',
+            position: position || '',
+            language: language || '',
+            fatherOcc: fatherOcc || '',
+            motherOcc: motherOcc || '',
+            address: address || '',
+            fatherPhone: fatherPhone || phone || '',
+            motherPhone: motherPhone || '',
+            siblingsNo: siblingsNo || '0',
+            siblingsNames: siblingsNames || '',
+            healthCondition: healthCondition || '',
+            immunized: immunized || 'Yes',
+            immunizedDisease: immunizedDisease || '',
+            restrictedActivities: restrictedActivities || '',
+            otherHealthInfo: otherHealthInfo || '',
+            parentSign: parentSign || '',
+            parentSignDate: parentSignDate || '',
+            classAdmitted: classAdmitted || '',
+            sssTrack: sssTrack || '',
+            email: email || '',
+            phone: phone || fatherPhone || '',
+            category: category || 'Admission Form',
+            message: message || `Admission form submitted for ${classAdmitted}`
         });
+
         await newEnquiry.save();
 
-        res.json({ success: true, message: 'Your enquiry has been received successfully! Our team will contact you shortly.' });
+        res.json({ success: true, message: 'Admission Form Submitted Successfully!' });
 
-        // Non-blocking HTTP email dispatch
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         sendEmail({
             to: recipientEmail,
-            replyTo: email,
-            subject: `New Enquiry: ${category} from ${fullName}`,
+            replyTo: email || undefined,
+            subject: `New Admission Form: ${fullName} (${classAdmitted})`,
             html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #0F172A;">
-                    <h3 style="color: #0B192C; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">
-                        New School Enquiry Submitted
+                    <h3 style="color: #0284C7; border-bottom: 2px solid #E11D48; padding-bottom: 8px;">
+                        New Admission Form Submitted
                     </h3>
-                    <p><strong>Name:</strong> ${fullName}</p>
-                    <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-                    <p><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></p>
-                    <p><strong>Category:</strong> ${category}</p>
-                    <p><strong>Proposed Class:</strong> ${childClass || 'N/A'}</p>
-                    <p><strong>Child's Age:</strong> ${childAge || 'N/A'}</p>
-                    <p><strong>Message:</strong></p>
-                    <blockquote style="background:#f4f4f4; padding:12px; border-left:4px solid #D4AF37; border-radius: 4px;">${message}</blockquote>
+                    <p><strong>Student Name:</strong> ${fullName}</p>
+                    <p><strong>Class Admitted:</strong> ${classAdmitted} ${sssTrack ? `(${sssTrack})` : ''}</p>
+                    <p><strong>Parents / Guardian:</strong> ${parents}</p>
+                    <p><strong>Father Phone:</strong> ${fatherPhone}</p>
+                    <p><strong>Mother Phone:</strong> ${motherPhone}</p>
+                    <p><strong>Address:</strong> ${address}</p>
                 </div>
             `
         });
 
     } catch (err) {
         console.error('Enquiry Save Error:', err);
-        res.status(500).json({ success: false, message: 'Failed to record enquiry.' });
+        res.status(500).json({ success: false, message: 'Failed to record admission form.' });
     }
 });
 

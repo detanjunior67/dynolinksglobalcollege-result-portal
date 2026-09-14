@@ -7,8 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- Put this inside your <head> tags -->
-<link rel="icon" type="image/png" href="mini.png">
+    <link rel="icon" type="image/png" href="mini.png">
     <style>
         :root {
             /* Vibrant Dark Base (Default) */
@@ -46,7 +45,7 @@
             --radius-md: 10px;
         }
 
-        /* Light Mode Theme Overrides with Rich Gradients */
+        /* Light Mode Theme Overrides */
         body.light-mode {
             --bg-dark: #eef2f6;
             --bg-body: #f8fafc;
@@ -935,6 +934,12 @@
             box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.4);
         }
 
+        .alert-error {
+            background: var(--crest-red-bright);
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px -4px rgba(225, 29, 72, 0.4);
+        }
+
         .btn-view-form {
             background: var(--grad-red);
             color: #FFFFFF;
@@ -1336,13 +1341,13 @@
     </section>
 
     <!-- ENQUIRY / ADMISSION FORM MODAL -->
-    <div id="enquiryModal" class="modal-overlay">
+    <div id="enquiryModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="enquiryModalTitle">
         <div class="modal-card">
-            <span class="close-modal" onclick="closeEnquiryModal()">&times;</span>
+            <span class="close-modal" onclick="closeEnquiryModal()" aria-label="Close Modal">&times;</span>
             
             <div class="admission-paper">
                 <div class="admission-paper-header">
-                    <h2>DYNOLINKS GLOBAL COLLEGE</h2>
+                    <h2 id="enquiryModalTitle">DYNOLINKS GLOBAL COLLEGE</h2>
                     <p>PLOT A4, MOKOLA HOUSING ESTATE, MOKOLA, IBADAN</p>
                     <div class="admission-title-badge">ADMISSION FORM</div>
                 </div>
@@ -1532,12 +1537,12 @@
     </div>
 
     <!-- ADMIN MODAL -->
-    <div id="adminModal" class="modal-overlay">
+    <div id="adminModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
         <div class="modal-card" style="max-width: 900px;">
-            <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+            <span class="close-modal" onclick="closeAdminModal()" aria-label="Close Modal">&times;</span>
             
             <div id="authSection">
-                <h2 style="color: var(--text-light); margin-bottom: 10px; font-weight: 800;">Administrator Access</h2>
+                <h2 id="adminModalTitle" style="color: var(--text-light); margin-bottom: 10px; font-weight: 800;">Administrator Access</h2>
                 <p style="color: var(--text-muted); margin-bottom: 20px;">Enter security password to view submitted enquiries.</p>
                 <div style="margin-bottom: 15px;">
                     <input type="password" id="adminPass" placeholder="Enter Admin Password">
@@ -1549,7 +1554,10 @@
             <div id="enquiriesDashboard" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="color: var(--text-light); font-weight: 800;">Received Enquiries / Admission Forms</h2>
-                    <button onclick="fetchEnquiries()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-red);">Refresh Data</button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="exportEnquiriesToCSV()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-blue);">📥 Export CSV</button>
+                        <button onclick="fetchEnquiries()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-red);">Refresh Data</button>
+                    </div>
                 </div>
                 <div class="admin-summary-box">
                     <div class="table-responsive">
@@ -1577,13 +1585,13 @@
     </div>
 
     <!-- ADMIN VIEW FILLED FORM MODAL -->
-    <div id="adminViewFormModal" class="modal-overlay">
+    <div id="adminViewFormModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="viewFormModalTitle">
         <div class="modal-card">
-            <span class="close-modal" onclick="closeAdminViewFormModal()">&times;</span>
+            <span class="close-modal" onclick="closeAdminViewFormModal()" aria-label="Close Modal">&times;</span>
             
             <div class="admission-paper">
                 <div class="admission-paper-header">
-                    <h2>DYNOLINKS GLOBAL COLLEGE</h2>
+                    <h2 id="viewFormModalTitle">DYNOLINKS GLOBAL COLLEGE</h2>
                     <p>PLOT A4, MOKOLA HOUSING ESTATE, MOKOLA, IBADAN</p>
                     <div class="admission-title-badge">SUBMITTED ADMISSION FORM</div>
                 </div>
@@ -1848,6 +1856,8 @@
                 trackBox.style.display = 'block';
             } else {
                 trackBox.style.display = 'none';
+                const sssRadios = document.querySelectorAll('input[name="sssTrack"]');
+                sssRadios.forEach(radio => radio.checked = false);
             }
         }
 
@@ -1878,7 +1888,13 @@
             let sssTrackVal = '';
             if (classSelected.startsWith('SS')) {
                 const trackOpt = document.querySelector('input[name="sssTrack"]:checked');
-                if (trackOpt) sssTrackVal = trackOpt.value;
+                if (!trackOpt) {
+                    alertBox.className = 'alert alert-error';
+                    alertBox.textContent = 'Please select a Senior Secondary (SSS) Academic Track.';
+                    alertBox.style.display = 'block';
+                    return;
+                }
+                sssTrackVal = trackOpt.value;
             }
 
             const newSubmission = {
@@ -1921,6 +1937,7 @@
             setTimeout(() => {
                 alertBox.style.display = 'none';
                 document.getElementById('enquiryAdmissionForm').reset();
+                document.getElementById('sssTrackBox').style.display = 'none';
                 closeEnquiryModal();
             }, 2000);
         });
@@ -1938,7 +1955,7 @@
         function verifyAdmin() {
             const pass = document.getElementById('adminPass').value;
             const err = document.getElementById('passErr');
-            if (pass === 'adminAdvocates') {
+            if (pass === 'adminonlyDGC') {
                 err.style.display = 'none';
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('enquiriesDashboard').style.display = 'block';
@@ -1970,6 +1987,70 @@
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No admission forms submitted yet.</td></tr>';
             }
+        }
+
+        function exportEnquiriesToCSV() {
+            if (!enquiriesList || enquiriesList.length === 0) {
+                alert('No enquiry records available to export.');
+                return;
+            }
+
+            const headers = [
+                "ID", "Date Submitted", "Full Name", "Sex", "Date of Birth",
+                "State of Origin", "Town", "LGA", "Lives With", "Parents/Guardian",
+                "Position in Family", "Language", "Father Occupation", "Mother Occupation",
+                "Address", "Father Phone", "Mother Phone", "Siblings Count", "Siblings Names",
+                "Health Condition", "Immunized", "Immunized Diseases", "Restricted Activities",
+                "Other Health Info", "Parent Signature", "Signature Date", "Class Admitted", "SSS Track"
+            ];
+
+            const escapeCSV = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+
+            let csvRows = [headers.join(',')];
+
+            enquiriesList.forEach(item => {
+                const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '';
+                const row = [
+                    escapeCSV(item.id),
+                    escapeCSV(dateStr),
+                    escapeCSV(item.fullName),
+                    escapeCSV(item.sex),
+                    escapeCSV(item.dob),
+                    escapeCSV(item.state),
+                    escapeCSV(item.town),
+                    escapeCSV(item.lga),
+                    escapeCSV(item.livesWith),
+                    escapeCSV(item.parents),
+                    escapeCSV(item.position),
+                    escapeCSV(item.language),
+                    escapeCSV(item.fatherOcc),
+                    escapeCSV(item.motherOcc),
+                    escapeCSV(item.address),
+                    escapeCSV(item.fatherPhone),
+                    escapeCSV(item.motherPhone),
+                    escapeCSV(item.siblingsNo),
+                    escapeCSV(item.siblingsNames),
+                    escapeCSV(item.healthCondition),
+                    escapeCSV(item.immunized),
+                    escapeCSV(item.immunizedDisease),
+                    escapeCSV(item.restrictedActivities),
+                    escapeCSV(item.otherHealthInfo),
+                    escapeCSV(item.parentSign),
+                    escapeCSV(item.parentSignDate),
+                    escapeCSV(item.classAdmitted),
+                    escapeCSV(item.sssTrack)
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Dynolinks_Admission_Enquiries_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function viewFilledForm(id) {
@@ -2018,6 +2099,24 @@
             document.body.classList.remove('modal-open');
             document.getElementById('adminViewFormModal').style.display = 'none';
         }
+
+        /* Backdrop & Escape Key Handlers */
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeEnquiryModal();
+                closeAdminModal();
+                closeAdminViewFormModal();
+            }
+        });
     </script>
 </body>
 </html>
