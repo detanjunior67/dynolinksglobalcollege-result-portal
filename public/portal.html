@@ -1610,6 +1610,9 @@
                     document.getElementById('resTotalScore').innerText = `${totalObtained} / ${totalPossible}`;
                     const perc = totalPossible > 0 ? ((totalObtained / totalPossible) * 100).toFixed(2) : 0;
                     document.getElementById('resPercentage').innerText = perc;
+                    if (data.emailSent === false) {
+                        alert('Result retrieved successfully, but the notification email could not be sent.');
+                    }
                 } else {
                     alert(data.message);
                 }

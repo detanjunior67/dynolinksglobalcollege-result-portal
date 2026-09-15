@@ -1,4 +1,6 @@
 const express = require('express');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
@@ -89,10 +91,17 @@ app.post('/api/admin/login', async (req, res) => {
 
     let emailSent = true;
     try {
+        const loginTime = new Date();
         await sendEmail({
             to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
             subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}`,
-            html: `<p>An administrator logged into the ${surface === 'cbt' ? 'CBT management' : 'result'} portal at ${new Date().toLocaleString()}.</p>`
+            html: `
+                <h2>Administrator Login Notification</h2>
+                <p><strong>Portal:</strong> ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}</p>
+                <p><strong>Time:</strong> ${loginTime.toLocaleString()}</p>
+                <p><strong>IP address:</strong> ${req.ip || 'Unavailable'}</p>
+                <p><strong>User agent:</strong> ${req.get('user-agent') || 'Unavailable'}</p>
+            `
         });
     } catch (err) {
         emailSent = false;
@@ -600,16 +609,35 @@ app.post('/api/check-result', async (req, res) => {
 
         let emailSent = true;
         try {
+            const checkTime = new Date();
+            const resultRows = (student.results || []).map(result => `
+                <tr>
+                    <td>${result.subject || ''}</td>
+                    <td>${result.ca ?? 0}</td>
+                    <td>${result.exam ?? 0}</td>
+                    <td>${result.total ?? 0}</td>
+                    <td>${result.grade || ''}</td>
+                </tr>
+            `).join('');
             await sendEmail({
                 to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
                 subject: `Student Result Checked: ${student.student_id}`,
                 html: `
-                    <p>A student checked an academic result on the portal.</p>
+                    <h2>Student Result Check Notification</h2>
+                    <p>A student successfully checked an academic result.</p>
                     <p><strong>Student:</strong> ${student.full_name}</p>
                     <p><strong>Student ID:</strong> ${student.student_id}</p>
+                    <p><strong>Email:</strong> ${student.email || 'Not provided'}</p>
+                    <p><strong>Class:</strong> ${student.student_class}</p>
                     <p><strong>Session:</strong> ${student.session}</p>
                     <p><strong>Term:</strong> ${student.term}</p>
-                    <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Checks used:</strong> ${student.usage_count} of ${student.max_usage}</p>
+                    <p><strong>Checks remaining:</strong> ${student.max_usage - student.usage_count}</p>
+                    <p><strong>Time:</strong> ${checkTime.toLocaleString()}</p>
+                    <table border="1" cellpadding="6" cellspacing="0">
+                        <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th></tr></thead>
+                        <tbody>${resultRows || '<tr><td colspan="5">No subject results</td></tr>'}</tbody>
+                    </table>
                 `
             });
         } catch (emailError) {

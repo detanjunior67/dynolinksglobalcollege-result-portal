@@ -2016,6 +2016,7 @@
         document.getElementById('enquiryAdmissionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const alertBox = document.getElementById('alertBox');
+            const submitButton = document.getElementById('submitBtn');
 
             const classSelected = document.getElementById('classAdmitted').value;
             let sssTrackVal = '';
@@ -2061,18 +2062,47 @@
                 createdAt: new Date().toISOString()
             };
 
-            enquiriesList.unshift(newSubmission);
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+            }
 
-            alertBox.className = 'alert alert-success';
-            alertBox.textContent = 'Admission Form Submitted Successfully!';
-            alertBox.style.display = 'block';
+            try {
+                const response = await fetch('/api/enquiries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSubmission)
+                });
+                const data = await response.json().catch(() => ({}));
 
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-                document.getElementById('enquiryAdmissionForm').reset();
-                document.getElementById('sssTrackBox').style.display = 'none';
-                closeEnquiryModal();
-            }, 2000);
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to submit admission form.');
+                }
+
+                enquiriesList.unshift(newSubmission);
+
+                alertBox.className = data.emailSent === false ? 'alert alert-error' : 'alert alert-success';
+                alertBox.textContent = data.emailSent === false
+                    ? 'Form saved, but the email notification could not be sent. Please contact the administrator.'
+                    : 'Admission Form Submitted Successfully! Email notification sent.';
+                alertBox.style.display = 'block';
+
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                    document.getElementById('enquiryAdmissionForm').reset();
+                    document.getElementById('sssTrackBox').style.display = 'none';
+                    closeEnquiryModal();
+                }, 2500);
+            } catch (err) {
+                alertBox.className = 'alert alert-error';
+                alertBox.textContent = err.message || 'Failed to submit admission form. Please try again.';
+                alertBox.style.display = 'block';
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Admission Form';
+                }
+            }
         });
 
         function openAdminModal() {
