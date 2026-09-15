@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="mini.png">
     <title>DYNOLINKS GLOBAL COLLEGE - Modern Result Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1313,16 +1314,24 @@
         }
 
         // Admin Login
-        document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
+        document.getElementById('adminAuthForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const pass = document.getElementById('adminPass').value;
-            if (pass === 'adminDGC') {
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass, surface: 'portal' })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
                 document.getElementById('adminAuthForm').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 build20Boxes();
                 fetchAdminStudentList();
-            } else {
-                alert('Invalid Administrator Password!');
+                if (data.emailSent === false) alert('Logged in, but the admin login notification could not be sent.');
+            } catch (err) {
+                alert(err.message || 'Invalid Administrator Password!');
             }
         });
 

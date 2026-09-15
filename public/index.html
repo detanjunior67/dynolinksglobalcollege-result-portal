@@ -168,6 +168,27 @@
             box-shadow: var(--shadow-glow-gold);
         }
 
+        /* CBT Floating Button */
+        .cbt-btn {
+            background: var(--grad-gold);
+            color: #FFFFFF !important;
+            font-weight: 800;
+            padding: 10px 22px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: var(--shadow-glow-gold);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .cbt-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.5);
+        }
+
         /* Glass Navigation Bar */
         header {
             background: var(--header-bg);
@@ -300,7 +321,7 @@
         nav {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
         }
 
         nav a {
@@ -313,7 +334,7 @@
             position: relative;
         }
 
-        nav a:not(.btn-portal):not(.admin-link)::after {
+        nav a:not(.btn-portal):not(.admin-link):not(.cbt-btn)::after {
             content: '';
             position: absolute;
             bottom: -4px;
@@ -325,7 +346,7 @@
             transition: width 0.3s ease;
         }
 
-        nav a:not(.btn-portal):not(.admin-link):hover::after {
+        nav a:not(.btn-portal):not(.admin-link):not(.cbt-btn):hover::after {
             width: 100%;
         }
 
@@ -826,6 +847,47 @@
             color: #FFFFFF;
         }
 
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-dark);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            border: 1px solid var(--border-dark);
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--grad-primary);
+            color: #ffffff;
+            border-color: var(--crest-blue-light);
+            box-shadow: var(--shadow-glow-blue);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background-color: var(--card-dark);
+            color: var(--text-light);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         label {
             display: block;
             font-weight: 700;
@@ -951,11 +1013,29 @@
             font-size: 0.8rem;
             transition: all 0.2s;
             box-shadow: var(--shadow-glow-red);
+            margin-right: 4px;
         }
 
         .btn-view-form:hover {
             transform: scale(1.05);
             box-shadow: 0 6px 18px rgba(225, 29, 72, 0.5);
+        }
+
+        .btn-delete-form {
+            background: #f44336;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-delete-form:hover {
+            transform: scale(1.05);
+            background: #d32f2f;
         }
 
         .back-to-top {
@@ -1249,6 +1329,7 @@
             <a href="#about" onclick="closeMobileMenu()">About</a>
             <a href="#programs" onclick="closeMobileMenu()">Programs</a>
             <a href="#programs" onclick="closeMobileMenu()">Enquiries</a>
+            <a href="javascript:void(0)" onclick="accessCBT(); closeMobileMenu();" class="cbt-btn">CBT Exam</a>
             <a href="/portal.html" class="btn-portal">Check Result</a>
             <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();">🔒 Admin Only</a>
         </nav>
@@ -1552,34 +1633,76 @@
             </div>
 
             <div id="enquiriesDashboard" style="display: none;">
+                <!-- Tab Switcher Navigation -->
+                <div class="tab-navigation">
+                    <button class="tab-btn active" id="tab-btn-enquiry" onclick="switchAdminTab('enquiry')">Enquiry Submitted</button>
+                    <button class="tab-btn" id="tab-btn-cbt" onclick="switchAdminTab('cbt')">CBT Exam</button>
+                </div>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="color: var(--text-light); font-weight: 800;">Received Enquiries / Admission Forms</h2>
+                    <h2 id="admin-dashboard-title" style="color: var(--text-light); font-weight: 800;">Received Enquiries / Admission Forms</h2>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="exportEnquiriesToCSV()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-blue);">📥 Export CSV</button>
                         <button onclick="fetchEnquiries()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-red);">Refresh Data</button>
                     </div>
                 </div>
-                <div class="admin-summary-box">
-                    <div class="table-responsive">
-                        <table class="enquiry-table">
-                            <thead>
-                                <tr>
-                                    <th>Date Submitted</th>
-                                    <th>Student Name</th>
-                                    <th>Parents / Contact</th>
-                                    <th>Class Admitted</th>
-                                    <th>SSS Track</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="enquiryListBody">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading records...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                <!-- TAB 1: Enquiry Submitted Table -->
+                <div id="adminEnquiryView" class="tab-content active">
+                    <div class="admin-summary-box">
+                        <div class="table-responsive">
+                            <table class="enquiry-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Submitted</th>
+                                        <th>Student Name</th>
+                                        <th>Parents / Contact</th>
+                                        <th>Class Admitted</th>
+                                        <th>SSS Track</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="enquiryListBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading records...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
+                <!-- TAB 2: CBT Exam Table -->
+                <div id="adminCbtView" class="tab-content">
+                    <div class="admin-summary-box">
+                        <div class="table-responsive">
+                            <table class="enquiry-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Taken</th>
+                                        <th>Student Name</th>
+                                        <th>Exam Score</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cbtListBody">
+                                    <tr>
+                                        <td>2026-08-12</td>
+                                        <td><strong>ADEBAYO Oluwaseun David</strong></td>
+                                        <td>84%</td>
+                                        <td style="color: #10B981; font-weight: bold;">Passed</td>
+                                        <td>
+                                            <button class="btn-view-form">View Results</button>
+                                            <button class="btn-delete-form">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1763,6 +1886,16 @@
 
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        /* CBT Access Function with Password Verification */
+        function accessCBT() {
+            const password = prompt("Enter Password to access the CBT Exam:");
+            if (password === 'cbtaccess') {
+                window.location.href = "cbt.html";
+            } else if (password !== null) {
+                alert("Incorrect password. Access denied.");
+            }
+        }
 
         /* Theme Toggle Logic with System Default and Smooth Transition */
         const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
@@ -1965,6 +2098,28 @@
             }
         }
 
+        function switchAdminTab(tabName) {
+            const enquiryView = document.getElementById('adminEnquiryView');
+            const cbtView = document.getElementById('adminCbtView');
+            const btnEnquiry = document.getElementById('tab-btn-enquiry');
+            const btnCbt = document.getElementById('tab-btn-cbt');
+            const dashboardTitle = document.getElementById('admin-dashboard-title');
+
+            if (tabName === 'enquiry') {
+                enquiryView.classList.add('active');
+                cbtView.classList.remove('active');
+                btnEnquiry.classList.add('active');
+                btnCbt.classList.remove('active');
+                dashboardTitle.innerText = 'Received Enquiries / Admission Forms';
+            } else {
+                cbtView.classList.add('active');
+                enquiryView.classList.remove('active');
+                btnCbt.classList.add('active');
+                btnEnquiry.classList.remove('active');
+                dashboardTitle.innerText = 'CBT Exam Results';
+            }
+        }
+
         function fetchEnquiries() {
             const tbody = document.getElementById('enquiryListBody');
             if (enquiriesList.length > 0) {
@@ -1980,12 +2135,20 @@
                         <td>${item.sssTrack ? item.sssTrack : 'N/A'}</td>
                         <td>
                             <button class="btn-view-form" onclick="viewFilledForm(${item.id})">View Form</button>
+                            <button class="btn-delete-form" onclick="deleteEnquiry(${item.id})">Delete</button>
                         </td>
                     `;
                     tbody.appendChild(row);
                 });
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No admission forms submitted yet.</td></tr>';
+            }
+        }
+
+        function deleteEnquiry(id) {
+            if (confirm('Are you sure you want to delete this enquiry record?')) {
+                enquiriesList = enquiriesList.filter(item => item.id !== id);
+                fetchEnquiries();
             }
         }
 

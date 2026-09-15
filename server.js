@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
+require('dotenv').config();
 const { google } = require('googleapis');
 
 const app = express();
@@ -20,7 +22,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static frontend files
+// Serve static frontend files from both root and public directories
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Google OAuth2 & Gmail HTTP API Configuration
@@ -69,9 +72,35 @@ async function sendEmail({ to, subject, html, replyTo }) {
         console.log(`Gmail API Email sent successfully. Message ID: ${res.data.id}`);
         return res.data;
     } catch (err) {
-        console.error('Gmail API Email Error:', err.message);
+        console.error('Gmail API Email Error:', err.response?.data || err.message);
+        throw err;
     }
 }
+
+app.post('/api/admin/login', async (req, res) => {
+    const { password, surface = 'portal' } = req.body || {};
+    const expectedPassword = surface === 'cbt'
+        ? (process.env.CBT_ADMIN_PASSWORD || 'cbtadmin')
+        : (process.env.ADMIN_PASSWORD || 'adminDGC');
+
+    if (!password || password !== expectedPassword) {
+        return res.status(401).json({ success: false, message: 'Invalid Administrator Password!' });
+    }
+
+    let emailSent = true;
+    try {
+        await sendEmail({
+            to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+            subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}`,
+            html: `<p>An administrator logged into the ${surface === 'cbt' ? 'CBT management' : 'result'} portal at ${new Date().toLocaleString()}.</p>`
+        });
+    } catch (err) {
+        emailSent = false;
+        console.error('Admin login notification failed:', err.response?.data || err.message);
+    }
+
+    res.json({ success: true, emailSent });
+});
 
 // Helper function to format and grade subjects
 const processSubjectScores = (subjects) => {
@@ -173,6 +202,36 @@ const EnquirySchema = new mongoose.Schema({
 
 const Enquiry = mongoose.model('Enquiry', EnquirySchema);
 
+// CBT Question Schema
+const QuestionSchema = new mongoose.Schema({
+    classKey: { type: String, required: true },
+    subjectId: { type: String, required: true },
+    qNumber: { type: Number },
+    text: { type: String, required: true },
+    options: [{ type: String }],
+    correctIndex: { type: Number, required: true },
+    points: { type: Number, default: 1 },
+    customTime: { type: Number, default: 60 },
+    hint: { type: String, default: '' }
+}, { timestamps: true });
+
+const Question = mongoose.model('Question', QuestionSchema);
+
+// CBT Exam Result Schema
+const CbtResultSchema = new mongoose.Schema({
+    studentId: { type: String, required: true },
+    studentName: { type: String, required: true },
+    classLevel: { type: String, required: true },
+    totalPoints: { type: Number, default: 0 },
+    maxPoints: { type: Number, default: 0 },
+    percentage: { type: Number, default: 0 },
+    grade: { type: String, default: 'F' },
+    subjectBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} },
+    timestamp: { type: String, default: () => new Date().toLocaleString() }
+}, { timestamps: true });
+
+const CbtResult = mongoose.model('CbtResult', CbtResultSchema);
+
 const buildStudentQuery = (studentId) => {
     const cleanId = decodeURIComponent(String(studentId)).trim();
     const escapedId = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -238,29 +297,40 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             { upsert: true, new: true, runValidators: true }
         );
 
-        res.json({ success: true, message: 'Result and PIN saved successfully!', student: updatedStudent });
-
+        let emailSent = true;
         if (studentEmail) {
-            sendEmail({
-                to: studentEmail,
-                subject: `Academic Result Published - ${session} (${term})`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #0d233a;">
-                        <h2 style="color: #0288d1; border-bottom: 2px solid #ffb300; padding-bottom: 8px;">
-                            Dynolinks Academic Result Notification
-                        </h2>
-                        <p>Dear <strong>${fullName.trim()}</strong>,</p>
-                        <p>Your academic results for <strong>${session} - ${term}</strong> have been updated on the portal.</p>
-                        <div style="background: #f4f7f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                            <p style="margin: 5px 0;"><strong>Student ID:</strong> ${cleanId}</p>
-                            <p style="margin: 5px 0;"><strong>Access PIN:</strong> ${cleanPin}</p>
-                            <p style="margin: 5px 0;"><strong>Class:</strong> ${studentClass}</p>
+            try {
+                await sendEmail({
+                    to: studentEmail,
+                    subject: `Academic Result Published - ${session} (${term})`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #0d233a;">
+                            <h2 style="color: #0288d1; border-bottom: 2px solid #ffb300; padding-bottom: 8px;">
+                                Dynolinks Academic Result Notification
+                            </h2>
+                            <p>Dear <strong>${fullName.trim()}</strong>,</p>
+                            <p>Your academic results for <strong>${session} - ${term}</strong> have been updated on the portal.</p>
+                            <div style="background: #f4f7f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${cleanId}</p>
+                                <p style="margin: 5px 0;"><strong>Access PIN:</strong> ${cleanPin}</p>
+                                <p style="margin: 5px 0;"><strong>Class:</strong> ${studentClass}</p>
+                            </div>
+                            <p>For enquiries, reach out to us via WhatsApp at <strong>+234 807 983 1549</strong>.</p>
                         </div>
-                        <p>For enquiries, reach out to us via WhatsApp at <strong>+234 807 983 1549</strong>.</p>
-                    </div>
-                `
-            });
+                    `
+                });
+            } catch (emailError) {
+                emailSent = false;
+                console.error('Result notification email failed:', emailError.response?.data || emailError.message);
+            }
         }
+
+        res.json({
+            success: true,
+            emailSent,
+            message: emailSent ? 'Result and PIN saved successfully!' : 'Result and PIN saved, but the notification email could not be sent.',
+            student: updatedStudent
+        });
 
     } catch (err) {
         console.error('Save student error detailed:', err);
@@ -399,7 +469,7 @@ app.delete('/api/admin/delete-student', async (req, res) => {
     }
 });
 
-// Export Results CSV Endpoint (Fixed UTF-8 Encoding & BOM for Excel)
+// Export Results CSV Endpoint
 app.get('/api/admin/export-results', async (req, res) => {
     try {
         const students = await Student.find({});
@@ -450,7 +520,7 @@ app.get('/api/admin/export-results', async (req, res) => {
     }
 });
 
-// Export Admission Enquiries CSV Endpoint (Fixed UTF-8 Encoding & BOM for Excel)
+// Export Admission Enquiries CSV Endpoint
 app.get('/api/admin/export-enquiries', async (req, res) => {
     try {
         const enquiries = await Enquiry.find({}).sort({ createdAt: -1 });
@@ -528,8 +598,28 @@ app.post('/api/check-result', async (req, res) => {
         student.usage_count += 1;
         await student.save();
 
+        let emailSent = true;
+        try {
+            await sendEmail({
+                to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+                subject: `Student Result Checked: ${student.student_id}`,
+                html: `
+                    <p>A student checked an academic result on the portal.</p>
+                    <p><strong>Student:</strong> ${student.full_name}</p>
+                    <p><strong>Student ID:</strong> ${student.student_id}</p>
+                    <p><strong>Session:</strong> ${student.session}</p>
+                    <p><strong>Term:</strong> ${student.term}</p>
+                    <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                `
+            });
+        } catch (emailError) {
+            emailSent = false;
+            console.error('Result check notification failed:', emailError.response?.data || emailError.message);
+        }
+
         res.json({
             success: true,
+            emailSent,
             student: {
                 id: student.student_id,
                 name: student.full_name,
@@ -601,26 +691,36 @@ app.post('/api/enquiries', async (req, res) => {
 
         await newEnquiry.save();
 
-        res.json({ success: true, message: 'Admission Form Submitted Successfully!' });
-
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
-        sendEmail({
-            to: recipientEmail,
-            replyTo: email || undefined,
-            subject: `New Admission Form: ${fullName} (${classAdmitted})`,
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #0F172A;">
-                    <h3 style="color: #0284C7; border-bottom: 2px solid #E11D48; padding-bottom: 8px;">
-                        New Admission Form Submitted
-                    </h3>
-                    <p><strong>Student Name:</strong> ${fullName}</p>
-                    <p><strong>Class Admitted:</strong> ${classAdmitted} ${sssTrack ? `(${sssTrack})` : ''}</p>
-                    <p><strong>Parents / Guardian:</strong> ${parents}</p>
-                    <p><strong>Father Phone:</strong> ${fatherPhone}</p>
-                    <p><strong>Mother Phone:</strong> ${motherPhone}</p>
-                    <p><strong>Address:</strong> ${address}</p>
-                </div>
-            `
+        let emailSent = true;
+        try {
+            await sendEmail({
+                to: recipientEmail,
+                replyTo: email || undefined,
+                subject: `New Admission Form: ${fullName} (${classAdmitted})`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #0F172A;">
+                        <h3 style="color: #0284C7; border-bottom: 2px solid #E11D48; padding-bottom: 8px;">
+                            New Admission Form Submitted
+                        </h3>
+                        <p><strong>Student Name:</strong> ${fullName}</p>
+                        <p><strong>Class Admitted:</strong> ${classAdmitted} ${sssTrack ? `(${sssTrack})` : ''}</p>
+                        <p><strong>Parents / Guardian:</strong> ${parents}</p>
+                        <p><strong>Father Phone:</strong> ${fatherPhone}</p>
+                        <p><strong>Mother Phone:</strong> ${motherPhone}</p>
+                        <p><strong>Address:</strong> ${address}</p>
+                    </div>
+                `
+            });
+        } catch (emailError) {
+            emailSent = false;
+            console.error('Admission notification email failed:', emailError.response?.data || emailError.message);
+        }
+
+        res.json({
+            success: true,
+            emailSent,
+            message: emailSent ? 'Admission Form Submitted Successfully!' : 'Admission form saved, but the notification email could not be sent.'
         });
 
     } catch (err) {
@@ -639,8 +739,407 @@ app.get('/api/admin/enquiries', async (req, res) => {
     }
 });
 
-// Fallback route for SPA / static routing
+// CBT QUESTIONS API ENDPOINTS
+
+// GET questions (Supports optional filtering by classKey and subjectId)
+app.get('/api/questions', async (req, res) => {
+    try {
+        const { classKey, subjectId } = req.query;
+        const filter = {};
+        if (classKey) filter.classKey = classKey;
+        if (subjectId) filter.subjectId = subjectId;
+
+        const questions = await Question.find(filter).sort({ qNumber: 1 });
+        res.json(questions);
+    } catch (err) {
+        console.error('Error fetching questions:', err);
+        res.status(500).json({ error: 'Failed to fetch questions' });
+    }
+});
+
+// POST a new CBT question
+app.post('/api/questions', async (req, res) => {
+    try {
+        const newQuestion = new Question(req.body);
+        const saved = await newQuestion.save();
+        res.status(201).json(saved);
+    } catch (err) {
+        console.error('Error saving question:', err);
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// PUT update an existing CBT question
+app.put('/api/questions/:id', async (req, res) => {
+    try {
+        const updatedQuestion = await Question.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true, runValidators: true }
+        );
+        if (!updatedQuestion) {
+            return res.status(404).json({ error: 'Question not found' });
+        }
+        res.json(updatedQuestion);
+    } catch (err) {
+        console.error('Error updating question:', err);
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// DELETE a CBT question
+app.delete('/api/questions/:id', async (req, res) => {
+    try {
+        const deletedQuestion = await Question.findByIdAndDelete(req.params.id);
+        if (!deletedQuestion) {
+            return res.status(404).json({ error: 'Question not found' });
+        }
+        res.json({ success: true, message: 'Question deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting question:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+function decodeHtmlEntities(text) {
+    return String(text || '')
+        .replace(/&quot;/g, '"')
+        .replace(/&#039;/g, "'")
+        .replace(/&apos;/g, "'")
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&rsquo;/g, "'")
+        .replace(/&ldquo;/g, '"')
+        .replace(/&rdquo;/g, '"')
+        .replace(/&nbsp;/g, ' ');
+}
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function toFourOptionMcq(stem, correct, incorrects) {
+    const uniqueWrong = [...new Set((incorrects || []).map(x => String(x).trim()).filter(Boolean))]
+        .filter(opt => opt.toLowerCase() !== String(correct).trim().toLowerCase())
+        .slice(0, 3);
+    while (uniqueWrong.length < 3) {
+        uniqueWrong.push(`Not a valid statement about this topic (${uniqueWrong.length + 1})`);
+    }
+    const options = shuffleArray([String(correct).trim(), ...uniqueWrong]).slice(0, 4);
+    return {
+        text: String(stem).trim(),
+        options,
+        correctIndex: Math.max(0, options.indexOf(String(correct).trim()))
+    };
+}
+
+function mapOnlineQuestionCategory(subjectName) {
+    const s = (subjectName || '').toLowerCase();
+    if (s.includes('math')) return { trivia: 'science_mathematics', opentdb: 19 };
+    if (s.includes('english') || s.includes('literature') || s.includes('language')) return { trivia: 'arts_and_literature', opentdb: 10 };
+    if (s.includes('physics') || s.includes('chem') || s.includes('bio') || s.includes('scien')) return { trivia: 'science', opentdb: 17 };
+    if (s.includes('geo')) return { trivia: 'geography', opentdb: 22 };
+    if (s.includes('hist') || s.includes('civic') || s.includes('social')) return { trivia: 'history', opentdb: 23 };
+    return { trivia: 'general_knowledge', opentdb: 9 };
+}
+
+function matchesTopic(text, topic) {
+    const hay = String(text || '').toLowerCase();
+    const words = String(topic || '').toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    if (!words.length) return hay.includes(String(topic || '').toLowerCase());
+    return words.some(w => hay.includes(w));
+}
+
+async function fetchRemoteJson(url) {
+    const res = await fetch(url, {
+        headers: {
+            'User-Agent': 'DynolinksCBT/1.0 (school result portal; infodynolinks@gmail.com)',
+            Accept: 'application/json'
+        }
+    });
+    if (!res.ok) throw new Error(`Request failed ${res.status} for ${url}`);
+    return res.json();
+}
+
+async function fetchTriviaApiQuestions(subjectName, topic, limit) {
+    const { trivia } = mapOnlineQuestionCategory(subjectName);
+    const url = `https://the-trivia-api.com/v2/questions?limit=${Math.min(50, Math.max(limit * 5, 10))}&categories=${encodeURIComponent(trivia)}`;
+    const data = await fetchRemoteJson(url);
+    const items = Array.isArray(data) ? data : [];
+    return items.map((q) => {
+        const stem = q.question && q.question.text ? q.question.text : q.question;
+        return toFourOptionMcq(
+            decodeHtmlEntities(stem),
+            decodeHtmlEntities(q.correctAnswer),
+            (q.incorrectAnswers || []).map(decodeHtmlEntities)
+        );
+    }).filter(q => q.text);
+}
+
+async function fetchOpenTdbQuestions(subjectName, limit) {
+    const { opentdb } = mapOnlineQuestionCategory(subjectName);
+    const url = `https://opentdb.com/api.php?amount=${Math.min(20, Math.max(limit, 5))}&category=${opentdb}&type=multiple`;
+    const data = await fetchRemoteJson(url);
+    return (data.results || []).map((q) => toFourOptionMcq(
+        decodeHtmlEntities(q.question),
+        decodeHtmlEntities(q.correct_answer),
+        (q.incorrect_answers || []).map(decodeHtmlEntities)
+    )).filter(q => q.text);
+}
+
+function splitWikiSentences(extract) {
+    return String(extract || '')
+        .replace(/\n+/g, ' ')
+        .split(/(?<=[.!?])\s+/)
+        .map(s => s.trim())
+        .filter(s => s.length >= 35 && s.length <= 220 && !s.includes('==') && !s.startsWith('Coordinates'));
+}
+
+async function fetchWikipediaQuestions(topic, subjectName, classLabel, count) {
+    const query = `${topic} ${subjectName}`.trim();
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=8&format=json`;
+    const searchData = await fetchRemoteJson(searchUrl);
+    const hits = (searchData.query && searchData.query.search) || [];
+    const facts = [];
+
+    for (const hit of hits.slice(0, 5)) {
+        const pageUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&titles=${encodeURIComponent(hit.title)}&format=json`;
+        const pageData = await fetchRemoteJson(pageUrl);
+        const pages = pageData.query && pageData.query.pages ? Object.values(pageData.query.pages) : [];
+        pages.forEach((page) => {
+            splitWikiSentences(page.extract).forEach((sentence) => {
+                facts.push({ title: page.title || hit.title, sentence });
+            });
+        });
+    }
+
+    const unique = [];
+    const seen = new Set();
+    facts.forEach((f) => {
+        const key = f.sentence.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(f);
+        }
+    });
+
+    const questions = [];
+    for (let i = 0; i < unique.length && questions.length < count + 4; i++) {
+        const fact = unique[i];
+        const distractors = unique
+            .filter((_, j) => j !== i)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(d => d.sentence);
+        if (distractors.length < 3) continue;
+        questions.push(toFourOptionMcq(
+            `According to materials on "${topic}" (${classLabel} ${subjectName} — ${fact.title}), which statement is correct?`,
+            fact.sentence,
+            distractors
+        ));
+    }
+    return questions;
+}
+
+function rankOnlineQuestions(questions, topic, needed) {
+    const scored = questions.map((q) => {
+        const blob = `${q.text} ${q.options.join(' ')}`;
+        return { q, score: matchesTopic(blob, topic) ? 2 : 0 };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    const picked = [];
+    const seen = new Set();
+    scored.forEach(({ q }) => {
+        const key = q.text.toLowerCase();
+        if (seen.has(key) || picked.length >= needed) return;
+        seen.add(key);
+        picked.push(q);
+    });
+    return picked;
+}
+
+function extractJsonObject(text) {
+    const raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start < 0 || end < start) throw new Error('AI provider returned invalid JSON.');
+    return JSON.parse(raw.slice(start, end + 1));
+}
+
+function normalizeGeneratedQuestions(value, count) {
+    const items = Array.isArray(value) ? value : value && Array.isArray(value.questions) ? value.questions : [];
+    return items.map((item) => {
+        const options = Array.isArray(item.options) ? item.options.map(option => String(option).trim()).filter(Boolean).slice(0, 4) : [];
+        const correctIndex = Number(item.correctIndex);
+        if (!item.text || options.length !== 4 || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex > 3) return null;
+        return {
+            text: String(item.text).trim(),
+            options,
+            correctIndex
+        };
+    }).filter(Boolean).slice(0, count);
+}
+
+function buildAiQuestionPrompt({ classLabel, subjectName, topic, count }) {
+    return `Create ${count} original four-option multiple-choice questions for ${classLabel}, subject ${subjectName}, on the syllabus topic "${topic}".\nReturn JSON only in this exact shape: {"questions":[{"text":"...","options":["...","...","...","..."],"correctIndex":0}]}.\nEach question must have exactly four distinct options, one unambiguous correct answer, and correctIndex must be a zero-based integer. Match the stated class level. Do not include markdown or explanations.`;
+}
+
+async function fetchChatGptQuestions(params) {
+    if (!process.env.OPENAI_API_KEY) return [];
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            temperature: 0.4,
+            response_format: { type: 'json_object' },
+            messages: [
+                { role: 'system', content: 'You generate accurate school examination questions and follow JSON schemas exactly.' },
+                { role: 'user', content: buildAiQuestionPrompt(params) }
+            ]
+        })
+    });
+    if (!response.ok) throw new Error(`ChatGPT request failed with status ${response.status}.`);
+    const data = await response.json();
+    return normalizeGeneratedQuestions(extractJsonObject(data.choices?.[0]?.message?.content), params.count);
+}
+
+async function fetchGeminiQuestions(params) {
+    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) return [];
+    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: buildAiQuestionPrompt(params) }] }],
+            generationConfig: { temperature: 0.4, responseMimeType: 'application/json' }
+        })
+    });
+    if (!response.ok) throw new Error(`Google Gemini request failed with status ${response.status}.`);
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('');
+    return normalizeGeneratedQuestions(extractJsonObject(text), params.count);
+}
+
+// Ask configured AI providers first, then use public sources to fill any gaps.
+app.post('/api/cbt/generate-questions', async (req, res) => {
+    try {
+        const { classLabel, subjectName, topic } = req.body || {};
+        const count = Math.min(20, Math.max(1, parseInt(req.body && req.body.count, 10) || 5));
+
+        if (!topic || !String(topic).trim()) {
+            return res.status(400).json({ error: 'Topic is required to search related questions online.' });
+        }
+
+        const label = classLabel || 'Secondary School';
+        const subject = subjectName || 'General Studies';
+        const focus = String(topic).trim();
+        const aiParams = { classLabel: label, subjectName: subject, topic: focus, count };
+
+        const settled = await Promise.allSettled([
+            fetchChatGptQuestions(aiParams),
+            fetchGeminiQuestions(aiParams),
+            fetchTriviaApiQuestions(subject, focus, count),
+            fetchOpenTdbQuestions(subject, count),
+            fetchWikipediaQuestions(focus, subject, label, count)
+        ]);
+
+        const pooled = [];
+        settled.forEach((result) => {
+            if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+                pooled.push(...result.value);
+            } else if (result.status === 'rejected') {
+                console.warn('Online question source failed:', result.reason && result.reason.message);
+            }
+        });
+
+        const questions = rankOnlineQuestions(pooled, focus, count);
+        if (!questions.length) {
+            return res.status(502).json({ error: 'No questions were generated. Configure OPENAI_API_KEY or GOOGLE_AI_API_KEY, then try again.' });
+        }
+
+        res.json({
+            source: process.env.OPENAI_API_KEY || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY ? 'ai-and-online' : 'online',
+            topic: focus,
+            questions
+        });
+    } catch (err) {
+        console.error('AI question generation error:', err);
+        res.status(500).json({ error: 'Failed to search and generate questions online.' });
+    }
+});
+
+// CBT RESULTS API ENDPOINTS
+
+// GET all completed CBT exam results
+app.get('/api/cbt-results', async (req, res) => {
+    try {
+        const results = await CbtResult.find({}).sort({ createdAt: -1 });
+        res.json(results);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to retrieve CBT results', details: err.message });
+    }
+});
+
+// POST save completed CBT test submission
+app.post('/api/cbt-results', async (req, res) => {
+    try {
+        const cbtResult = new CbtResult(req.body);
+        const saved = await cbtResult.save();
+        res.status(201).json(saved);
+    } catch (err) {
+        res.status(400).json({ error: 'Failed to save CBT result', details: err.message });
+    }
+});
+
+// GET export CBT exam results as CSV
+app.get('/api/admin/export-cbt-results', async (req, res) => {
+    try {
+        const results = await CbtResult.find({}).sort({ createdAt: -1 });
+        const headers = ['Student ID', 'Student Name', 'Class Level', 'Total Points', 'Max Points', 'Percentage', 'Grade', 'Date Submitted'];
+        
+        let csv = '\uFEFF' + headers.map(sanitizeCsvField).join(',') + '\n';
+
+        results.forEach(r => {
+            const row = [
+                sanitizeCsvField(r.studentId),
+                sanitizeCsvField(r.studentName),
+                sanitizeCsvField(r.classLevel),
+                r.totalPoints || 0,
+                r.maxPoints || 0,
+                sanitizeCsvField(`${r.percentage}%`),
+                sanitizeCsvField(r.grade),
+                sanitizeCsvField(r.timestamp || (r.createdAt ? new Date(r.createdAt).toLocaleString() : ''))
+            ];
+            csv += row.join(',') + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="Dynolinks_CBT_Results_${Date.now()}.csv"`);
+        res.status(200).send(csv);
+    } catch (err) {
+        console.error('Export CBT results error:', err);
+        res.status(500).send('Error generating CBT results CSV.');
+    }
+});
+
+// Fallback route for SPA / static file serving
 app.get('*', (req, res) => {
+    const cbtFile = path.join(__dirname, 'cbt_8.html');
+    if (fs.existsSync(cbtFile)) {
+        return res.sendFile(cbtFile);
+    }
     res.sendFile(path.join(__dirname, 'public', 'portal.html'));
 });
 

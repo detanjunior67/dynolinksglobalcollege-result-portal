@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="mini.png">
+    <title>Dynolinks College - CBT & School Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .toast-animate {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* Physical AI Button 3D Effect */
+        .btn-ai-physical {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            box-shadow: 0 4px 0 0 #4c1d95, 0 8px 15px rgba(168, 85, 247, 0.4);
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-ai-physical:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 0 #4c1d95, 0 12px 20px rgba(168, 85, 247, 0.5);
+        }
+        .btn-ai-physical:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 0 #4c1d95, 0 4px 8px rgba(168, 85, 247, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Navigation Header -->
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dynolinks College</span>
+                    <span class="hidden sm:inline-block text-xs ml-2 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">CBT & Portal</span>
+                </div>
+            </div>
+
+            <!-- Controls & Mode Toggle -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <!-- Admin Lock Button -->
+                <button id="portalToggleBtn" onclick="openAdminAuthModal()" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-amber-500"></i>
+                    <span id="portalToggleText">🔒 Admin Only</span>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Toggle Light/Dark Theme">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+
+                <!-- Profile Badge -->
+                <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 dark:border-gray-700">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">
+                        ST
+                    </div>
+                    <div class="hidden md:block text-left text-xs">
+                        <div class="font-semibold" id="userName">Student Portal</div>
+                        <div class="text-gray-500 dark:text-gray-400" id="userRole">DGC Online Assessment</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: STUDENT DASHBOARD & SETUP          -->
+        <!-- ========================================== -->
+        <section id="viewDashboard" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10">
+                    <i class="fa-solid fa-laptop-code text-[220px]"></i>
+                </div>
+                <div class="relative z-10 max-w-3xl">
+                    <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-md uppercase tracking-wider">Dynolinks Global College</span>
+                    <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-2">Computer Based Testing Portal</h1>
+                    <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class level below to begin your examination. Ensure your registration details match system records.</p>
+                </div>
+            </div>
+
+            <!-- Student Registration & Class Selection -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl mx-auto space-y-6">
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <h2 class="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-graduate text-blue-600"></i> Student Candidate Registration
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Please complete all required fields accurately before starting the examination.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Full Candidate Name *</label>
+                        <input type="text" id="studentFullName" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Student ID *</label>
+                        <input type="text" id="studentIdInput" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase" placeholder="e.g. STU-2026-001">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Class Level *</label>
+                        <select id="studentClassSelect" onchange="handleClassChange()" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <!-- Dynamic class options loaded from JS state -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Exam Subjects Summary Preview Card -->
+                <div id="examSubjectPreview" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Exam Overview:</p>
+                    <p id="examSubjectPreviewText">Select your class level to view applicable subjects and duration breakdown.</p>
+                </div>
+
+                <button onclick="prepareStudentExam()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Proceed to Guidelines
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: EXAM INSTRUCTION PRE-VIEW          -->
+        <!-- ========================================== -->
+        <section id="viewInstructions" class="hidden max-w-3xl mx-auto w-full space-y-6">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6">
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <button onclick="showDashboard()" class="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left"></i> Change Candidate Info / Back
+                    </button>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white" id="instExamTitle">Examination Guidelines</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="instExamMeta">Candidate: John Doe | Class: JSS 1</p>
+                </div>
+
+                <div class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base">Rules & Instructions:</h3>
+                    <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm">
+                        <li>Each subject section has its allocated time limit or total exam timer as configured by school administration.</li>
+                        <li>Switching between subject tabs is permitted during the exam.</li>
+                        <li>Questions marked with "Review" will be highlighted in purple on the palette sidebar.</li>
+                        <li class="font-semibold text-amber-600 dark:text-amber-400">Scores will be calculated automatically and submitted securely to the Admin records upon completion.</li>
+                    </ul>
+
+                    <!-- Dynamic Subject Breakdown Pill Grid -->
+                    <div id="instSubjectBreakdown" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <!-- Dynamic cards injected -->
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3">
+                    <button onclick="showDashboard()" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
+                    <button onclick="startExamNow()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition">Begin Examination</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: LIVE CBT EXAM INTERFACE            -->
+        <!-- ========================================== -->
+        <section id="viewExamPortal" class="hidden flex-grow flex flex-col space-y-4">
+            <!-- Top Control Bar: Subject Navigation & Active Timer -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Subject Pills -->
+                <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0" id="sectionTabs">
+                    <!-- Dynamic Pills -->
+                </div>
+
+                <!-- Timer Box -->
+                <div id="timerContainer" class="flex items-center space-x-3 shrink-0 bg-red-50 dark:bg-red-900/30 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 transition-colors">
+                    <i class="fa-solid fa-clock text-red-600 text-lg animate-pulse" id="timerIcon"></i>
+                    <span class="text-xs uppercase font-bold text-red-600 dark:text-red-400" id="timerLabel">Time Left:</span>
+                    <span id="examTimer" class="font-mono text-xl font-black text-red-600 dark:text-red-400">00:00</span>
+                </div>
+            </div>
+
+            <!-- Main Question & Palette Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow items-start">
+                <!-- Question Card (3 cols) -->
+                <div class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col min-h-[480px] justify-between">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+                            <span class="font-bold text-sm text-blue-600 dark:text-blue-400" id="currentQNumText">Question 1 of 10</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold" id="qPointWeight">1 Point</span>
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 font-medium text-gray-600 dark:text-gray-300" id="currentSectionBadge">Subject</span>
+                            </div>
+                        </div>
+
+                        <!-- Stem -->
+                        <div class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed" id="questionText">
+                            <!-- Question Stem -->
+                        </div>
+
+                        <!-- MCQ Options -->
+                        <div class="space-y-3" id="optionsContainer">
+                            <!-- Options stack -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Nav Toolbar -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="clearResponse()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Clear Selection
+                            </button>
+                            <button onclick="toggleMarkForReview()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition">
+                                <i class="fa-solid fa-bookmark mr-1"></i> Mark Review
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button id="btnPrevQ" onclick="navigateQuestion(-1)" class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                            </button>
+                            <button id="btnNextQ" onclick="navigateQuestion(1)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow transition">
+                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </button>
+                            <button onclick="promptSubmitExam()" class="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow transition ml-2">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Final Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palette Sidebar (1 col) -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+                    <h3 class="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Question Palette</h3>
+                    
+                    <div id="paletteGrid" class="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
+                        <!-- Buttons -->
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-500 inline-block"></span> Answered:</span>
+                            <span class="font-bold" id="countAnswered">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-300 dark:bg-gray-600 inline-block"></span> Unanswered:</span>
+                            <span class="font-bold" id="countUnanswered">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-600 inline-block"></span> Marked Review:</span>
+                            <span class="font-bold" id="countMarked">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: SUBMISSION CONFIRMATION & SCORECARD-->
+        <!-- ========================================== -->
+        <section id="viewSubmissionSuccess" class="hidden max-w-3xl mx-auto my-auto w-full space-y-6">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">Exam Completed & Submitted!</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="scorecardMeta">Candidate Performance Breakdown</p>
+                </div>
+
+                <!-- Performance Card -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                        <p class="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase">Total Score</p>
+                        <p class="text-2xl font-black text-blue-700 dark:text-blue-300 mt-1" id="scorecardPoints">0 / 0</p>
+                    </div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                        <p class="text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase">Percentage</p>
+                        <p class="text-2xl font-black text-indigo-700 dark:text-indigo-300 mt-1" id="scorecardPercent">0%</p>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-800">
+                        <p class="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase">Grade Assessment</p>
+                        <p class="text-2xl font-black text-purple-700 dark:text-purple-300 mt-1" id="scorecardGrade">N/A</p>
+                    </div>
+                </div>
+
+                <!-- Subject-by-Subject Score Table -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Subject Performance Summary:</h4>
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700 border rounded-xl overflow-hidden" id="scorecardSubjectTable">
+                        <!-- Dynamic Subject Scores -->
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button onclick="showDashboard()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md transition">
+                        Return to Student Portal
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: DYNAMIC ADMIN / TEACHER PORTAL     -->
+        <!-- ========================================== -->
+        <section id="viewAdminPortal" class="hidden space-y-6">
+            <!-- Top Admin Nav Bar -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-blue-600"></i> Teacher & Admin Management Console
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Customize curriculum, edit timers, build question banks, and monitor student test logs.</p>
+                </div>
+                <!-- Navigation Tabs -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="showAdminSubView('builder')" id="btnTabBuilder" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow">
+                        <i class="fa-solid fa-gear mr-1"></i> Exam Config & Timers
+                    </button>
+                    <button onclick="showAdminSubView('roster')" id="btnTabRoster" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                        <i class="fa-solid fa-id-card mr-1"></i> Authorized Roster
+                    </button>
+                    <button onclick="showAdminSubView('questions')" id="btnTabQuestions" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                        <i class="fa-solid fa-list-check mr-1"></i> Question Bank & AI Setup
+                    </button>
+                    <button onclick="showAdminSubView('results')" id="btnTabResults" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Test Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 1: DYNAMIC EXAM & CURRICULUM CONFIGURATION ENGINE -->
+            <div id="adminSubBuilder" class="space-y-6">
+                <!-- Class Selection & Configuration Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-3">
+                        <h3 class="font-extrabold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-blue-600"></i> Target Class & Curriculum Setup
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <button onclick="addNewClassLevelModal()" class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> New Class Level
+                            </button>
+                            <button onclick="resetClassConfigToDefault()" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition">
+                                Reset Defaults
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Select Class to Edit</label>
+                            <select id="adminActiveClassSelect" onchange="loadAdminClassConfig()" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                <!-- Dynamic options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Class Display Name</label>
+                            <input type="text" id="adminClassLabelInput" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Timer Execution Mode</label>
+                            <select id="adminTimerModeSelect" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold">
+                                <option value="subject">Per-Subject Timers</option>
+                                <option value="blended">Blended / Combined Exam Timer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button onclick="saveClassConfigState()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Class Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Cards & Timers Management -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider">Configured Subjects & Timers</h4>
+                        <button onclick="addSubjectToClassConfig()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Add Subject
+                        </button>
+                    </div>
+
+                    <div id="adminSubjectCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamically populated subject cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 1.5: AUTHORIZED STUDENT ROSTER MANAGER -->
+            <div id="adminSubRoster" class="hidden space-y-6">
+                <!-- Roster Tools & Filter -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-3">
+                        <h3 class="font-extrabold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-users-gear text-blue-600"></i> Authorized Student IDs & Roster Manager
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openBulkAddModal()" class="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100">
+                                <i class="fa-solid fa-file-import mr-1"></i> Bulk Import IDs
+                            </button>
+                            <button onclick="openSingleAddRosterModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">
+                                <i class="fa-solid fa-user-plus mr-1"></i> Add Student ID
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Filter by Class Level</label>
+                            <select id="rosterClassFilterSelect" onchange="renderRosterTable()" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                <option value="ALL">All Classes</option>
+                                <!-- Dynamic options -->
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Search Student ID or Name</label>
+                            <input type="text" id="rosterSearchInput" onkeyup="renderRosterTable()" placeholder="Search STU-2026-001 or Student Name..." class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-medium">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roster List Table -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                    <th class="p-4 font-semibold">Student ID</th>
+                                    <th class="p-4 font-semibold">Student Name</th>
+                                    <th class="p-4 font-semibold">Assigned Class</th>
+                                    <th class="p-4 font-semibold">Status</th>
+                                    <th class="p-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Roster items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 2: QUESTION BANK & DYNAMIC BOX SETUP WITH AI GENERATOR -->
+            <div id="adminSubQuestions" class="hidden space-y-6">
+                <!-- Top Control & Action Bar -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                        <!-- Class & Subject Selectors -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Class Level</label>
+                                <select id="qBankClassSelect" onchange="updateSubjectBankSelector(); renderAdminQuestionBank()" class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <!-- Class options -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Subject</label>
+                                <select id="qBankSubjectSelect" onchange="renderAdminQuestionBank()" class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <!-- Subject options -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons: Setup Boxes & AI Button -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Update/Configure Question Boxes Button -->
+                            <button onclick="promptUpdateQuestionsSetup()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
+                                <i class="fa-solid fa-boxes-stacked"></i> Update Questions (Open Boxes)
+                            </button>
+
+                            <!-- PHYSICAL AI BUTTON -->
+                            <button onclick="openAiAutofillModal()" class="btn-ai-physical px-5 py-2.5 text-white text-xs font-black rounded-xl flex items-center gap-2 uppercase tracking-wide cursor-pointer">
+                                <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-sm animate-pulse"></i>
+                                <span>AI Question Generator</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Question Boxes Workspace (Rendered when setup or AI autofill is triggered) -->
+                <div id="batchQuestionWorkspace" class="hidden space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-6 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-indigo-200 dark:border-indigo-800 pb-3">
+                        <div>
+                            <h3 class="text-base font-extrabold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-ruler text-indigo-600"></i> Active Question Boxes Editor
+                            </h3>
+                            <p id="workspaceMetaText" class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Configuring questions for selected class & subject.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="addSingleQuestionBoxToWorkspace()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Add Box
+                            </button>
+                            <button onclick="saveAllWorkspaceBoxes()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow flex items-center gap-1">
+                                <i class="fa-solid fa-floppy-disk"></i> Save All Questions
+                            </button>
+                            <button onclick="closeWorkspace()" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-300">
+                                Close Editor
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Container for N Question Boxes -->
+                    <div id="questionBoxesContainer" class="space-y-4">
+                        <!-- Open boxes injected here -->
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button onclick="saveAllWorkspaceBoxes()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-2">
+                            <i class="fa-solid fa-check-double"></i> Confirm & Save All Boxes to Bank
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Existing Saved Questions Bank List -->
+                <div class="space-y-3">
+                    <h4 class="font-extrabold text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-database text-blue-600"></i> Saved Question Bank List
+                    </h4>
+                    <div id="adminQuestionBankList" class="space-y-3">
+                        <!-- Injected questions -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 3: STUDENT EXAM RESULTS LOGS -->
+            <div id="adminSubResults" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <input type="text" id="searchResultInput" onkeyup="filterResultsTable()" placeholder="Search by student name or class..." class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full sm:w-64">
+                    <button onclick="exportCbtResultsCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">
+                        <i class="fa-solid fa-file-csv mr-1"></i> Export Results CSV
+                    </button>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                    <th class="p-4 font-semibold">Student ID</th>
+                                    <th class="p-4 font-semibold">Student Name</th>
+                                    <th class="p-4 font-semibold">Class Level</th>
+                                    <th class="p-4 font-semibold">Subject Breakdown</th>
+                                    <th class="p-4 font-semibold">Total Points</th>
+                                    <th class="p-4 font-semibold">Percentage</th>
+                                    <th class="p-4 font-semibold">Grade</th>
+                                    <th class="p-4 font-semibold">Date Submitted</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cbtResultsTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Results populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal Container -->
+    <div id="appModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div id="modalCard" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="modalTitle" class="text-lg font-extrabold text-gray-900 dark:text-white"></h3>
+            <div id="modalBody" class="text-xs sm:text-sm text-gray-600 dark:text-gray-300"></div>
+            <div id="modalActions" class="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        // ========================================================
+        // MONGO DB CONNECTIVITY HELPERS
+        // ========================================================
+        const API_BASE_URL = '/api'; // Replace with Node.js/Express server API endpoint linked to MongoDB
+
+        async function apiFetchQuestions(classKey, subjectId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions?classKey=${classKey}&subjectId=${subjectId}`);
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (err) {
+                console.warn('MongoDB API fetch failed, falling back to local memory:', err);
+            }
+            return (questionBank[classKey] && questionBank[classKey][subjectId]) || [];
+        }
+
+        async function apiSaveQuestion(classKey, subjectId, questionObj) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classKey, subjectId, ...questionObj })
+                });
+                if (response.ok) return await response.json();
+            } catch (err) {
+                console.warn('MongoDB API save failed, using local memory:', err);
+            }
+            return null;
+        }
+
+        async function apiUpdateQuestion(questionId, updatedObj) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedObj)
+                });
+                if (response.ok) return await response.json();
+            } catch (err) {
+                console.warn('MongoDB API update failed, using local memory:', err);
+            }
+            return null;
+        }
+
+        async function apiDeleteQuestion(questionId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) return true;
+            } catch (err) {
+                console.warn('MongoDB API delete failed, using local memory:', err);
+            }
+            return false;
+        }
+
+        async function apiSaveCbtResult(result) {
+            const response = await fetch(`${API_BASE_URL}/cbt-results`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result)
+            });
+            if (!response.ok) throw new Error('MongoDB could not save the CBT result.');
+            return response.json();
+        }
+
+        // ========================================================
+        // DEFAULT COLLEGE CURRICULUM & QUESTION BANK STATE (6 CLASSES)
+        // ========================================================
+        const defaultClassConfigurations = {
+            'JSS1': {
+                label: 'Junior Secondary School 1',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG101', timerMins: 5 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH101', timerMins: 5 },
+                    { id: 'gk', name: 'General Studies', code: 'GNS101', timerMins: 5 }
+                ]
+            },
+            'JSS2': {
+                label: 'Junior Secondary School 2',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG102', timerMins: 5 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH102', timerMins: 5 },
+                    { id: 'gk', name: 'General Studies', code: 'GNS102', timerMins: 5 }
+                ]
+            },
+            'JSS3': {
+                label: 'Junior Secondary School 3',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG103', timerMins: 5 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH103', timerMins: 5 },
+                    { id: 'gk', name: 'General Studies', code: 'GNS103', timerMins: 5 }
+                ]
+            },
+            'SSS1': {
+                label: 'Senior Secondary School 1',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG201', timerMins: 6 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH201', timerMins: 6 },
+                    { id: 'sci', name: 'General Science', code: 'SCI201', timerMins: 6 }
+                ]
+            },
+            'SSS2': {
+                label: 'Senior Secondary School 2',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG202', timerMins: 6 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH202', timerMins: 6 },
+                    { id: 'sci', name: 'General Science', code: 'SCI202', timerMins: 6 }
+                ]
+            },
+            'SSS3': {
+                label: 'Senior Secondary School 3',
+                timerMode: 'subject',
+                subjects: [
+                    { id: 'eng', name: 'English Language', code: 'ENG203', timerMins: 6 },
+                    { id: 'math', name: 'Mathematics', code: 'MTH203', timerMins: 6 },
+                    { id: 'sci', name: 'General Science', code: 'SCI203', timerMins: 6 }
+                ]
+            }
+        };
+
+        const defaultRoster = [
+            { studentId: 'STU-2026-001', name: 'John Doe', classKey: 'JSS1', status: 'Authorized' },
+            { studentId: 'STU-2026-002', name: 'Jane Smith', classKey: 'JSS2', status: 'Authorized' },
+            { studentId: 'STU-2026-003', name: 'David Mark', classKey: 'JSS3', status: 'Authorized' },
+            { studentId: 'STU-2026-101', name: 'Michael Brown', classKey: 'SSS1', status: 'Authorized' },
+            { studentId: 'STU-2026-102', name: 'Sarah Connor', classKey: 'SSS2', status: 'Authorized' },
+            { studentId: 'STU-2026-103', name: 'Alex Johnson', classKey: 'SSS3', status: 'Authorized' }
+        ];
+
+        const defaultQuestionBank = {
+            'JSS1': {
+                'eng': [
+                    { id: 'je1', qNumber: 1, text: 'Choose the correct synonym for "Abundant":', options: ['Plentiful', 'Scarce', 'Empty', 'Tiny'], correctIndex: 0, points: 1, customTime: 60, hint: 'It means existing in large quantities.' },
+                    { id: 'je2', qNumber: 2, text: 'Identify the verb in: "She sang beautifully."', options: ['She', 'Sang', 'Beautifully', 'None'], correctIndex: 1, points: 1, customTime: 60, hint: 'Look for the action word.' }
+                ],
+                'math': [
+                    { id: 'jm1', qNumber: 1, text: 'Solve for x: 3x - 5 = 10', options: ['x = 3', 'x = 5', 'x = 15', 'x = 4'], correctIndex: 1, points: 1, customTime: 90, hint: 'Add 5 to both sides then divide by 3.' }
+                ],
+                'gk': [
+                    { id: 'jg1', qNumber: 1, text: 'What is the capital city of Nigeria?', options: ['Lagos', 'Abuja', 'Kano', 'Ibadan'], correctIndex: 1, points: 1, customTime: 45, hint: 'Federal Capital Territory.' }
+                ]
+            },
+            'JSS2': { 'eng': [], 'math': [], 'gk': [] },
+            'JSS3': { 'eng': [], 'math': [], 'gk': [] },
+            'SSS1': {
+                'eng': [
+                    { id: 'se1', qNumber: 1, text: 'Choose the option opposite in meaning to "Meticulous":', options: ['Careful', 'Careless', 'Thorough', 'Precise'], correctIndex: 1, points: 1, customTime: 60, hint: 'Meticulous means very careful.' }
+                ],
+                'math': [
+                    { id: 'sm1', qNumber: 1, text: 'Solve quadratic equation x² - 5x + 6 = 0:', options: ['x = 2, 3', 'x = -2, -3', 'x = 1, 6', 'x = -1, 5'], correctIndex: 0, points: 1, customTime: 120, hint: 'Factors of 6 that add up to -5.' }
+                ],
+                'sci': [
+                    { id: 'sgs1', qNumber: 1, text: '[Physics] Acceleration due to gravity on Earth is approx:', options: ['9.8 m/s²', '5.0 m/s²', '12 m/s²', '1.6 m/s²'], correctIndex: 0, points: 1, customTime: 60, hint: 'Standard g value.' }
+                ]
+            },
+            'SSS2': { 'eng': [], 'math': [], 'sci': [] },
+            'SSS3': { 'eng': [], 'math': [], 'sci': [] }
+        };
+
+        // State Initialization
+        let classConfigs = JSON.parse(localStorage.getItem('dgc_class_configs')) || defaultClassConfigurations;
+        let studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
+        let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
+        let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
+
+        // Student Exam Session
+        let currentCandidate = { name: '', studentId: '', classKey: '' };
+        let currentClassConfig = null;
+        let activeSubjectIdx = 0;
+        let activeQuestionIdx = 0;
+        let studentAnswers = {}; // { 'subId-qIdx': optIdx }
+        let markedForReview = {}; // { 'subId-qIdx': true }
+        
+        // Timer Mechanics
+        let sectionTimers = {}; // { subId: remainingSeconds }
+        let totalExamTimer = 0; // blended mode seconds
+        let examTimerInterval = null;
+
+        window.onload = function() {
+            savePersistentData();
+            populateStudentClassDropdown();
+            populateAdminClassDropdown();
+        };
+
+        function savePersistentData() {
+            localStorage.setItem('dgc_class_configs', JSON.stringify(classConfigs));
+            localStorage.setItem('dgc_student_roster', JSON.stringify(studentRoster));
+            localStorage.setItem('dgc_question_bank_v2', JSON.stringify(questionBank));
+            localStorage.setItem('dgc_cbt_results_v2', JSON.stringify(cbtResults));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-animate pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 text-white ${
+                type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('themeIcon');
+            icon.className = document.documentElement.classList.contains('dark') 
+                ? 'fa-solid fa-sun text-lg text-amber-400' 
+                : 'fa-solid fa-moon text-lg text-gray-600';
+        }
+
+        function showView(viewId) {
+            ['viewDashboard', 'viewInstructions', 'viewExamPortal', 'viewSubmissionSuccess', 'viewAdminPortal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function showDashboard() {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+            showView('viewDashboard');
+        }
+
+        function populateStudentClassDropdown() {
+            const select = document.getElementById('studentClassSelect');
+            select.innerHTML = '<option value="">-- Select Class Level --</option>';
+            Object.keys(classConfigs).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = classConfigs[key].label;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleClassChange() {
+            const classKey = document.getElementById('studentClassSelect').value;
+            const previewText = document.getElementById('examSubjectPreviewText');
+
+            if (classKey && classConfigs[classKey]) {
+                const cfg = classConfigs[classKey];
+                const subNames = cfg.subjects.map(s => `${s.name} (${s.timerMins}m)`).join(', ');
+                previewText.innerText = `Class: ${cfg.label} | Configured Subjects: [ ${subNames} ]`;
+            } else {
+                previewText.innerText = 'Select your class level to view applicable subjects and duration breakdown.';
+            }
+        }
+
+        function prepareStudentExam() {
+            const name = document.getElementById('studentFullName').value.trim();
+            const studentId = document.getElementById('studentIdInput').value.trim().toUpperCase();
+            const classKey = document.getElementById('studentClassSelect').value;
+
+            if (!name) return showCustomAlert('Validation Error', 'Please enter candidate full name.');
+            if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
+            if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
+
+            const rosterMatch = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey);
+
+            if (!rosterMatch) {
+                return showCustomAlert('Authorization Error', `Student ID "${studentId}" is not registered or authorized for ${classConfigs[classKey].label}. Please verify your ID or contact your administrator.`);
+            }
+
+            if (rosterMatch.status === 'Suspended') {
+                return showCustomAlert('Access Suspended', `Student ID "${studentId}" has been suspended for this examination session. Please see your invigilator.`);
+            }
+
+            const priorResult = cbtResults.find(res => res.studentId && res.studentId.toUpperCase() === studentId && res.classKey === classKey);
+            if (priorResult || rosterMatch.status === 'Completed/Attempted') {
+                return showCustomAlert('Exam Already Submitted', `Student ID "${studentId}" has already completed and submitted the examination for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
+            }
+
+            currentCandidate = { name: rosterMatch.name || name, studentId: studentId, classKey: classKey };
+            currentClassConfig = classConfigs[classKey];
+
+            document.getElementById('instExamTitle').innerText = `${currentClassConfig.label} Examination`;
+            document.getElementById('instExamMeta').innerText = `Candidate: ${currentCandidate.name} (${studentId}) | Timer Mode: ${currentClassConfig.timerMode === 'subject' ? 'Per-Subject Timers' : 'Blended Exam Timer'}`;
+
+            const breakdownBox = document.getElementById('instSubjectBreakdown');
+            breakdownBox.innerHTML = '';
+
+            let totalMins = 0;
+            currentClassConfig.subjects.forEach(s => {
+                const qList = (questionBank[classKey] && questionBank[classKey][s.id]) || [];
+                totalMins += parseInt(s.timerMins) || 5;
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 text-xs';
+                card.innerHTML = `
+                    <div class="font-bold text-blue-600 dark:text-blue-400">${s.name} (${s.code})</div>
+                    <div class="text-gray-500 dark:text-gray-400 mt-1">${qList.length} Questions | ${s.timerMins} Mins Allocated</div>
+                `;
+                breakdownBox.appendChild(card);
+            });
+
+            showView('viewInstructions');
+        }
+
+        async function startExamNow() {
+            studentAnswers = {};
+            markedForReview = {};
+            activeSubjectIdx = 0;
+            activeQuestionIdx = 0;
+
+            // Sync with MongoDB for active class subjects
+            for (let sub of currentClassConfig.subjects) {
+                const remoteQs = await apiFetchQuestions(currentCandidate.classKey, sub.id);
+                if (remoteQs && remoteQs.length > 0) {
+                    if (!questionBank[currentCandidate.classKey]) questionBank[currentCandidate.classKey] = {};
+                    questionBank[currentCandidate.classKey][sub.id] = remoteQs;
+                }
+            }
+
+            sectionTimers = {};
+            let totalSecs = 0;
+            currentClassConfig.subjects.forEach(s => {
+                const secs = (parseInt(s.timerMins) || 5) * 60;
+                sectionTimers[s.id] = secs;
+                totalSecs += secs;
+            });
+            totalExamTimer = totalSecs;
+
+            showView('viewExamPortal');
+            renderSubjectTabs();
+            renderQuestion();
+            startTimerEngine();
+        }
+
+        function startTimerEngine() {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+            updateTimerDisplay();
+
+            examTimerInterval = setInterval(() => {
+                if (currentClassConfig.timerMode === 'subject') {
+                    const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+                    if (sectionTimers[activeSub.id] > 0) {
+                        sectionTimers[activeSub.id]--;
+                    } else {
+                        showToast(`Time expired for ${activeSub.name}!`, 'error');
+                        if (activeSubjectIdx < currentClassConfig.subjects.length - 1) {
+                            activeSubjectIdx++;
+                            activeQuestionIdx = 0;
+                            renderSubjectTabs();
+                            renderQuestion();
+                        } else {
+                            clearInterval(examTimerInterval);
+                            finalizeExamSubmission();
+                            return;
+                        }
+                    }
+                } else {
+                    if (totalExamTimer > 0) {
+                        totalExamTimer--;
+                    } else {
+                        clearInterval(examTimerInterval);
+                        showCustomAlert('Time Expired!', 'Total examination time has elapsed. Submitting test automatically.', () => {
+                            finalizeExamSubmission();
+                        });
+                        return;
+                    }
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            let secsRemaining = 0;
+            const timerBox = document.getElementById('timerContainer');
+            
+            if (currentClassConfig.timerMode === 'subject') {
+                const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+                secsRemaining = sectionTimers[activeSub.id] || 0;
+                document.getElementById('timerLabel').innerText = `${activeSub.name} Time:`;
+            } else {
+                secsRemaining = totalExamTimer;
+                document.getElementById('timerLabel').innerText = `Total Time Left:`;
+            }
+
+            if (secsRemaining <= 300) {
+                timerBox.className = 'flex items-center space-x-3 shrink-0 bg-red-100 dark:bg-red-900/50 px-4 py-2 rounded-xl border border-red-300 dark:border-red-700 animate-pulse';
+            } else {
+                timerBox.className = 'flex items-center space-x-3 shrink-0 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800';
+            }
+
+            const mins = Math.floor(secsRemaining / 60);
+            const secs = secsRemaining % 60;
+            document.getElementById('examTimer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function renderSubjectTabs() {
+            const container = document.getElementById('sectionTabs');
+            container.innerHTML = '';
+            currentClassConfig.subjects.forEach((sub, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                    idx === activeSubjectIdx 
+                        ? 'bg-blue-600 text-white shadow' 
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                }`;
+                btn.innerText = sub.name;
+                btn.onclick = () => {
+                    activeSubjectIdx = idx;
+                    activeQuestionIdx = 0;
+                    renderSubjectTabs();
+                    renderQuestion();
+                    updateTimerDisplay();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function getActiveQuestionSet() {
+            const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+            if (!activeSub) return [];
+            return (questionBank[currentCandidate.classKey] && questionBank[currentCandidate.classKey][activeSub.id]) || [];
+        }
+
+        function renderQuestion() {
+            const qList = getActiveQuestionSet();
+            const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+
+            if (qList.length === 0) {
+                document.getElementById('currentQNumText').innerText = `No Questions Configured`;
+                document.getElementById('questionText').innerText = `There are no questions configured for ${activeSub.name} yet. Please notify your admin.`;
+                document.getElementById('optionsContainer').innerHTML = '';
+                renderPalette();
+                return;
+            }
+
+            const q = qList[activeQuestionIdx];
+            const answerKey = `${activeSub.id}-${activeQuestionIdx}`;
+
+            const qDisplayNum = q.qNumber !== undefined ? q.qNumber : (activeQuestionIdx + 1);
+            document.getElementById('currentQNumText').innerText = `Question ${qDisplayNum} of ${qList.length}`;
+            document.getElementById('qPointWeight').innerText = `${q.points || 1} Pt` + (q.customTime ? ` | ${q.customTime}s` : '');
+            document.getElementById('currentSectionBadge').innerText = activeSub.name;
+            document.getElementById('questionText').innerText = q.text;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, optIdx) => {
+                const isSelected = studentAnswers[answerKey] === optIdx;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border cursor-pointer transition flex items-center space-x-3 ${
+                    isSelected 
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20' 
+                        : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-800 dark:text-gray-200'
+                }`;
+                card.onclick = () => {
+                    studentAnswers[answerKey] = optIdx;
+                    renderQuestion();
+                };
+
+                const letter = String.fromCharCode(65 + optIdx);
+                card.innerHTML = `
+                    <div class="w-7 h-7 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs font-bold ${
+                        isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700'
+                    }">${letter}</div>
+                    <div class="text-sm font-medium flex-grow">${optText}</div>
+                `;
+                optionsContainer.appendChild(card);
+            });
+
+            renderPalette();
+        }
+
+        function clearResponse() {
+            const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+            delete studentAnswers[`${activeSub.id}-${activeQuestionIdx}`];
+            renderQuestion();
+        }
+
+        function toggleMarkForReview() {
+            const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+            const key = `${activeSub.id}-${activeQuestionIdx}`;
+            markedForReview[key] = !markedForReview[key];
+            renderPalette();
+        }
+
+        function navigateQuestion(dir) {
+            const qList = getActiveQuestionSet();
+            const newIdx = activeQuestionIdx + dir;
+            if (newIdx >= 0 && newIdx < qList.length) {
+                activeQuestionIdx = newIdx;
+                renderQuestion();
+            }
+        }
+
+        function renderPalette() {
+            const paletteGrid = document.getElementById('paletteGrid');
+            paletteGrid.innerHTML = '';
+
+            const qList = getActiveQuestionSet();
+            const activeSub = currentClassConfig.subjects[activeSubjectIdx];
+
+            let cAns = 0, cUnans = 0, cMarked = 0;
+
+            qList.forEach((q, idx) => {
+                const key = `${activeSub.id}-${idx}`;
+                const isAns = studentAnswers[key] !== undefined;
+                const isMark = !!markedForReview[key];
+
+                let bgClass = 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+                if (isMark) {
+                    bgClass = 'bg-purple-600 text-white';
+                    cMarked++;
+                } else if (isAns) {
+                    bgClass = 'bg-green-500 text-white';
+                    cAns++;
+                } else {
+                    cUnans++;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = `w-9 h-9 rounded-xl text-xs font-bold transition flex items-center justify-center ${bgClass} shadow-sm`;
+                btn.innerText = q.qNumber !== undefined ? q.qNumber : (idx + 1);
+                btn.onclick = () => {
+                    activeQuestionIdx = idx;
+                    renderQuestion();
+                };
+                paletteGrid.appendChild(btn);
+            });
+
+            document.getElementById('countAnswered').innerText = cAns;
+            document.getElementById('countUnanswered').innerText = cUnans;
+            document.getElementById('countMarked').innerText = cMarked;
+        }
+
+        function promptSubmitExam() {
+            showCustomConfirm(
+                'Submit Examination?',
+                'Are you sure you want to finalize your submission? All answers will be logged.',
+                () => finalizeExamSubmission()
+            );
+        }
+
+        async function finalizeExamSubmission() {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+
+            let subjectBreakdown = {};
+            let totalAchieved = 0;
+            let totalPossible = 0;
+
+            currentClassConfig.subjects.forEach(sub => {
+                const qList = (questionBank[currentCandidate.classKey] && questionBank[currentCandidate.classKey][sub.id]) || [];
+                let subScore = 0;
+                let subPossible = 0;
+
+                qList.forEach((q, idx) => {
+                    const points = q.points || 1;
+                    subPossible += points;
+                    if (studentAnswers[`${sub.id}-${idx}`] === q.correctIndex) {
+                        subScore += points;
+                    }
+                });
+
+                subjectBreakdown[sub.name] = { score: subScore, max: subPossible };
+                totalAchieved += subScore;
+                totalPossible += subPossible;
+            });
+
+            const percent = totalPossible > 0 ? Math.round((totalAchieved / totalPossible) * 100) : 0;
+            let grade = 'F';
+            if (percent >= 70) grade = 'A (Distinction)';
+            else if (percent >= 60) grade = 'B (Credit)';
+            else if (percent >= 50) grade = 'C (Pass)';
+            else if (percent >= 40) grade = 'D (Pass)';
+
+            const timestamp = new Date().toLocaleString();
+
+            const record = {
+                id: 'res-' + Date.now(),
+                studentId: currentCandidate.studentId,
+                studentName: currentCandidate.name,
+                classKey: currentCandidate.classKey,
+                classLevel: currentClassConfig.label,
+                subjectBreakdown: subjectBreakdown,
+                totalPoints: totalAchieved,
+                maxPoints: totalPossible,
+                percentage: percent,
+                grade: grade,
+                timestamp: timestamp
+            };
+
+            cbtResults.unshift(record);
+
+            const rItem = studentRoster.find(r => r.studentId.toUpperCase() === currentCandidate.studentId.toUpperCase() && r.classKey === currentCandidate.classKey);
+            if (rItem) {
+                rItem.status = 'Completed/Attempted';
+            }
+
+            savePersistentData();
+
+            try {
+                await apiSaveCbtResult(record);
+            } catch (err) {
+                console.error('CBT result MongoDB save failed:', err);
+                showToast('Exam saved locally, but the server could not save the result.', 'error');
+            }
+
+            document.getElementById('scorecardMeta').innerText = `Candidate: ${currentCandidate.name} (${currentCandidate.studentId}) | ${currentClassConfig.label}`;
+            document.getElementById('scorecardPoints').innerText = `${totalAchieved} / ${totalPossible}`;
+            document.getElementById('scorecardPercent').innerText = `${percent}%`;
+            document.getElementById('scorecardGrade').innerText = grade;
+
+            const table = document.getElementById('scorecardSubjectTable');
+            table.innerHTML = '';
+            Object.keys(subjectBreakdown).forEach(sName => {
+                const item = subjectBreakdown[sName];
+                const row = document.createElement('div');
+                row.className = 'p-3 bg-white dark:bg-gray-800 flex justify-between items-center text-xs font-semibold';
+                row.innerHTML = `
+                    <span>${sName}</span>
+                    <span class="text-blue-600 dark:text-blue-400 font-bold">${item.score} / ${item.max} Points</span>
+                `;
+                table.appendChild(row);
+            });
+
+            showView('viewSubmissionSuccess');
+        }
+
+        // ========================================================
+        // ADMIN AUTHENTICATION & TEACHER HUB LOGIC
+        // ========================================================
+        function openAdminAuthModal() {
+            document.getElementById('modalTitle').innerText = '🔒 Admin & Teacher Login';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Enter administrator password to access college controls, curriculum config, and result logs.</p>
+                    <input type="password" id="adminPassInput" class="w-full px-4 py-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Password" onkeydown="if(event.key==='Enter') verifyAdminPass()">
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="verifyAdminPass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Unlock Console</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+            setTimeout(() => {
+                const passInput = document.getElementById('adminPassInput');
+                if (passInput) passInput.focus();
+            }, 100);
+        }
+
+        async function verifyAdminPass() {
+            const pass = document.getElementById('adminPassInput').value;
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass, surface: 'cbt' })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
+                closeModal();
+                showView('viewAdminPortal');
+                showAdminSubView('builder');
+                showToast(data.emailSent === false ? 'Admin Portal unlocked, but login notification failed.' : 'Admin Portal unlocked successfully!');
+            } catch (err) {
+                showCustomAlert('Access Denied', err.message || 'Incorrect Admin Password! Please try again.');
+            }
+        }
+
+        function showAdminSubView(key) {
+            ['builder', 'roster', 'questions', 'results'].forEach(k => {
+                const sub = document.getElementById('adminSub' + k.charAt(0).toUpperCase() + k.slice(1));
+                const btn = document.getElementById('btnTab' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (sub) sub.classList.add('hidden');
+                if (btn) btn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200';
+            });
+
+            const activeSub = document.getElementById('adminSub' + key.charAt(0).toUpperCase() + key.slice(1));
+            const activeBtn = document.getElementById('btnTab' + key.charAt(0).toUpperCase() + key.slice(1));
+            if (activeSub) activeSub.classList.remove('hidden');
+            if (activeBtn) activeBtn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow';
+
+            if (key === 'builder') loadAdminClassConfig();
+            if (key === 'roster') { populateRosterClassFilter(); renderRosterTable(); }
+            if (key === 'questions') { populateQuestionBankSelectors(); renderAdminQuestionBank(); }
+            if (key === 'results') renderCbtResultsTable();
+        }
+
+        // ========================================================
+        // AUTHORIZED ROSTER MANAGER LOGIC
+        // ========================================================
+        function populateRosterClassFilter() {
+            const select = document.getElementById('rosterClassFilterSelect');
+            select.innerHTML = '<option value="ALL">All Classes</option>';
+            Object.keys(classConfigs).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = classConfigs[key].label;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderRosterTable() {
+            const filterClass = document.getElementById('rosterClassFilterSelect').value || 'ALL';
+            const search = (document.getElementById('rosterSearchInput').value || '').toLowerCase();
+            const tbody = document.getElementById('rosterTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = studentRoster.filter(r => {
+                const matchClass = filterClass === 'ALL' || r.classKey === filterClass;
+                const matchSearch = r.studentId.toLowerCase().includes(search) || (r.name && r.name.toLowerCase().includes(search));
+                return matchClass && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No student IDs match the selected filter or search terms.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((item) => {
+                const classLabel = classConfigs[item.classKey] ? classConfigs[item.classKey].label : item.classKey;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition';
+
+                let statusBadge = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+                if (item.status === 'Completed/Attempted') statusBadge = 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+                if (item.status === 'Suspended') statusBadge = 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+
+                tr.innerHTML = `
+                    <td class="p-4 font-mono font-bold text-gray-900 dark:text-white">${item.studentId}</td>
+                    <td class="p-4 font-medium text-gray-800 dark:text-gray-200">${item.name || 'N/A'}</td>
+                    <td class="p-4 text-xs font-semibold text-blue-600 dark:text-blue-400">${classLabel}</td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge}">${item.status || 'Authorized'}</span>
+                    </td>
+                    <td class="p-4 space-x-2">
+                        <button onclick="toggleRosterStatus('${item.studentId}')" class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold">Toggle Status</button>
+                        <button onclick="deleteRosterItem('${item.studentId}')" class="text-xs text-red-500 hover:underline font-semibold">Remove</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleRosterStatus(studentId) {
+            const item = studentRoster.find(r => r.studentId === studentId);
+            if (item) {
+                if (item.status === 'Authorized') item.status = 'Suspended';
+                else if (item.status === 'Suspended') item.status = 'Completed/Attempted';
+                else item.status = 'Authorized';
+                savePersistentData();
+                renderRosterTable();
+                showToast(`Status updated for ${studentId}`);
+            }
+        }
+
+        function deleteRosterItem(studentId) {
+            studentRoster = studentRoster.filter(r => r.studentId !== studentId);
+            savePersistentData();
+            renderRosterTable();
+            showToast(`Removed Student ID ${studentId}`);
+        }
+
+        function openSingleAddRosterModal() {
+            document.getElementById('modalTitle').innerText = '➕ Add Authorized Student ID';
+            let classOptionsHtml = Object.keys(classConfigs).map(k => `<option value="${k}">${classConfigs[k].label}</option>`).join('');
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold mb-1">Student ID *</label>
+                        <input type="text" id="addRosterId" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 uppercase font-mono" placeholder="e.g. STU-2026-005">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Full Student Name (Optional)</label>
+                        <input type="text" id="addRosterName" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Alex Johnson">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Assigned Class Level *</label>
+                        <select id="addRosterClass" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            ${classOptionsHtml}
+                        </select>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="saveSingleRosterStudent()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Add to Roster</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        function saveSingleRosterStudent() {
+            const studentId = document.getElementById('addRosterId').value.trim().toUpperCase();
+            const name = document.getElementById('addRosterName').value.trim();
+            const classKey = document.getElementById('addRosterClass').value;
+
+            if (!studentId) return showToast('Please enter a valid Student ID.', 'error');
+
+            const existing = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey);
+            if (existing) return showToast(`Student ID ${studentId} is already authorized for this class!`, 'error');
+
+            studentRoster.push({
+                studentId: studentId,
+                name: name || 'Authorized Candidate',
+                classKey: classKey,
+                status: 'Authorized'
+            });
+
+            savePersistentData();
+            closeModal();
+            renderRosterTable();
+            showToast(`Added ${studentId} to roster!`);
+        }
+
+        function openBulkAddModal() {
+            document.getElementById('modalTitle').innerText = '📥 Bulk Import Authorized Student IDs';
+            let classOptionsHtml = Object.keys(classConfigs).map(k => `<option value="${k}">${classConfigs[k].label}</option>`).join('');
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold mb-1">Target Class Level *</label>
+                        <select id="bulkClassSelect" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Paste Student IDs (Comma or Newline Separated)</label>
+                        <textarea id="bulkIdsInput" rows="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-mono" placeholder="STU-2026-001&#10;STU-2026-002&#10;STU-2026-003"></textarea>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="processBulkRosterImport()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Import IDs</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        function processBulkRosterImport() {
+            const classKey = document.getElementById('bulkClassSelect').value;
+            const rawText = document.getElementById('bulkIdsInput').value;
+
+            if (!rawText.trim()) return showToast('Please paste at least one Student ID.', 'error');
+
+            const ids = rawText.split(/[\n,]+/).map(i => i.trim().toUpperCase()).filter(i => i.length > 0);
+            let addedCount = 0;
+
+            ids.forEach(id => {
+                const exists = studentRoster.some(r => r.studentId.toUpperCase() === id && r.classKey === classKey);
+                if (!exists) {
+                    studentRoster.push({
+                        studentId: id,
+                        name: 'Candidate ' + id,
+                        classKey: classKey,
+                        status: 'Authorized'
+                    });
+                    addedCount++;
+                }
+            });
+
+            savePersistentData();
+            closeModal();
+            renderRosterTable();
+            showToast(`Successfully imported ${addedCount} Student IDs!`);
+        }
+
+        function populateAdminClassDropdown(preferredKey) {
+            const select = document.getElementById('adminActiveClassSelect');
+            if (!select) return;
+            const keep = preferredKey || select.value;
+            select.innerHTML = '';
+            Object.keys(classConfigs).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = classConfigs[key].label;
+                select.appendChild(opt);
+            });
+            if (keep && classConfigs[keep]) {
+                select.value = keep;
+            }
+        }
+
+        function loadAdminClassConfig() {
+            const select = document.getElementById('adminActiveClassSelect');
+            if (!select) return;
+            populateAdminClassDropdown(select.value);
+            const classKey = select.value || Object.keys(classConfigs)[0];
+            if (classKey && select.value !== classKey) select.value = classKey;
+            const cfg = classConfigs[classKey];
+            if (!cfg) return;
+
+            const labelInput = document.getElementById('adminClassLabelInput');
+            const timerSelect = document.getElementById('adminTimerModeSelect');
+            if (labelInput) labelInput.value = cfg.label;
+            if (timerSelect) timerSelect.value = cfg.timerMode || 'subject';
+
+            renderAdminSubjectCards(cfg.subjects);
+        }
+
+        function renderAdminSubjectCards(subjects) {
+            const container = document.getElementById('adminSubjectCardsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            subjects.forEach((sub, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                        <span class="font-bold text-xs text-blue-600 dark:text-blue-400">Subject #${idx + 1}</span>
+                        <button onclick="removeSubjectCard(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Subject Name</label>
+                            <input type="text" value="${sub.name}" onchange="updateSubjectField(${idx}, 'name', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Subject Code</label>
+                                <input type="text" value="${sub.code}" onchange="updateSubjectField(${idx}, 'code', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Timer (Mins)</label>
+                                <input type="number" min="1" max="180" value="${sub.timerMins}" onchange="updateSubjectField(${idx}, 'timerMins', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold text-blue-600">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateSubjectField(idx, field, value) {
+            const classKey = document.getElementById('adminActiveClassSelect').value;
+            if (classConfigs[classKey] && classConfigs[classKey].subjects[idx]) {
+                classConfigs[classKey].subjects[idx][field] = value;
+            }
+        }
+
+        function removeSubjectCard(idx) {
+            const classKey = document.getElementById('adminActiveClassSelect').value;
+            if (classConfigs[classKey]) {
+                classConfigs[classKey].subjects.splice(idx, 1);
+                renderAdminSubjectCards(classConfigs[classKey].subjects);
+            }
+        }
+
+        function addSubjectToClassConfig() {
+            const classKey = document.getElementById('adminActiveClassSelect').value;
+            if (classConfigs[classKey]) {
+                const count = classConfigs[classKey].subjects.length + 1;
+                classConfigs[classKey].subjects.push({
+                    id: 'sub-' + Date.now(),
+                    name: `New Subject ${count}`,
+                    code: `SUB${count}01`,
+                    timerMins: 5
+                });
+                renderAdminSubjectCards(classConfigs[classKey].subjects);
+            }
+        }
+
+        function addNewClassLevelModal() {
+            document.getElementById('modalTitle').innerText = '➕ Add New Class Level';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-xs mb-1">Class Key Code (e.g., JSS1, SSS2)</label>
+                        <input type="text" id="newClassKey" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold" placeholder="e.g. JSS1">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-xs mb-1">Full Class Label</label>
+                        <input type="text" id="newClassLabel" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs" placeholder="e.g. Junior Secondary School 1">
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="saveNewClassLevel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Create Class</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        function saveNewClassLevel() {
+            const key = document.getElementById('newClassKey').value.trim().toUpperCase();
+            const label = document.getElementById('newClassLabel').value.trim();
+
+            if (!key || !label) return showToast('Please enter both key and label.', 'error');
+
+            classConfigs[key] = {
+                label: label,
+                timerMode: 'subject',
+                subjects: [{ id: 'eng', name: 'English Language', code: 'ENG101', timerMins: 5 }]
+            };
+
+            questionBank[key] = { 'eng': [] };
+
+            savePersistentData();
+            closeModal();
+            populateStudentClassDropdown();
+            populateAdminClassDropdown();
+            document.getElementById('adminActiveClassSelect').value = key;
+            loadAdminClassConfig();
+            showToast(`Created ${label}!`);
+        }
+
+        function saveClassConfigState() {
+            const classKey = document.getElementById('adminActiveClassSelect').value;
+            if (classConfigs[classKey]) {
+                classConfigs[classKey].label = document.getElementById('adminClassLabelInput').value;
+                classConfigs[classKey].timerMode = document.getElementById('adminTimerModeSelect').value;
+                savePersistentData();
+                populateStudentClassDropdown();
+                showToast('Class configuration saved successfully!');
+            }
+        }
+
+        function resetClassConfigToDefault() {
+            showCustomConfirm('Reset Configurations?', 'This will revert class settings to factory defaults.', () => {
+                classConfigs = JSON.parse(JSON.stringify(defaultClassConfigurations));
+                savePersistentData();
+                populateStudentClassDropdown();
+                loadAdminClassConfig();
+                showToast('Reverted to defaults.');
+            });
+        }
+
+        // ========================================================
+        // TEACHER QUESTION UPDATE (BOX SETUP) & PHYSICAL AI GENERATOR
+        // ========================================================
+        let currentWorkspaceClass = '';
+        let currentWorkspaceSubId = '';
+
+        function populateQuestionBankSelectors() {
+            const classSel = document.getElementById('qBankClassSelect');
+            classSel.innerHTML = '';
+            Object.keys(classConfigs).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = classConfigs[key].label;
+                classSel.appendChild(opt);
+            });
+
+            updateSubjectBankSelector();
+        }
+
+        function updateSubjectBankSelector() {
+            const classKey = document.getElementById('qBankClassSelect').value;
+            const subSel = document.getElementById('qBankSubjectSelect');
+            subSel.innerHTML = '';
+            if (classConfigs[classKey]) {
+                classConfigs[classKey].subjects.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.innerText = sub.name;
+                    subSel.appendChild(opt);
+                });
+            }
+        }
+
+        async function renderAdminQuestionBank() {
+            const classKey = document.getElementById('qBankClassSelect').value;
+            const subId = document.getElementById('qBankSubjectSelect').value;
+            const container = document.getElementById('adminQuestionBankList');
+            container.innerHTML = '';
+
+            let qList = await apiFetchQuestions(classKey, subId);
+            if (!qList || qList.length === 0) {
+                qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
+            }
+
+            if (qList.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">No questions found for this subject section. Click "Update Questions (Open Boxes)" or the AI Generator button above to create boxes.</div>`;
+                return;
+            }
+
+            qList.forEach((q, idx) => {
+                const qNumLabel = q.qNumber !== undefined ? q.qNumber : (idx + 1);
+                const timeLabel = q.customTime ? ` | ⏱️ ${q.customTime}s` : '';
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-2 text-xs shadow-sm';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-blue-600 dark:text-blue-400">Q${qNumLabel}. [${q.points || 1} Pt${timeLabel}] ${q.text}</span>
+                        <div class="space-x-2">
+                            <button onclick="openEditQuestionModal(${idx})" class="text-blue-600 hover:text-blue-800 font-bold"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button onclick="deleteQuestion(${idx})" class="text-red-500 hover:text-red-700 font-bold"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-300">
+                        ${q.options.map((opt, oIdx) => `
+                            <div class="p-2 rounded-lg border ${oIdx === q.correctIndex ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold' : 'border-gray-200 dark:border-gray-700'}">
+                                ${String.fromCharCode(65 + oIdx)}. ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 1. TEACHER UPDATE QUESTIONS SETUP (PROMPT FOR CLASS, NUMBER OF QUESTIONS, TIME)
+        function promptUpdateQuestionsSetup() {
+            let classOptionsHtml = Object.keys(classConfigs).map(k => `<option value="${k}">${classConfigs[k].label}</option>`).join('');
+
+            document.getElementById('modalTitle').innerText = '⚙️ Configure Question Boxes Setup';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <p class="text-gray-500 dark:text-gray-400">Select class level, number of question boxes to open, and default allocated time per question.</p>
+                    <div>
+                        <label class="block font-bold mb-1">Select Class Level *</label>
+                        <select id="setupClassSelect" onchange="updateSetupSubjectDropdown()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Select Subject *</label>
+                        <select id="setupSubjectSelect" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <!-- Injected -->
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold mb-1">Number of Question Boxes *</label>
+                            <input type="number" id="setupNumQuestions" min="1" max="100" value="5" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-blue-600">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Time Per Question (Seconds) *</label>
+                            <input type="number" id="setupTimePerQuestion" min="10" max="600" value="60" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="executeOpenQuestionBoxes()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold shadow">Open Question Boxes</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+            updateSetupSubjectDropdown();
+        }
+
+        function updateSetupSubjectDropdown() {
+            const classKey = document.getElementById('setupClassSelect').value;
+            const subSel = document.getElementById('setupSubjectSelect');
+            if (!subSel) return;
+            subSel.innerHTML = '';
+            if (classConfigs[classKey]) {
+                classConfigs[classKey].subjects.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.innerText = sub.name;
+                    subSel.appendChild(opt);
+                });
+            }
+        }
+
+        function executeOpenQuestionBoxes() {
+            const classKey = document.getElementById('setupClassSelect').value;
+            const subId = document.getElementById('setupSubjectSelect').value;
+            const numBoxes = parseInt(document.getElementById('setupNumQuestions').value) || 5;
+            const timePerQ = parseInt(document.getElementById('setupTimePerQuestion').value) || 60;
+
+            if (!classKey || !subId) return showToast('Please select valid Class and Subject.', 'error');
+
+            currentWorkspaceClass = classKey;
+            currentWorkspaceSubId = subId;
+
+            // Load existing questions or fill blanks up to numBoxes
+            const existingQs = (questionBank[classKey] && questionBank[classKey][subId]) ? [...questionBank[classKey][subId]] : [];
+            let boxesData = [];
+
+            for (let i = 0; i < numBoxes; i++) {
+                if (existingQs[i]) {
+                    boxesData.push({ ...existingQs[i], customTime: existingQs[i].customTime || timePerQ });
+                } else {
+                    boxesData.push({
+                        id: 'q-' + Date.now() + '-' + i,
+                        qNumber: i + 1,
+                        text: '',
+                        options: ['', '', '', ''],
+                        correctIndex: 0,
+                        points: 1,
+                        customTime: timePerQ
+                    });
+                }
+            }
+
+            closeModal();
+            renderQuestionWorkspace(classKey, subId, boxesData);
+            showToast(`Opened ${numBoxes} question boxes!`);
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // 2. PHYSICAL AI BUTTON MODAL (PROMPT FOR CLASS, SUBJECT, TOPIC, NUMBER OF QUESTIONS)
+        function openAiAutofillModal() {
+            const currentClass = document.getElementById('qBankClassSelect')?.value || '';
+            const classOptionsHtml = Object.keys(classConfigs).map(k =>
+                `<option value="${k}" ${k === currentClass ? 'selected' : ''}>${classConfigs[k].label}</option>`
+            ).join('');
+
+            document.getElementById('modalTitle').innerHTML = '<span class="flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> AI Question Generator & Autofill</span>';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <p class="text-gray-500 dark:text-gray-400">Enter class, subject, topic and how many questions to create. Configured ChatGPT and Google Gemini providers generate the questions, with online sources used as backup.</p>
+                    <div>
+                        <label class="block font-bold mb-1">Target Class Level *</label>
+                        <select id="aiClassSelect" onchange="updateAiSubjectDropdown()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Subject *</label>
+                        <select id="aiSubjectSelect" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <!-- Injected -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Topic / Syllabus Focus *</label>
+                        <input type="text" id="aiTopicInput" placeholder="e.g. Quadratic Equations, Photosynthesis, Parts of Speech..." class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-medium" onkeydown="if(event.key==='Enter') executeAiGeneration()">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Number of Questions *</label>
+                        <input type="number" id="aiNumQuestions" min="1" max="20" value="5" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-purple-600">
+                    </div>
+                    <p id="aiGenerateStatus" class="hidden text-[11px] font-semibold text-purple-600 dark:text-purple-300"></p>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button type="button" id="aiGenerateBtn" onclick="executeAiGeneration()" class="px-5 py-2 btn-ai-physical text-white rounded-xl text-xs font-black shadow-lg">✨ Generate &amp; Fill Boxes</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+            updateAiSubjectDropdown();
+            const currentSub = document.getElementById('qBankSubjectSelect')?.value;
+            if (currentSub && document.getElementById('aiSubjectSelect')) {
+                document.getElementById('aiSubjectSelect').value = currentSub;
+            }
+            setTimeout(() => document.getElementById('aiTopicInput')?.focus(), 80);
+        }
+
+        function updateAiSubjectDropdown() {
+            const classKey = document.getElementById('aiClassSelect').value;
+            const subSel = document.getElementById('aiSubjectSelect');
+            if (!subSel) return;
+            subSel.innerHTML = '';
+            if (classConfigs[classKey]) {
+                classConfigs[classKey].subjects.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.innerText = sub.name;
+                    subSel.appendChild(opt);
+                });
+            }
+        }
+
+        async function executeAiGeneration() {
+            const classKey = document.getElementById('aiClassSelect').value;
+            const subId = document.getElementById('aiSubjectSelect').value;
+            const topic = document.getElementById('aiTopicInput').value.trim();
+            const numQs = Math.min(20, Math.max(1, parseInt(document.getElementById('aiNumQuestions').value, 10) || 5));
+
+            if (!classKey || !subId) return showToast('Please select class and subject.', 'error');
+            if (!topic) return showToast('Please enter a topic for AI question generation.', 'error');
+
+            const subObj = classConfigs[classKey].subjects.find(s => s.id === subId);
+            const subName = subObj ? subObj.name : 'Subject';
+            const classLabel = classConfigs[classKey] ? classConfigs[classKey].label : classKey;
+
+            const btn = document.getElementById('aiGenerateBtn');
+            const status = document.getElementById('aiGenerateStatus');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'pointer-events-none');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Asking AI providers...';
+            }
+            if (status) {
+                status.classList.remove('hidden');
+                status.innerText = `Generating ${subName} questions on "${topic}" with ChatGPT and Google...`;
+            }
+
+            let generatedBoxes = [];
+            try {
+                const response = await fetch(`${API_BASE_URL}/cbt/generate-questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        classKey,
+                        classLabel,
+                        subjectName: subName,
+                        topic,
+                        count: numQs
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.ok && Array.isArray(data.questions) && data.questions.length) {
+                    generatedBoxes = data.questions.slice(0, numQs).map((q, i) => ({
+                        id: 'q-ai-' + Date.now() + '-' + i,
+                        qNumber: i + 1,
+                        text: q.text,
+                        options: (q.options || ['', '', '', '']).slice(0, 4),
+                        correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : 0,
+                        points: 1,
+                        customTime: 60,
+                        isAiAutofilled: true
+                    }));
+                }
+            } catch (err) {
+                console.warn('Online question search failed:', err);
+            }
+
+            if (!generatedBoxes.length) {
+                generatedBoxes = generateAiQuestionsData(classKey, subName, topic, numQs);
+                showToast('Online search was limited. Filled boxes with generated topic questions.', 'error');
+            } else {
+                showToast(`Filled ${generatedBoxes.length} question boxes from online search for "${topic}".`);
+            }
+
+            currentWorkspaceClass = classKey;
+            currentWorkspaceSubId = subId;
+            closeModal();
+            renderQuestionWorkspace(classKey, subId, generatedBoxes);
+        }
+
+        // SMART AI QUESTION GENERATOR LOGIC
+        function generateAiQuestionsData(classKey, subjectName, topic, count) {
+            let list = [];
+            const topicLower = topic.toLowerCase();
+
+            for (let i = 1; i <= count; i++) {
+                let qStem = '';
+                let opts = [];
+                let cIdx = 0;
+
+                if (topicLower.includes('equation') || topicLower.includes('algebra') || topicLower.includes('math')) {
+                    const a = i + 2;
+                    const b = i * 3;
+                    const ans = a * b;
+                    qStem = `[${topic}] Question ${i}: Evaluate the equation ${a}x = ${ans}. What is the value of x?`;
+                    opts = [`x = ${b}`, `x = ${b + 2}`, `x = ${b - 1}`, `x = ${b * 2}`];
+                    cIdx = 0;
+                } else if (topicLower.includes('photosynthesis') || topicLower.includes('plant') || topicLower.includes('biology')) {
+                    qStem = `[${topic}] Question ${i}: Which of the following is essential for plant photosynthesis?`;
+                    opts = ['Chlorophyll and Sunlight', 'Carbon Monoxide only', 'Nitrogen Gas only', 'Argon Gas'];
+                    cIdx = 0;
+                } else if (topicLower.includes('verb') || topicLower.includes('noun') || topicLower.includes('grammar') || topicLower.includes('english')) {
+                    qStem = `[${topic}] Question ${i}: Identify the grammatical structure in the topic sentence regarding "${topic}".`;
+                    opts = ['Subject + Action Verb', 'Adverbial Phrase only', 'Prepositional Passive', 'Interjection'];
+                    cIdx = 0;
+                } else {
+                    qStem = `[${topic}] Question ${i}: What is a fundamental core concept regarding "${topic}" in ${subjectName}?`;
+                    opts = [
+                        `Key principle governing ${topic}`,
+                        `Secondary non-essential factor of ${topic}`,
+                        `Unrelated concept from general science`,
+                        `An invalid premise regarding ${topic}`
+                    ];
+                    cIdx = 0;
+                }
+
+                list.push({
+                    id: 'q-ai-' + Date.now() + '-' + i,
+                    qNumber: i,
+                    text: qStem,
+                    options: opts,
+                    correctIndex: cIdx,
+                    points: 1,
+                    customTime: 60,
+                    isAiAutofilled: true
+                });
+            }
+
+            return list;
+        }
+
+        // RENDER WORKSPACE WITH N QUESTION BOXES
+        function renderQuestionWorkspace(classKey, subId, boxesData) {
+            const workspace = document.getElementById('batchQuestionWorkspace');
+            const container = document.getElementById('questionBoxesContainer');
+            const metaText = document.getElementById('workspaceMetaText');
+
+            const classLabel = classConfigs[classKey] ? classConfigs[classKey].label : classKey;
+            const subObj = classConfigs[classKey] ? classConfigs[classKey].subjects.find(s => s.id === subId) : null;
+            const subName = subObj ? subObj.name : subId;
+
+            metaText.innerText = `Editing ${boxesData.length} Question Boxes for ${classLabel} -> ${subName}`;
+            container.innerHTML = '';
+
+            boxesData.forEach((b, idx) => {
+                const boxNum = idx + 1;
+                const boxDiv = document.createElement('div');
+                boxDiv.className = 'bg-white dark:bg-gray-800 p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800 shadow-sm space-y-3 relative';
+                boxDiv.id = `qBoxCard_${idx}`;
+
+                boxDiv.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center">${boxNum}</span>
+                            <span class="font-extrabold text-xs text-gray-900 dark:text-white">Question Box #${boxNum}</span>
+                            ${b.isAiAutofilled ? '<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-[10px] font-black"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Autofilled</span>' : ''}
+                        </div>
+                        <button onclick="removeWorkspaceBox(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-trash"></i> Remove Box
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Question Stem / Prompt *</label>
+                            <textarea id="qBoxText_${idx}" rows="2" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-medium">${escapeHtml(b.text || '')}</textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Point Weight</label>
+                                <input type="number" id="qBoxPoints_${idx}" value="${b.points || 1}" min="1" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Timer (Seconds)</label>
+                                <input type="number" id="qBoxTime_${idx}" value="${b.customTime || 60}" min="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option A</label>
+                            <input type="text" id="qBoxOptA_${idx}" value="${escapeHtml((b.options && b.options[0]) || '')}" placeholder="Option A" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option B</label>
+                            <input type="text" id="qBoxOptB_${idx}" value="${escapeHtml((b.options && b.options[1]) || '')}" placeholder="Option B" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option C</label>
+                            <input type="text" id="qBoxOptC_${idx}" value="${escapeHtml((b.options && b.options[2]) || '')}" placeholder="Option C" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option D</label>
+                            <input type="text" id="qBoxOptD_${idx}" value="${escapeHtml((b.options && b.options[3]) || '')}" placeholder="Option D" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Correct Answer Selection</label>
+                        <select id="qBoxCorrect_${idx}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-emerald-600">
+                            <option value="0" ${b.correctIndex === 0 ? 'selected' : ''}>Option A is Correct</option>
+                            <option value="1" ${b.correctIndex === 1 ? 'selected' : ''}>Option B is Correct</option>
+                            <option value="2" ${b.correctIndex === 2 ? 'selected' : ''}>Option C is Correct</option>
+                            <option value="3" ${b.correctIndex === 3 ? 'selected' : ''}>Option D is Correct</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(boxDiv);
+            });
+
+            workspace.classList.remove('hidden');
+            // Sync question bank dropdowns
+            document.getElementById('qBankClassSelect').value = classKey;
+            updateSubjectBankSelector();
+            document.getElementById('qBankSubjectSelect').value = subId;
+        }
+
+        function removeWorkspaceBox(idx) {
+            const card = document.getElementById(`qBoxCard_${idx}`);
+            if (card) card.remove();
+            showToast('Question box removed');
+        }
+
+        function addSingleQuestionBoxToWorkspace() {
+            const container = document.getElementById('questionBoxesContainer');
+            const idx = container.children.length;
+            const boxNum = idx + 1;
+
+            const boxDiv = document.createElement('div');
+            boxDiv.className = 'bg-white dark:bg-gray-800 p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800 shadow-sm space-y-3 relative';
+            boxDiv.id = `qBoxCard_${idx}`;
+
+            boxDiv.innerHTML = `
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center">${boxNum}</span>
+                        <span class="font-extrabold text-xs text-gray-900 dark:text-white">Question Box #${boxNum}</span>
+                    </div>
+                    <button onclick="removeWorkspaceBox(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-trash"></i> Remove Box
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Question Stem / Prompt *</label>
+                        <textarea id="qBoxText_${idx}" rows="2" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-medium" placeholder="Enter question stem..."></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Point Weight</label>
+                            <input type="number" id="qBoxPoints_${idx}" value="1" min="1" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Timer (Seconds)</label>
+                            <input type="number" id="qBoxTime_${idx}" value="60" min="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option A</label>
+                        <input type="text" id="qBoxOptA_${idx}" placeholder="Option A" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option B</label>
+                        <input type="text" id="qBoxOptB_${idx}" placeholder="Option B" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option C</label>
+                        <input type="text" id="qBoxOptC_${idx}" placeholder="Option C" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Option D</label>
+                        <input type="text" id="qBoxOptD_${idx}" placeholder="Option D" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Correct Answer Selection</label>
+                    <select id="qBoxCorrect_${idx}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-emerald-600">
+                        <option value="0">Option A is Correct</option>
+                        <option value="1">Option B is Correct</option>
+                        <option value="2">Option C is Correct</option>
+                        <option value="3">Option D is Correct</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(boxDiv);
+        }
+
+        async function saveAllWorkspaceBoxes() {
+            if (!currentWorkspaceClass || !currentWorkspaceSubId) {
+                showToast('No active class or subject workspace selected.', 'error');
+                return;
+            }
+
+            const container = document.getElementById('questionBoxesContainer');
+            const boxElements = container.querySelectorAll('[id^="qBoxCard_"]');
+            let updatedQuestions = [];
+
+            boxElements.forEach((card) => {
+                const idParts = card.id.split('_');
+                const idx = idParts[1];
+
+                const qText = document.getElementById(`qBoxText_${idx}`)?.value.trim();
+                const optA = document.getElementById(`qBoxOptA_${idx}`)?.value.trim();
+                const optB = document.getElementById(`qBoxOptB_${idx}`)?.value.trim();
+                const optC = document.getElementById(`qBoxOptC_${idx}`)?.value.trim();
+                const optD = document.getElementById(`qBoxOptD_${idx}`)?.value.trim();
+                const correctIdx = parseInt(document.getElementById(`qBoxCorrect_${idx}`)?.value || '0');
+                const points = parseInt(document.getElementById(`qBoxPoints_${idx}`)?.value || '1');
+                const customTime = parseInt(document.getElementById(`qBoxTime_${idx}`)?.value || '60');
+
+                if (qText) {
+                    const qObj = {
+                        id: 'q-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                        qNumber: updatedQuestions.length + 1,
+                        text: qText,
+                        options: [optA || 'Option A', optB || 'Option B', optC || 'Option C', optD || 'Option D'],
+                        correctIndex: correctIdx,
+                        points: points,
+                        customTime: customTime
+                    };
+                    updatedQuestions.push(qObj);
+                    apiSaveQuestion(currentWorkspaceClass, currentWorkspaceSubId, qObj);
+                }
+            });
+
+            if (!questionBank[currentWorkspaceClass]) questionBank[currentWorkspaceClass] = {};
+            questionBank[currentWorkspaceClass][currentWorkspaceSubId] = updatedQuestions;
+
+            savePersistentData();
+            closeWorkspace();
+            renderAdminQuestionBank();
+            showToast(`Saved ${updatedQuestions.length} questions to bank!`);
+        }
+
+        function closeWorkspace() {
+            document.getElementById('batchQuestionWorkspace').classList.add('hidden');
+        }
+
+        function openEditQuestionModal(idx) {
+            const classKey = document.getElementById('qBankClassSelect').value;
+            const subId = document.getElementById('qBankSubjectSelect').value;
+            const qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
+            const q = qList[idx];
+            if (!q) return;
+
+            document.getElementById('modalTitle').innerText = `✏️ Edit Question ${idx + 1}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold mb-1">Question Text</label>
+                        <textarea id="editQText" rows="2" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-medium">${q.text}</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold mb-1">Points</label>
+                            <input type="number" id="editQPoints" value="${q.points || 1}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Time (Seconds)</label>
+                            <input type="number" id="editQTime" value="${q.customTime || 60}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-blue-600">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold mb-1">Option A</label>
+                            <input type="text" id="editOpt0" value="${q.options[0] || ''}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Option B</label>
+                            <input type="text" id="editOpt1" value="${q.options[1] || ''}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Option C</label>
+                            <input type="text" id="editOpt2" value="${q.options[2] || ''}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Option D</label>
+                            <input type="text" id="editOpt3" value="${q.options[3] || ''}" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Correct Answer</label>
+                        <select id="editCorrectIdx" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-emerald-600">
+                            <option value="0" ${q.correctIndex === 0 ? 'selected' : ''}>Option A</option>
+                            <option value="1" ${q.correctIndex === 1 ? 'selected' : ''}>Option B</option>
+                            <option value="2" ${q.correctIndex === 2 ? 'selected' : ''}>Option C</option>
+                            <option value="3" ${q.correctIndex === 3 ? 'selected' : ''}>Option D</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="saveEditedQuestion(${idx})" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Save Changes</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        async function saveEditedQuestion(idx) {
+            const classKey = document.getElementById('qBankClassSelect').value;
+            const subId = document.getElementById('qBankSubjectSelect').value;
+            const qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
+            
+            if (qList[idx]) {
+                qList[idx].text = document.getElementById('editQText').value.trim();
+                qList[idx].points = parseInt(document.getElementById('editQPoints').value) || 1;
+                qList[idx].customTime = parseInt(document.getElementById('editQTime').value) || 60;
+                qList[idx].options = [
+                    document.getElementById('editOpt0').value.trim(),
+                    document.getElementById('editOpt1').value.trim(),
+                    document.getElementById('editOpt2').value.trim(),
+                    document.getElementById('editOpt3').value.trim()
+                ];
+                qList[idx].correctIndex = parseInt(document.getElementById('editCorrectIdx').value);
+                
+                if (qList[idx].id) {
+                    await apiUpdateQuestion(qList[idx].id, qList[idx]);
+                }
+                savePersistentData();
+                closeModal();
+                renderAdminQuestionBank();
+                showToast('Question updated!');
+            }
+        }
+
+        async function deleteQuestion(idx) {
+            const classKey = document.getElementById('qBankClassSelect').value;
+            const subId = document.getElementById('qBankSubjectSelect').value;
+            const qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
+            
+            if (qList[idx]) {
+                if (qList[idx].id) {
+                    await apiDeleteQuestion(qList[idx].id);
+                }
+                qList.splice(idx, 1);
+                savePersistentData();
+                renderAdminQuestionBank();
+                showToast('Question deleted.');
+            }
+        }
+
+        function renderCbtResultsTable() {
+            const tbody = document.getElementById('cbtResultsTableBody');
+            tbody.innerHTML = '';
+
+            if (cbtResults.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
+                return;
+            }
+
+            cbtResults.forEach(res => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition';
+
+                const subBreakdownText = Object.keys(res.subjectBreakdown || {})
+                    .map(sName => `${sName}: ${res.subjectBreakdown[sName].score}/${res.subjectBreakdown[sName].max}`)
+                    .join(' | ');
+
+                tr.innerHTML = `
+                    <td class="p-4 font-mono font-bold text-gray-900 dark:text-white">${res.studentId}</td>
+                    <td class="p-4 font-medium text-gray-800 dark:text-gray-200">${res.studentName}</td>
+                    <td class="p-4 text-xs font-semibold text-blue-600 dark:text-blue-400">${res.classLevel}</td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">${subBreakdownText || 'N/A'}</td>
+                    <td class="p-4 font-bold text-gray-900 dark:text-white">${res.totalPoints} / ${res.maxPoints}</td>
+                    <td class="p-4 font-bold text-indigo-600 dark:text-indigo-400">${res.percentage}%</td>
+                    <td class="p-4 font-bold text-purple-600 dark:text-purple-400">${res.grade}</td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">${res.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterResultsTable() {
+            const query = (document.getElementById('searchResultInput').value || '').toLowerCase();
+            const tbody = document.getElementById('cbtResultsTableBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function exportCbtResultsCSV() {
+            if (cbtResults.length === 0) {
+                showToast('No exam results available to export.', 'error');
+                return;
+            }
+
+            let csv = 'Student ID,Candidate Name,Class Level,Total Score,Max Score,Percentage,Grade,Timestamp\n';
+            cbtResults.forEach(r => {
+                csv += `"${r.studentId}","${r.studentName}","${r.classLevel}",${r.totalPoints},${r.maxPoints},${r.percentage}%,"${r.grade}","${r.timestamp}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cbt_exam_results_${Date.now()}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showToast('CSV Exported successfully!');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('appModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showCustomAlert(title, message, onConfirm = null) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = message;
+            document.getElementById('modalActions').innerHTML = `
+                <button id="alertConfirmBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">OK</button>
+            `;
+            const btn = document.getElementById('alertConfirmBtn');
+            btn.onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        function showCustomConfirm(title, message, onConfirm) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = message;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button id="confirmBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Confirm</button>
+            `;
+            document.getElementById('confirmBtn').onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+    </script>
+</body>
+</html>
