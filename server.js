@@ -85,7 +85,7 @@ async function sendEmail({ to, subject, html, replyTo }) {
 }
 
 app.post('/api/admin/login', async (req, res) => {
-    const { password, surface = 'portal' } = req.body || {};
+    const { password, surface = 'portal', deviceName = 'Unknown device' } = req.body || {};
     const expectedPassword = surface === 'cbt'
         ? (process.env.CBT_ADMIN_PASSWORD || 'cbtadmin')
         : (process.env.ADMIN_PASSWORD || 'adminDGC');
@@ -103,6 +103,7 @@ app.post('/api/admin/login', async (req, res) => {
                 <p><strong>Portal:</strong> ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}</p>
                 <p><strong>Time:</strong> ${loginTime.toLocaleString()}</p>
                 <p><strong>IP address:</strong> ${req.ip || 'Unavailable'}</p>
+                <p><strong>Device:</strong> ${deviceName}</p>
                 <p><strong>User agent:</strong> ${req.get('user-agent') || 'Unavailable'}</p>
             `
         }).catch(err => console.error('Admin login notification failed:', err.response?.data || err.message));
@@ -1055,16 +1056,19 @@ async function fetchGeminiQuestions(params) {
 // Ask configured AI providers first, then use public sources to fill any gaps.
 app.post('/api/cbt/generate-questions', async (req, res) => {
     try {
-        const { classLabel, subjectName, topic } = req.body || {};
+        const { classLabel, subjectName, topic, topics } = req.body || {};
         const count = Math.min(20, Math.max(1, parseInt(req.body && req.body.count, 10) || 5));
 
-        if (!topic || !String(topic).trim()) {
+        const topicList = Array.isArray(topics)
+            ? topics.map(item => String(item).trim()).filter(Boolean)
+            : String(topic || '').split(',').map(item => item.trim()).filter(Boolean);
+        if (!topicList.length) {
             return res.status(400).json({ error: 'Topic is required to search related questions online.' });
         }
 
         const label = classLabel || 'Secondary School';
         const subject = subjectName || 'General Studies';
-        const focus = String(topic).trim();
+        const focus = topicList.join(', ');
         const aiParams = { classLabel: label, subjectName: subject, topic: focus, count };
 
         const aiSettled = await Promise.allSettled([

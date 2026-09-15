@@ -685,11 +685,12 @@
             return false;
         }
 
-        async function apiSaveCbtResult(result) {
+        async function apiSaveCbtResult(result, keepalive = false) {
             const response = await fetch(`${API_BASE_URL}/cbt-results`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(result)
+                body: JSON.stringify(result),
+                keepalive
             });
             if (!response.ok) throw new Error('MongoDB could not save the CBT result.');
             return response.json();
@@ -813,6 +814,7 @@
         let activeQuestionIdx = 0;
         let studentAnswers = {}; // { 'subId-qIdx': optIdx }
         let markedForReview = {}; // { 'subId-qIdx': true }
+        let examSubmissionStarted = false;
         
         // Timer Mechanics
         let sectionTimers = {}; // { subId: remainingSeconds }
@@ -940,6 +942,7 @@
         }
 
         async function startExamNow() {
+            examSubmissionStarted = false;
             studentAnswers = {};
             markedForReview = {};
             activeSubjectIdx = 0;
@@ -1178,7 +1181,9 @@
             );
         }
 
-        async function finalizeExamSubmission() {
+        async function finalizeExamSubmission(options = {}) {
+            if (examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
+            examSubmissionStarted = true;
             if (examTimerInterval) clearInterval(examTimerInterval);
 
             let subjectBreakdown = {};
@@ -1236,11 +1241,13 @@
             savePersistentData();
 
             try {
-                await apiSaveCbtResult(record);
+                await apiSaveCbtResult(record, options.keepalive);
             } catch (err) {
                 console.error('CBT result MongoDB save failed:', err);
-                showToast('Exam saved locally, but the server could not save the result.', 'error');
+                if (!options.silent) showToast('Exam saved locally, but the server could not save the result.', 'error');
             }
+
+            if (options.silent) return;
 
             document.getElementById('scorecardMeta').innerText = `Candidate: ${currentCandidate.name} (${currentCandidate.studentId}) | ${currentClassConfig.label}`;
             document.getElementById('scorecardPoints').innerText = `${totalAchieved} / ${totalPossible}`;
@@ -1262,6 +1269,11 @@
 
             showView('viewSubmissionSuccess');
         }
+
+        window.addEventListener('pagehide', () => {
+            if (document.getElementById('viewExamPortal')?.classList.contains('hidden')) return;
+            void finalizeExamSubmission({ silent: true, keepalive: true });
+        });
 
         // ========================================================
         // ADMIN AUTHENTICATION & TEACHER HUB LOGIC
@@ -1292,7 +1304,11 @@
                 const response = await fetch(`${API_BASE_URL}/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass, surface: 'cbt' })
+                    body: JSON.stringify({
+                        password: pass,
+                        surface: 'cbt',
+                        deviceName: navigator.userAgentData?.platform || navigator.platform || 'Unknown device'
+                    })
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
@@ -1914,11 +1930,15 @@
         async function executeAiGeneration() {
             const classKey = document.getElementById('aiClassSelect').value;
             const subId = document.getElementById('aiSubjectSelect').value;
-            const topic = document.getElementById('aiTopicInput').value.trim();
+            const topics = document.getElementById('aiTopicInput').value
+                .split(',')
+                .map(topic => topic.trim())
+                .filter(Boolean);
+            const topic = topics.join(', ');
             const numQs = Math.min(20, Math.max(1, parseInt(document.getElementById('aiNumQuestions').value, 10) || 5));
 
             if (!classKey || !subId) return showToast('Please select class and subject.', 'error');
-            if (!topic) return showToast('Please enter a topic for AI question generation.', 'error');
+            if (!topics.length) return showToast('Please enter at least one topic for AI question generation.', 'error');
 
             const subObj = classConfigs[classKey].subjects.find(s => s.id === subId);
             const subName = subObj ? subObj.name : 'Subject';
@@ -1946,6 +1966,7 @@
                         classLabel,
                         subjectName: subName,
                         topic,
+                        topics,
                         count: numQs
                     })
                 });

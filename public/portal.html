@@ -1321,7 +1321,11 @@
                 const response = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass, surface: 'portal' })
+                    body: JSON.stringify({
+                        password: pass,
+                        surface: 'portal',
+                        deviceName: navigator.userAgentData?.platform || navigator.platform || 'Unknown device'
+                    })
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
