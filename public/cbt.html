@@ -77,6 +77,16 @@
 
             <!-- Controls & Mode Toggle -->
             <div class="flex items-center space-x-3 sm:space-x-4">
+                <!-- Home Navigation -->
+                <a href="index.html" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Go to home page">
+                    <i class="fa-solid fa-house text-blue-600"></i>
+                    <span>Home</span>
+                </a>
+                <a href="portal.html" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student result portal">
+                    <i class="fa-solid fa-file-lines text-emerald-600"></i>
+                    <span>Student Portal</span>
+                </a>
+
                 <!-- Admin Lock Button -->
                 <button id="portalToggleBtn" onclick="openAdminAuthModal()" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
                     <i class="fa-solid fa-lock text-amber-500"></i>
@@ -347,6 +357,9 @@
                 </div>
                 <!-- Navigation Tabs -->
                 <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="showView('viewDashboard')" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 transition flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left"></i> Student Portal
+                    </button>
                     <button onclick="showAdminSubView('builder')" id="btnTabBuilder" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow">
                         <i class="fa-solid fa-gear mr-1"></i> Exam Config & Timers
                     </button>
