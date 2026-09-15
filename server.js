@@ -147,7 +147,18 @@ const sanitizeCsvField = (val) => {
 };
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://detanjunior67_db_user:Manuel528@cluster0.wosavjw.mongodb.net/dynolinks?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+    throw new Error('MONGO_URI is required. Configure the same MongoDB URI locally and on the deployed host.');
+}
+
+try {
+    const databaseTarget = new URL(MONGO_URI);
+    console.log(`MongoDB target: ${databaseTarget.hostname}${databaseTarget.pathname}`);
+} catch {
+    throw new Error('MONGO_URI is not a valid MongoDB connection string.');
+}
+
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
     .catch(err => console.error('MongoDB Connection Error Detailed:', err.message));
@@ -337,7 +348,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
         res.json({
             success: true,
             emailSent,
-            message: emailSent ? 'Result and PIN saved successfully!' : 'Result and PIN saved, but the notification email could not be sent.',
+            message: emailSent ? 'Result and PIN saved successfully!' : 'Result and PIN saved.',
             student: updatedStudent
         });
 
@@ -748,7 +759,7 @@ app.post('/api/enquiries', async (req, res) => {
         res.json({
             success: true,
             emailSent,
-            message: emailSent ? 'Admission Form Submitted Successfully!' : 'Admission form saved, but the notification email could not be sent.'
+            message: emailSent ? 'Admission Form Submitted Successfully!' : 'Admission form saved.'
         });
 
     } catch (err) {
