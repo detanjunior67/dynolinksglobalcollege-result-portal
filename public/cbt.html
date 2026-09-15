@@ -641,6 +641,21 @@
             return null;
         }
 
+        async function apiSaveQuestions(classKey, subjectId, questions) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classKey, subjectId, questions })
+                });
+                if (!response.ok) throw new Error('MongoDB could not save the question bank.');
+                return await response.json();
+            } catch (err) {
+                console.warn('MongoDB bulk save failed, using local memory:', err);
+                return null;
+            }
+        }
+
         async function apiUpdateQuestion(questionId, updatedObj) {
             try {
                 const response = await fetch(`${API_BASE_URL}/questions/${questionId}`, {
@@ -2211,7 +2226,6 @@
                         customTime: customTime
                     };
                     updatedQuestions.push(qObj);
-                    qObj.pendingSave = apiSaveQuestion(currentWorkspaceClass, currentWorkspaceSubId, qObj);
                 }
             });
 
@@ -2219,13 +2233,16 @@
             questionBank[currentWorkspaceClass][currentWorkspaceSubId] = updatedQuestions;
 
             savePersistentData();
-            const saveResults = await Promise.all(updatedQuestions.map(question => question.pendingSave));
-            saveResults.forEach((savedQuestion, index) => {
-                if (savedQuestion) {
-                    updatedQuestions[index] = { ...updatedQuestions[index], ...savedQuestion, id: savedQuestion.id || savedQuestion._id };
-                    delete updatedQuestions[index].pendingSave;
-                }
-            });
+            const saveResults = await apiSaveQuestions(currentWorkspaceClass, currentWorkspaceSubId, updatedQuestions);
+            if (saveResults) {
+                saveResults.forEach((savedQuestion, index) => {
+                    if (savedQuestion) {
+                        updatedQuestions[index] = { ...updatedQuestions[index], ...savedQuestion, id: savedQuestion.id || savedQuestion._id };
+                    }
+                });
+            } else {
+                showToast('Questions saved locally, but the server could not save them.', 'error');
+            }
             questionBank[currentWorkspaceClass][currentWorkspaceSubId] = updatedQuestions;
             savePersistentData();
             closeWorkspace();

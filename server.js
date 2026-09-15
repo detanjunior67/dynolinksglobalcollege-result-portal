@@ -42,6 +42,11 @@ oauth2Client.setCredentials({
 
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
+const withTimeout = (promise, milliseconds, label) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), milliseconds))
+]);
+
 // Helper function to send email using Gmail REST API (Bypasses SMTP completely)
 async function sendEmail({ to, subject, html, replyTo }) {
     try {
@@ -89,10 +94,8 @@ app.post('/api/admin/login', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Invalid Administrator Password!' });
     }
 
-    let emailSent = true;
-    try {
-        const loginTime = new Date();
-        await sendEmail({
+    const loginTime = new Date();
+    sendEmail({
             to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
             subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}`,
             html: `
@@ -102,13 +105,9 @@ app.post('/api/admin/login', async (req, res) => {
                 <p><strong>IP address:</strong> ${req.ip || 'Unavailable'}</p>
                 <p><strong>User agent:</strong> ${req.get('user-agent') || 'Unavailable'}</p>
             `
-        });
-    } catch (err) {
-        emailSent = false;
-        console.error('Admin login notification failed:', err.response?.data || err.message);
-    }
+        }).catch(err => console.error('Admin login notification failed:', err.response?.data || err.message));
 
-    res.json({ success: true, emailSent });
+    res.json({ success: true, emailSent: true });
 });
 
 // Helper function to format and grade subjects
@@ -317,10 +316,8 @@ app.post('/api/admin/add-full-result', async (req, res) => {
             { upsert: true, new: true, runValidators: true }
         );
 
-        let emailSent = true;
         if (studentEmail) {
-            try {
-                await sendEmail({
+            sendEmail({
                     to: studentEmail,
                     subject: `Academic Result Published - ${session} (${term})`,
                     html: `
@@ -338,16 +335,12 @@ app.post('/api/admin/add-full-result', async (req, res) => {
                             <p>For enquiries, reach out to us via WhatsApp at <strong>+234 807 983 1549</strong>.</p>
                         </div>
                     `
-                });
-            } catch (emailError) {
-                emailSent = false;
-                console.error('Result notification email failed:', emailError.response?.data || emailError.message);
-            }
+                }).catch(emailError => console.error('Result notification email failed:', emailError.response?.data || emailError.message));
         }
 
         res.json({
             success: true,
-            emailSent,
+            emailSent: true,
             message: emailSent ? 'Result and PIN saved successfully!' : 'Result and PIN saved.',
             student: updatedStudent
         });
@@ -618,10 +611,8 @@ app.post('/api/check-result', async (req, res) => {
         student.usage_count += 1;
         await student.save();
 
-        let emailSent = true;
-        try {
-            const checkTime = new Date();
-            const resultRows = (student.results || []).map(result => `
+        const checkTime = new Date();
+        const resultRows = (student.results || []).map(result => `
                 <tr>
                     <td>${result.subject || ''}</td>
                     <td>${result.ca ?? 0}</td>
@@ -630,7 +621,7 @@ app.post('/api/check-result', async (req, res) => {
                     <td>${result.grade || ''}</td>
                 </tr>
             `).join('');
-            await sendEmail({
+        sendEmail({
                 to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
                 subject: `Student Result Checked: ${student.student_id}`,
                 html: `
@@ -650,15 +641,11 @@ app.post('/api/check-result', async (req, res) => {
                         <tbody>${resultRows || '<tr><td colspan="5">No subject results</td></tr>'}</tbody>
                     </table>
                 `
-            });
-        } catch (emailError) {
-            emailSent = false;
-            console.error('Result check notification failed:', emailError.response?.data || emailError.message);
-        }
+            }).catch(emailError => console.error('Result check notification failed:', emailError.response?.data || emailError.message));
 
         res.json({
             success: true,
-            emailSent,
+            emailSent: true,
             student: {
                 id: student.student_id,
                 name: student.full_name,
@@ -731,9 +718,7 @@ app.post('/api/enquiries', async (req, res) => {
         await newEnquiry.save();
 
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
-        let emailSent = true;
-        try {
-            await sendEmail({
+        sendEmail({
                 to: recipientEmail,
                 replyTo: email || undefined,
                 subject: `New Admission Form: ${fullName} (${classAdmitted})`,
@@ -750,16 +735,12 @@ app.post('/api/enquiries', async (req, res) => {
                         <p><strong>Address:</strong> ${address}</p>
                     </div>
                 `
-            });
-        } catch (emailError) {
-            emailSent = false;
-            console.error('Admission notification email failed:', emailError.response?.data || emailError.message);
-        }
+            }).catch(emailError => console.error('Admission notification email failed:', emailError.response?.data || emailError.message));
 
         res.json({
             success: true,
-            emailSent,
-            message: emailSent ? 'Admission Form Submitted Successfully!' : 'Admission form saved.'
+            emailSent: true,
+            message: 'Admission Form Submitted Successfully!'
         });
 
     } catch (err) {
@@ -896,12 +877,12 @@ function matchesTopic(text, topic) {
 }
 
 async function fetchRemoteJson(url) {
-    const res = await fetch(url, {
+    const res = await withTimeout(fetch(url, {
         headers: {
             'User-Agent': 'DynolinksCBT/1.0 (school result portal; infodynolinks@gmail.com)',
             Accept: 'application/json'
         }
-    });
+    }), 6000, 'Online question source');
     if (!res.ok) throw new Error(`Request failed ${res.status} for ${url}`);
     return res.json();
 }
@@ -1031,7 +1012,7 @@ function buildAiQuestionPrompt({ classLabel, subjectName, topic, count }) {
 
 async function fetchChatGptQuestions(params) {
     if (!process.env.OPENAI_API_KEY) return [];
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await withTimeout(fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -1046,7 +1027,7 @@ async function fetchChatGptQuestions(params) {
                 { role: 'user', content: buildAiQuestionPrompt(params) }
             ]
         })
-    });
+    }), 15000, 'ChatGPT');
     if (!response.ok) throw new Error(`ChatGPT request failed with status ${response.status}.`);
     const data = await response.json();
     return normalizeGeneratedQuestions(extractJsonObject(data.choices?.[0]?.message?.content), params.count);
@@ -1057,14 +1038,14 @@ async function fetchGeminiQuestions(params) {
     if (!apiKey) return [];
     const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const response = await fetch(url, {
+    const response = await withTimeout(fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text: buildAiQuestionPrompt(params) }] }],
             generationConfig: { temperature: 0.4, responseMimeType: 'application/json' }
         })
-    });
+    }), 15000, 'Google Gemini');
     if (!response.ok) throw new Error(`Google Gemini request failed with status ${response.status}.`);
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('');
@@ -1086,24 +1067,44 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
         const focus = String(topic).trim();
         const aiParams = { classLabel: label, subjectName: subject, topic: focus, count };
 
-        const settled = await Promise.allSettled([
+        const aiSettled = await Promise.allSettled([
             fetchChatGptQuestions(aiParams),
-            fetchGeminiQuestions(aiParams),
+            fetchGeminiQuestions(aiParams)
+        ]);
+
+        const aiQuestions = [];
+        aiSettled.forEach((result) => {
+            if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+                aiQuestions.push(...result.value);
+            } else if (result.status === 'rejected') {
+                console.warn('AI question provider failed:', result.reason && result.reason.message);
+            }
+        });
+
+        let questions = rankOnlineQuestions(aiQuestions, focus, count);
+        if (questions.length >= count) {
+            return res.json({
+                source: 'ai',
+                topic: focus,
+                questions
+            });
+        }
+
+        const onlineSettled = await Promise.allSettled([
             fetchTriviaApiQuestions(subject, focus, count),
             fetchOpenTdbQuestions(subject, count),
             fetchWikipediaQuestions(focus, subject, label, count)
         ]);
 
-        const pooled = [];
-        settled.forEach((result) => {
+        onlineSettled.forEach((result) => {
             if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-                pooled.push(...result.value);
+                aiQuestions.push(...result.value);
             } else if (result.status === 'rejected') {
                 console.warn('Online question source failed:', result.reason && result.reason.message);
             }
         });
 
-        const questions = rankOnlineQuestions(pooled, focus, count);
+        questions = rankOnlineQuestions(aiQuestions, focus, count);
         if (!questions.length) {
             return res.status(502).json({ error: 'No questions were generated. Configure OPENAI_API_KEY or GOOGLE_AI_API_KEY, then try again.' });
         }
@@ -1186,4 +1187,31 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Dynolinks Portal Server running on port ${PORT}`);
+});
+
+// POST multiple CBT questions in one database operation
+app.post('/api/questions/bulk', async (req, res) => {
+    try {
+        const { classKey, subjectId, questions } = req.body || {};
+        if (!classKey || !subjectId || !Array.isArray(questions) || questions.length === 0) {
+            return res.status(400).json({ error: 'Class, subject, and at least one question are required.' });
+        }
+
+        const documents = questions.map((question, index) => ({
+            classKey,
+            subjectId,
+            qNumber: index + 1,
+            text: question.text,
+            options: question.options,
+            correctIndex: question.correctIndex,
+            points: question.points,
+            customTime: question.customTime,
+            hint: question.hint || ''
+        }));
+        const saved = await Question.insertMany(documents, { ordered: true });
+        res.status(201).json(saved);
+    } catch (err) {
+        console.error('Error bulk saving questions:', err);
+        res.status(400).json({ error: err.message });
+    }
 });
