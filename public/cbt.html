@@ -615,7 +615,8 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/questions?classKey=${classKey}&subjectId=${subjectId}`);
                 if (response.ok) {
-                    return await response.json();
+                    const questions = await response.json();
+                    return questions.map(question => ({ ...question, id: question.id || question._id }));
                 }
             } catch (err) {
                 console.warn('MongoDB API fetch failed, falling back to local memory:', err);
@@ -630,7 +631,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ classKey, subjectId, ...questionObj })
                 });
-                if (response.ok) return await response.json();
+                if (response.ok) {
+                    const saved = await response.json();
+                    return { ...saved, id: saved.id || saved._id };
+                }
             } catch (err) {
                 console.warn('MongoDB API save failed, using local memory:', err);
             }
@@ -644,7 +648,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedObj)
                 });
-                if (response.ok) return await response.json();
+                if (response.ok) {
+                    const updated = await response.json();
+                    return { ...updated, id: updated.id || updated._id };
+                }
             } catch (err) {
                 console.warn('MongoDB API update failed, using local memory:', err);
             }
@@ -670,6 +677,12 @@
                 body: JSON.stringify(result)
             });
             if (!response.ok) throw new Error('MongoDB could not save the CBT result.');
+            return response.json();
+        }
+
+        async function apiFetchCbtResults() {
+            const response = await fetch(`${API_BASE_URL}/cbt-results`);
+            if (!response.ok) throw new Error('MongoDB could not load CBT results.');
             return response.json();
         }
 
@@ -1293,7 +1306,7 @@
             if (key === 'builder') loadAdminClassConfig();
             if (key === 'roster') { populateRosterClassFilter(); renderRosterTable(); }
             if (key === 'questions') { populateQuestionBankSelectors(); renderAdminQuestionBank(); }
-            if (key === 'results') renderCbtResultsTable();
+            if (key === 'results') loadCbtResultsTable();
         }
 
         // ========================================================
@@ -1684,6 +1697,10 @@
             let qList = await apiFetchQuestions(classKey, subId);
             if (!qList || qList.length === 0) {
                 qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
+            } else {
+                if (!questionBank[classKey]) questionBank[classKey] = {};
+                questionBank[classKey][subId] = qList;
+                savePersistentData();
             }
 
             if (qList.length === 0) {
@@ -2194,13 +2211,22 @@
                         customTime: customTime
                     };
                     updatedQuestions.push(qObj);
-                    apiSaveQuestion(currentWorkspaceClass, currentWorkspaceSubId, qObj);
+                    qObj.pendingSave = apiSaveQuestion(currentWorkspaceClass, currentWorkspaceSubId, qObj);
                 }
             });
 
             if (!questionBank[currentWorkspaceClass]) questionBank[currentWorkspaceClass] = {};
             questionBank[currentWorkspaceClass][currentWorkspaceSubId] = updatedQuestions;
 
+            savePersistentData();
+            const saveResults = await Promise.all(updatedQuestions.map(question => question.pendingSave));
+            saveResults.forEach((savedQuestion, index) => {
+                if (savedQuestion) {
+                    updatedQuestions[index] = { ...updatedQuestions[index], ...savedQuestion, id: savedQuestion.id || savedQuestion._id };
+                    delete updatedQuestions[index].pendingSave;
+                }
+            });
+            questionBank[currentWorkspaceClass][currentWorkspaceSubId] = updatedQuestions;
             savePersistentData();
             closeWorkspace();
             renderAdminQuestionBank();
@@ -2313,6 +2339,16 @@
                 renderAdminQuestionBank();
                 showToast('Question deleted.');
             }
+        }
+
+        async function loadCbtResultsTable() {
+            try {
+                cbtResults = await apiFetchCbtResults();
+                localStorage.setItem('dgc_cbt_results_v2', JSON.stringify(cbtResults));
+            } catch (err) {
+                console.warn('MongoDB CBT results fetch failed, using local results:', err);
+            }
+            renderCbtResultsTable();
         }
 
         function renderCbtResultsTable() {
