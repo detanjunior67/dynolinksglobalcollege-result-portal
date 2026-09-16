@@ -677,6 +677,7 @@
                 <div id="result-card" class="hidden">
                     <div class="school-header" style="text-align: center; margin-bottom: 20px;">
                         <img src="logo.jpg" alt="School Logo" class="result-logo">
+                        <img id="resPicture" src="" alt="Student picture" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 12px; margin: 0 auto 10px;">
                         <h2>DYNOLINKS GLOBAL COLLEGE</h2>
                         <p class="sub-heading">Official Statement of Academic Results</p>
                     </div>
@@ -875,6 +876,7 @@
                     <!-- SINGLE UPLOAD / UPDATE RESULT FORM -->
                     <form id="addResultForm" class="admin-form">
                         <h4 id="formHeadingTitle">Upload / Update Single Student Result</h4>
+                        <img id="admStudentPicture" src="" alt="Student picture" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 12px; margin: 0 0 14px;">
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -1083,6 +1085,7 @@
                 return;
             }
 
+            const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
             let subjects = [];
             if (classVal.startsWith('JSS')) {
                 subjects = SUBJECT_LISTS.JSS;
@@ -1095,7 +1098,7 @@
             }
 
             const fullClassName = classVal.startsWith('SSS') ? `${classVal} (${deptVal})` : classVal;
-            let csvRows = ["Student ID,Full Name,Class,Session,Term,PIN,Subject,CA Score,Exam Score"];
+            const csvRows = [["Student ID", "Full Name", "Class", "Session", "Term", "PIN", "Subject", "CA Score", "Exam Score"]];
 
             for (let i = 0; i < admInputs.length; i++) {
                 const admNo = admInputs[i].value.trim();
@@ -1109,18 +1112,18 @@
                 const generatedPin = 'DGC-' + Math.floor(100000 + Math.random() * 900000);
 
                 subjects.forEach(subj => {
-                    csvRows.push(`"${admNo}","${fullName}","${fullClassName}","${session}","${term}","${generatedPin}","${subj}",0,0`);
+                    csvRows.push([admNo, fullName, fullClassName, session, term, generatedPin, subj, 0, 0]);
                 });
             }
 
-            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            const csvContent = '\uFEFF' + csvRows.map(row => row.map(csvEscape).join(',')).join('\r\n') + '\r\n';
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8' }));
             link.setAttribute("download", `Bulk_Results_${fullClassName.replace(/[^a-zA-Z0-9]/g, '_')}_${session.replace('/', '_')}.csv`);
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            link.remove();
+            URL.revokeObjectURL(link.href);
         }
 
         function build20Boxes(subjectData = []) {
@@ -1282,6 +1285,9 @@
 
                     document.getElementById('admStudentId').value = data.student.student_id || data.student.id;
                     document.getElementById('admFullName').value = data.student.full_name || data.student.name;
+                    const adminPicture = document.getElementById('admStudentPicture');
+                    adminPicture.src = data.student.picture || '';
+                    adminPicture.style.display = data.student.picture ? 'block' : 'none';
                     document.getElementById('admSession').value = data.student.session || session;
                     document.getElementById('admTerm').value = data.student.term || term;
                     document.getElementById('generatedPin').value = data.student.pin_code || data.student.pin || '';
@@ -1588,6 +1594,9 @@
 
                     document.getElementById('resName').innerText = data.student.name;
                     document.getElementById('resId').innerText = data.student.id;
+                    const resultPicture = document.getElementById('resPicture');
+                    resultPicture.src = data.student.picture || '';
+                    resultPicture.style.display = data.student.picture ? 'block' : 'none';
                     document.getElementById('resClass').innerText = data.student.class;
                     document.getElementById('resSession').innerText = data.student.session;
                     document.getElementById('resTerm').innerText = data.student.term;

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="icon" type="image/png" href="mini.png">
-    <title>Dynolinks College - CBT & School Management System</title>
+    <title>Dynolinks Global College - CBT & School Management System</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -356,11 +356,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <!-- Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-blue-500/20">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
+                <img src="logo.jpg" alt="Dynolinks Global College logo" class="w-10 h-10 rounded-xl object-cover shadow-md shadow-blue-500/20">
                 <div>
-                    <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dynolinks College</span>
+                    <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dynolinks Global College</span>
                     <span class="hidden sm:inline-block text-xs ml-2 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">CBT & Portal</span>
                 </div>
             </div>
@@ -443,6 +441,10 @@
                         <select id="studentClassSelect" onchange="handleClassChange()" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                             <!-- Dynamic class options loaded from JS state -->
                         </select>
+                    </div>
+                    <div class="sm:col-span-2 flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                        <img id="studentCandidatePicture" src="" alt="Student picture" class="hidden w-14 h-14 rounded-xl object-cover">
+                        <p id="studentProfileStatus" class="text-xs text-gray-500 dark:text-gray-400">Enter a saved Student ID to load the candidate profile.</p>
                     </div>
                 </div>
 
@@ -1176,16 +1178,45 @@
             }
         }
 
-        function prepareStudentExam() {
+        async function loadSavedStudentProfile(studentId) {
+            if (!studentId) return null;
+            const response = await fetch(`/api/student-data/${encodeURIComponent(studentId)}`);
+            if (!response.ok) return null;
+            const data = await response.json();
+            if (!data.success) return null;
+            const student = data.student;
+            document.getElementById('studentFullName').value = student.full_name || '';
+            const classSelect = document.getElementById('studentClassSelect');
+            const baseClass = String(student.student_class || '').match(/^(JSS[1-3]|SSS[1-3])/i)?.[1]?.toUpperCase();
+            const classOption = [...classSelect.options].find(option => option.value === baseClass || option.value === student.student_class || option.textContent === student.student_class);
+            if (classOption) classSelect.value = classOption.value;
+            handleClassChange();
+            const picture = document.getElementById('studentCandidatePicture');
+            picture.src = student.picture || '';
+            picture.classList.toggle('hidden', !student.picture);
+            document.getElementById('studentProfileStatus').innerText = `Saved profile loaded for ${student.full_name}.`;
+            return student;
+        }
+
+        async function prepareStudentExam() {
             const name = document.getElementById('studentFullName').value.trim();
             const studentId = document.getElementById('studentIdInput').value.trim().toUpperCase();
-            const classKey = document.getElementById('studentClassSelect').value;
+            let classKey = document.getElementById('studentClassSelect').value;
+
+            let savedProfile = null;
+            try { savedProfile = await loadSavedStudentProfile(studentId); } catch (error) { console.warn('Saved student profile lookup failed:', error); }
+            classKey = document.getElementById('studentClassSelect').value;
 
             if (!name) return showCustomAlert('Validation Error', 'Please enter candidate full name.');
             if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
             if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
 
-            const rosterMatch = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey);
+            const rosterMatch = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey) || (savedProfile ? {
+                studentId: savedProfile.student_id,
+                name: savedProfile.full_name,
+                classKey,
+                status: 'Authorized'
+            } : null);
 
             if (!rosterMatch) {
                 return showCustomAlert('Authorization Error', `Student ID "${studentId}" is not registered or authorized for ${classConfigs[classKey].label}. Please verify your ID or contact your administrator.`);
@@ -2796,12 +2827,14 @@
                 return;
             }
 
-            let csv = 'Student ID,Candidate Name,Class Level,Total Score,Max Score,Percentage,Grade,Timestamp\n';
+            const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const rows = [['Student ID', 'Candidate Name', 'Class Level', 'Total Score', 'Max Score', 'Percentage', 'Grade', 'Timestamp']];
             cbtResults.forEach(r => {
-                csv += `"${r.studentId}","${r.studentName}","${r.classLevel}",${r.totalPoints},${r.maxPoints},${r.percentage}%,"${r.grade}","${r.timestamp}"\n`;
+                rows.push([r.studentId, r.studentName, r.classLevel, r.totalPoints, r.maxPoints, `${r.percentage}%`, r.grade, r.timestamp]);
             });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n') + '\r\n';
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

@@ -24,7 +24,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
 // Serve static frontend files from both root and public directories
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -168,11 +167,12 @@ mongoose.connect(MONGO_URI)
 const StudentSchema = new mongoose.Schema({
     student_id: { type: String, required: true, unique: true },
     full_name: { type: String, required: true },
+    picture: { type: String, default: '' },
     email: { type: String, default: '' },
     student_class: { type: String, required: true },
-    session: { type: String, required: true },
-    term: { type: String, required: true },
-    pin_code: { type: String, required: true },
+    session: { type: String, required: true, default: '' },
+    term: { type: String, required: true, default: '' },
+    pin_code: { type: String, required: true, default: '' },
     usage_count: { type: Number, default: 0 },
     max_usage: { type: Number, default: 3 },
     results: [{
@@ -185,6 +185,16 @@ const StudentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Student = mongoose.model('Student', StudentSchema);
+
+const STUDENT_DATA_PASSWORD = process.env.STUDENT_DATA_PASSWORD || 'studata';
+
+const requireStudentDataPassword = (req, res, next) => {
+    const password = req.body?.password || req.headers['x-student-data-password'];
+    if (password !== STUDENT_DATA_PASSWORD) {
+        return res.status(401).json({ success: false, message: 'Invalid student data password.' });
+    }
+    next();
+};
 
 // Comprehensive Admission & Enquiry Schema
 const EnquirySchema = new mongoose.Schema({
@@ -274,6 +284,91 @@ const buildStudentQuery = (studentId) => {
     }
     return { $or: queryConditions };
 };
+
+const publicStudent = (student) => ({
+    student_id: student.student_id,
+    full_name: student.full_name,
+    student_class: student.student_class,
+    picture: student.picture || ''
+});
+
+const normalizeStudentData = (item = {}) => ({
+    student_id: String(item.student_id || item.studentId || '').trim(),
+    full_name: String(item.full_name || item.fullName || '').trim(),
+    student_class: String(item.student_class || item.studentClass || item.class || '').trim(),
+    picture: String(item.picture || '').trim()
+});
+
+// Student Data Manager API. The password is required for every write and search request.
+app.post('/api/admin/student-data/login', requireStudentDataPassword, (req, res) => {
+    res.json({ success: true });
+});
+
+app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) => {
+    try {
+        const search = String(req.query.search || '').trim();
+        const filter = search ? {
+            $or: [
+                { student_id: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+                { full_name: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+                { student_class: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
+            ]
+        } : {};
+        const students = await Student.find(filter, 'student_id full_name student_class picture').sort({ full_name: 1 }).lean();
+        const studentSummaries = students.map(student => ({
+            _id: student._id,
+            student_id: student.student_id,
+            full_name: student.full_name,
+            student_class: student.student_class,
+            has_picture: Boolean(student.picture),
+            picture: student.picture || ''
+        }));
+        res.json({ success: true, students: studentSummaries });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not load student data.' });
+    }
+});
+
+app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res) => {
+    try {
+        const student = normalizeStudentData(req.body);
+        if (!student.student_id || !student.full_name || !student.student_class) {
+            return res.status(400).json({ success: false, message: 'Full name, student ID, and class are required.' });
+        }
+        const saved = await Student.findOneAndUpdate(
+            buildStudentQuery(student.student_id),
+            { $set: student },
+            { upsert: true, new: true, runValidators: true }
+        );
+        res.json({ success: true, student: publicStudent(saved) });
+    } catch (err) {
+        res.status(400).json({ success: false, message: 'Could not save student data.' });
+    }
+});
+
+app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req, res) => {
+    try {
+        const items = Array.isArray(req.body.students) ? req.body.students : [];
+        const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
+        if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
+        for (const student of validItems) {
+            await Student.findOneAndUpdate(buildStudentQuery(student.student_id), { $set: student }, { upsert: true, new: true, runValidators: true });
+        }
+        res.json({ success: true, count: validItems.length });
+    } catch (err) {
+        res.status(400).json({ success: false, message: 'Could not import student data.' });
+    }
+});
+
+app.get('/api/student-data/:studentId', async (req, res) => {
+    try {
+        const student = await Student.findOne(buildStudentQuery(req.params.studentId), 'student_id full_name student_class picture');
+        if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
+        res.json({ success: true, student: publicStudent(student) });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not find student record.' });
+    }
+});
 
 // GET Single Student Record
 app.get('/api/admin/student/:studentId', async (req, res) => {
@@ -659,6 +754,7 @@ app.post('/api/check-result', async (req, res) => {
             student: {
                 id: student.student_id,
                 name: student.full_name,
+                picture: student.picture || '',
                 email: student.email,
                 class: student.student_class,
                 session: student.session,
@@ -1254,6 +1350,25 @@ app.get('/api/admin/export-cbt-results', async (req, res) => {
     } catch (err) {
         console.error('Export CBT results error:', err);
         res.status(500).send('Error generating CBT results CSV.');
+    }
+});
+
+app.get('/api/admin/student-data/export', requireStudentDataPassword, async (req, res) => {
+    try {
+        const students = await Student.find({}, 'student_id full_name student_class picture').sort({ full_name: 1 }).lean();
+        const rows = [['Student ID', 'Full Name', 'Class', 'Picture Data']];
+        students.forEach(student => rows.push([
+            student.student_id,
+            student.full_name,
+            student.student_class,
+            student.picture || ''
+        ]));
+        const csv = '\uFEFF' + rows.map(row => row.map(sanitizeCsvField).join(',')).join('\r\n') + '\r\n';
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="Dynolinks_Student_Data.csv"');
+        res.send(csv);
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not export student data.' });
     }
 });
 

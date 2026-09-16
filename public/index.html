@@ -1990,7 +1990,7 @@
                     <p>Building strong foundational knowledge across core sciences, humanities, business, and vocational studies.</p>
                     <ul class="program-features">
                         <li>Core Mathematics & English Proficiency</li>
-                        <li>Basic Science & Technology Labs</li>
+                        <li>Sport and Atheletic Activities</li>
                         <li>Introductory Business & ICT Skills</li>
                     </ul>
                 </div>
@@ -2042,7 +2042,7 @@
                 <p class="pin-account-row"><strong>Number of children:</strong><span class="children-stepper"><button type="button" onclick="changeChildrenCount(-1)" aria-label="Decrease number of children">−</button><input type="text" id="childrenCount" value="1" readonly aria-label="Number of children"><button type="button" onclick="changeChildrenCount(1)" aria-label="Increase number of children">+</button></span></p>
                 <p class="pin-total-row"><strong>Total amount to pay:</strong><strong id="totalPaymentAmount">₦2,050</strong></p>
             </div>
-            <button type="button" class="paid-confirm-btn" onclick="showPaidDetails()">Click, if paid</button>
+            <button type="button" class="paid-confirm-btn" onclick="showPaidDetails()">Click, After Payment</button>
             <div id="pinPaidDetails" class="pin-paid-details">
                 <label for="payerBankName">Full bank account name</label>
                 <input type="text" id="payerBankName" placeholder="Enter the full name on the paying bank account" autocomplete="name">
@@ -2275,6 +2275,7 @@
                 <div class="tab-navigation">
                     <button class="tab-btn active" id="tab-btn-enquiry" onclick="switchAdminTab('enquiry')">Enquiry Submitted</button>
                     <button class="tab-btn" id="tab-btn-cbt" onclick="switchAdminTab('cbt')">Admission PIN Generator</button>
+                    <button class="tab-btn" id="tab-btn-studentData" onclick="switchAdminTab('studentData')">Student Data</button>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -2336,6 +2337,48 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <div id="adminStudentDataView" class="tab-content">
+                    <div id="studentDataGate" class="admin-summary-box">
+                        <h3 style="color: var(--text-light); margin-bottom: 8px;">Student Data Manager</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 14px;">Enter the student data access password to manage names, IDs, classes, and pictures.</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="password" id="studentDataPassword" placeholder="Student data password" autocomplete="off" style="flex: 1 1 220px;">
+                            <button type="button" onclick="unlockStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Unlock Student Data</button>
+                        </div>
+                        <p id="studentDataGateError" style="display: none; color: var(--crest-red-bright); margin-top: 10px; font-weight: 700;"></p>
+                    </div>
+
+                    <div id="studentDataManager" class="admin-summary-box" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <h3 style="color: var(--text-light);">Student Records</h3>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px;">
+                                <button type="button" onclick="loadStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Search Student</button>
+                                <button type="button" onclick="openStudentDataEditor()" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Add Student</button>
+                                <button type="button" onclick="exportStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Export CSV</button>
+                                <label style="display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 50px; background: var(--grad-red); color: #FFFFFF; cursor: pointer; font-weight: 800; text-transform: none; letter-spacing: 0;">
+                                    Bulk Import CSV
+                                    <input type="file" id="studentDataBulkFile" accept=".csv,text/csv" onchange="importStudentDataCsv(event)" style="display: none;">
+                                </label>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+                            CSV columns: <strong>Student ID, Full Name, Class, Picture Data</strong>. For the picture column, just type the image's file name (e.g. <code>john-doe.jpg</code>) &mdash; the photo itself must already be saved in the server's <code>public/stud-data</code> folder. Full URLs also work if you have one.
+                        </p>
+                        <div id="studentDataEditor" style="display: none; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">
+                            <div class="form-row">
+                                <div class="form-group"><label for="studentDataFullName">Full Name</label><input id="studentDataFullName" type="text" required></div>
+                                <div class="form-group"><label for="studentDataId">Student ID</label><input id="studentDataId" type="text" required></div>
+                                <div class="form-group"><label for="studentDataClass">Class</label><input id="studentDataClass" type="text" placeholder="e.g. JSS1" required></div>
+                                <div class="form-group"><label for="studentDataPicture">Picture</label><input id="studentDataPicture" type="file" accept="image/*" onchange="previewStudentDataPicture(event)"></div>
+                            </div>
+                            <img id="studentDataPicturePreview" alt="Student preview" style="display: none; width: 72px; height: 72px; border-radius: 12px; object-fit: cover; margin-bottom: 12px;">
+                            <div style="display: flex; gap: 8px;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
+                        </div>
+                        <div class="table-responsive"><table class="enquiry-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
                     </div>
                 </div>
 
@@ -2939,27 +2982,185 @@
             }
         }
 
+        let studentDataPassword = '';
+        let editingStudentDataId = '';
+        let editingStudentDataPicture = '';
+
         function switchAdminTab(tabName) {
             const enquiryView = document.getElementById('adminEnquiryView');
             const cbtView = document.getElementById('adminCbtView');
+            const studentDataView = document.getElementById('adminStudentDataView');
             const btnEnquiry = document.getElementById('tab-btn-enquiry');
             const btnCbt = document.getElementById('tab-btn-cbt');
+            const btnStudentData = document.getElementById('tab-btn-studentData');
             const dashboardTitle = document.getElementById('admin-dashboard-title');
 
+            [enquiryView, cbtView, studentDataView].forEach(view => view.classList.remove('active'));
+            [btnEnquiry, btnCbt, btnStudentData].forEach(button => button.classList.remove('active'));
             if (tabName === 'enquiry') {
                 enquiryView.classList.add('active');
-                cbtView.classList.remove('active');
                 btnEnquiry.classList.add('active');
-                btnCbt.classList.remove('active');
                 dashboardTitle.innerText = 'Received Enquiries / Admission Forms';
-            } else {
+            } else if (tabName === 'cbt') {
                 cbtView.classList.add('active');
-                enquiryView.classList.remove('active');
                 btnCbt.classList.add('active');
-                btnEnquiry.classList.remove('active');
                 dashboardTitle.innerText = 'CBT Exam Results';
                 loadAdmissionPins();
+            } else {
+                studentDataView.classList.add('active');
+                btnStudentData.classList.add('active');
+                dashboardTitle.innerText = 'Student Data Manager';
             }
+        }
+
+        async function unlockStudentData() {
+            const password = document.getElementById('studentDataPassword').value;
+            const error = document.getElementById('studentDataGateError');
+            try {
+                const response = await fetch('/api/admin/student-data/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Access denied.');
+                studentDataPassword = password;
+                document.getElementById('studentDataGate').style.display = 'none';
+                document.getElementById('studentDataManager').style.display = 'block';
+                loadStudentData();
+            } catch (err) {
+                error.textContent = err.message;
+                error.style.display = 'block';
+            }
+        }
+
+        async function loadStudentData() {
+            if (!studentDataPassword) return;
+            const search = encodeURIComponent(document.getElementById('studentDataSearch').value.trim());
+            const response = await fetch(`/api/admin/student-data?search=${search}`, { headers: { 'x-student-data-password': studentDataPassword } });
+            const data = await response.json().catch(() => ({}));
+            const tbody = document.getElementById('studentDataListBody');
+            if (!response.ok || !data.success) {
+                tbody.innerHTML = `<tr><td colspan="5">${escapeHtml(data.message || 'Could not load students.')}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.students.length ? data.students.map(student => `
+                <tr>
+                    <td>${student.has_picture ? `<img src="${escapeHtml(student.picture || '')}" alt="" style="width: 42px; height: 42px; border-radius: 8px; object-fit: cover;" onerror="this.replaceWith(document.createTextNode('Missing file'))">` : 'No picture'}</td>
+                    <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td>
+                    <td><button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button></td>
+                </tr>`).join('') : '<tr><td colspan="5">No student records found.</td></tr>';
+        }
+
+        function openStudentDataEditor(student = null) {
+            editingStudentDataId = student ? student.student_id : '';
+            editingStudentDataPicture = student ? (student.picture || '') : '';
+            document.getElementById('studentDataFullName').value = student?.full_name || '';
+            document.getElementById('studentDataId').value = student?.student_id || '';
+            document.getElementById('studentDataClass').value = student?.student_class || '';
+            document.getElementById('studentDataPicture').value = '';
+            const preview = document.getElementById('studentDataPicturePreview');
+            preview.src = editingStudentDataPicture;
+            preview.style.display = editingStudentDataPicture ? 'block' : 'none';
+            document.getElementById('studentDataEditor').style.display = 'block';
+        }
+
+        function closeStudentDataEditor() { document.getElementById('studentDataEditor').style.display = 'none'; }
+
+        async function editStudentData(encodedId) {
+            const response = await fetch(`/api/admin/student/${encodedId}`);
+            const data = await response.json().catch(() => ({}));
+            if (data.success) openStudentDataEditor(data.student);
+        }
+
+        function previewStudentDataPicture(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { editingStudentDataPicture = reader.result; const preview = document.getElementById('studentDataPicturePreview'); preview.src = reader.result; preview.style.display = 'block'; };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveStudentData() {
+            const payload = { password: studentDataPassword, fullName: document.getElementById('studentDataFullName').value.trim(), studentId: document.getElementById('studentDataId').value.trim(), studentClass: document.getElementById('studentDataClass').value.trim(), picture: editingStudentDataPicture };
+            const response = await fetch('/api/admin/student-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');
+            closeStudentDataEditor();
+            loadStudentData();
+        }
+
+        // Folder (relative to the site root) where student photos live.
+        // Files placed in public/stud-data/ on the server are served at /stud-data/<filename>.
+        const STUDENT_PHOTO_FOLDER = '/stud-data/';
+
+        // Turns a bare filename (e.g. "john-doe.jpg") typed into the CSV's Picture column
+        // into the full path the browser needs to actually load it. Values that already look
+        // like a URL, a data URI, or an absolute path are left untouched.
+        function normalizeStudentPicturePath(value) {
+            const trimmed = String(value || '').trim();
+            if (!trimmed) return '';
+            if (/^(https?:\/\/|data:|\/)/i.test(trimmed)) return trimmed;
+            return STUDENT_PHOTO_FOLDER + trimmed.replace(/^\.?\/+/, '');
+        }
+
+        function parseStudentDataCsv(text) {
+            const rows = [];
+            let row = [];
+            let value = '';
+            let quoted = false;
+            const input = String(text || '').replace(/^\uFEFF/, '');
+            for (let index = 0; index < input.length; index += 1) {
+                const character = input[index];
+                const nextCharacter = input[index + 1];
+                if (character === '"') {
+                    if (quoted && nextCharacter === '"') { value += '"'; index += 1; }
+                    else { quoted = !quoted; }
+                } else if (character === ',' && !quoted) {
+                    row.push(value.trim()); value = '';
+                } else if ((character === '\n' || character === '\r') && !quoted) {
+                    if (character === '\r' && nextCharacter === '\n') index += 1;
+                    row.push(value.trim());
+                    if (row.some(cell => cell !== '')) rows.push(row);
+                    row = []; value = '';
+                } else { value += character; }
+            }
+            if (value || row.length) { row.push(value.trim()); rows.push(row); }
+            return rows.slice(1).filter(record => record.length >= 3).map(record => ({
+                studentId: record[0], fullName: record[1], studentClass: record[2], picture: normalizeStudentPicturePath(record[3])
+            }));
+        }
+
+        async function exportStudentData() {
+            const response = await fetch('/api/admin/student-data/export', {
+                headers: { 'x-student-data-password': studentDataPassword }
+            });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                return alert(data.message || 'Could not export student data.');
+            }
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Dynolinks_Student_Data.csv';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function importStudentDataCsv(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const response = await fetch('/api/admin/student-data/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: studentDataPassword, students: parseStudentDataCsv(reader.result) }) });
+                const data = await response.json().catch(() => ({}));
+                alert(data.success ? `Imported ${data.count} student records.` : (data.message || 'Import failed.'));
+                if (data.success) loadStudentData();
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         async function loadAdmissionPins() {
@@ -3066,46 +3267,25 @@
                 "Other Health Info", "Parent Signature", "Signature Date", "Class Admitted", "SSS Track"
             ];
 
-            const escapeCSV = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
-
-            let csvRows = [headers.join(',')];
+            const escapeCSV = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const csvRows = [headers];
 
             enquiriesList.forEach(item => {
                 const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '';
                 const row = [
-                    escapeCSV(item.id),
-                    escapeCSV(dateStr),
-                    escapeCSV(item.fullName),
-                    escapeCSV(item.sex),
-                    escapeCSV(item.dob),
-                    escapeCSV(item.state),
-                    escapeCSV(item.town),
-                    escapeCSV(item.lga),
-                    escapeCSV(item.livesWith),
-                    escapeCSV(item.parents),
-                    escapeCSV(item.position),
-                    escapeCSV(item.language),
-                    escapeCSV(item.fatherOcc),
-                    escapeCSV(item.motherOcc),
-                    escapeCSV(item.address),
-                    escapeCSV(item.fatherPhone),
-                    escapeCSV(item.motherPhone),
-                    escapeCSV(item.siblingsNo),
-                    escapeCSV(item.siblingsNames),
-                    escapeCSV(item.healthCondition),
-                    escapeCSV(item.immunized),
-                    escapeCSV(item.immunizedDisease),
-                    escapeCSV(item.restrictedActivities),
-                    escapeCSV(item.otherHealthInfo),
-                    escapeCSV(item.parentSign),
-                    escapeCSV(item.parentSignDate),
-                    escapeCSV(item.classAdmitted),
-                    escapeCSV(item.sssTrack)
+                    item.id, dateStr, item.fullName, item.sex, item.dob, item.state,
+                    item.town, item.lga, item.livesWith, item.parents, item.position,
+                    item.language, item.fatherOcc, item.motherOcc, item.address,
+                    item.fatherPhone, item.motherPhone, item.siblingsNo, item.siblingsNames,
+                    item.healthCondition, item.immunized, item.immunizedDisease,
+                    item.restrictedActivities, item.otherHealthInfo, item.parentSign,
+                    item.parentSignDate, item.classAdmitted, item.sssTrack
                 ];
-                csvRows.push(row.join(','));
+                csvRows.push(row);
             });
 
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const csv = '\uFEFF' + csvRows.map(row => row.map(escapeCSV).join(',')).join('\r\n') + '\r\n';
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -3113,6 +3293,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         function viewFilledForm(id) {
