@@ -287,6 +287,52 @@
         }
 
         @media (max-width: 640px) {
+            header > div {
+                min-width: 0;
+            }
+
+            header > div:first-child {
+                gap: 0.5rem;
+            }
+
+            .header-controls {
+                min-width: 0;
+                gap: 0.35rem !important;
+            }
+
+            .header-controls .mobile-secondary-nav {
+                display: inline-flex;
+                width: 2.25rem;
+                height: 2.25rem;
+                padding: 0.5rem;
+                justify-content: center;
+            }
+
+            .header-controls .mobile-secondary-nav span {
+                display: none;
+            }
+
+            .header-controls #portalToggleBtn {
+                display: inline-flex;
+                width: 2.35rem;
+                height: 2.35rem;
+                padding: 0;
+                justify-content: center;
+                flex: 0 0 auto;
+            }
+
+            .header-controls #portalToggleBtn span {
+                display: none;
+            }
+
+            .header-controls > div:last-child {
+                display: none;
+            }
+
+            .header-controls > button:last-of-type {
+                flex: 0 0 auto;
+            }
+
             #viewAdminPortal {
                 padding: 0.75rem;
                 border-radius: 1.25rem;
@@ -320,13 +366,13 @@
             </div>
 
             <!-- Controls & Mode Toggle -->
-            <div class="flex items-center space-x-3 sm:space-x-4">
+            <div class="header-controls flex items-center space-x-3 sm:space-x-4">
                 <!-- Home Navigation -->
-                <a href="index.html" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Go to home page">
+                <a href="index.html" class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Go to home page">
                     <i class="fa-solid fa-house text-blue-600"></i>
                     <span>Home</span>
                 </a>
-                <a href="cbt.html" onclick="showDashboard()" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student CBT portal">
+                <a href="cbt.html" onclick="showDashboard()" class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student CBT portal">
                     <i class="fa-solid fa-laptop-code text-blue-600"></i>
                     <span>Student Portal</span>
                 </a>
