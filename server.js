@@ -1,6 +1,7 @@
 const express = require('express');
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
@@ -221,6 +222,14 @@ const EnquirySchema = new mongoose.Schema({
 });
 
 const Enquiry = mongoose.model('Enquiry', EnquirySchema);
+
+const AdmissionPinSchema = new mongoose.Schema({
+    code: { type: String, required: true, unique: true, uppercase: true, match: /^[A-Z0-9]{10}$/ },
+    status: { type: String, enum: ['unused', 'used'], default: 'unused' },
+    usedAt: { type: Date, default: null }
+}, { timestamps: true });
+
+const AdmissionPin = mongoose.model('AdmissionPin', AdmissionPinSchema);
 
 // CBT Question Schema
 const QuestionSchema = new mongoose.Schema({
@@ -671,16 +680,31 @@ app.post('/api/check-result', async (req, res) => {
 
 // Admission Form / Enquiry API Endpoint
 app.post('/api/enquiries', async (req, res) => {
+    let reservedPin = null;
     try {
         const {
             fullName, sex, dob, state, town, lga, livesWith, parents, position, language,
             fatherOcc, motherOcc, address, fatherPhone, motherPhone, siblingsNo, siblingsNames,
             healthCondition, immunized, immunizedDisease, restrictedActivities, otherHealthInfo,
-            parentSign, parentSignDate, classAdmitted, sssTrack, email, phone, category, message
+            parentSign, parentSignDate, classAdmitted, sssTrack, email, phone, category, message, admissionPin
         } = req.body;
 
         if (!fullName) {
             return res.status(400).json({ success: false, message: 'Full name is required.' });
+        }
+
+        const cleanPin = String(admissionPin || '').trim().toUpperCase();
+        if (!/^[A-Z0-9]{10}$/.test(cleanPin)) {
+            return res.status(400).json({ success: false, message: 'A valid 10-character admission PIN is required.' });
+        }
+
+        reservedPin = await AdmissionPin.findOneAndUpdate(
+            { code: cleanPin, status: 'unused' },
+            { $set: { status: 'used', usedAt: new Date() } },
+            { new: true }
+        );
+        if (!reservedPin) {
+            return res.status(400).json({ success: false, message: 'PIN is invalid or has already been used.' });
         }
 
         const newEnquiry = new Enquiry({
@@ -745,6 +769,12 @@ app.post('/api/enquiries', async (req, res) => {
         });
 
     } catch (err) {
+        if (reservedPin) {
+            await AdmissionPin.updateOne(
+                { _id: reservedPin._id },
+                { $set: { status: 'unused' }, $unset: { usedAt: 1 } }
+            ).catch(resetError => console.error('Admission PIN rollback failed:', resetError));
+        }
         console.error('Enquiry Save Error:', err);
         res.status(500).json({ success: false, message: 'Failed to record admission form.' });
     }
@@ -757,6 +787,55 @@ app.get('/api/admin/enquiries', async (req, res) => {
         res.json({ success: true, enquiries });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Failed to fetch enquiries.' });
+    }
+});
+
+app.get('/api/admin/admission-pins', async (req, res) => {
+    try {
+        const pins = await AdmissionPin.find({}).sort({ createdAt: -1 });
+        res.json({ success: true, pins });
+    } catch (err) {
+        console.error('Fetch admission PINs error:', err);
+        res.status(500).json({ success: false, message: 'Failed to fetch admission PINs.' });
+    }
+});
+
+app.post('/api/admin/admission-pins', async (req, res) => {
+    try {
+        const requestedCode = String(req.body?.code || '').trim().toUpperCase();
+        const code = requestedCode || crypto.randomBytes(8).toString('hex').slice(0, 10).toUpperCase();
+
+        if (!/^[A-Z0-9]{10}$/.test(code)) {
+            return res.status(400).json({ success: false, message: 'PIN must contain exactly 10 letters or numbers.' });
+        }
+
+        const pin = await AdmissionPin.create({ code });
+        res.status(201).json({ success: true, pin });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, message: 'That PIN already exists. Use another code.' });
+        }
+        console.error('Create admission PIN error:', err);
+        res.status(500).json({ success: false, message: 'Failed to create admission PIN.' });
+    }
+});
+
+app.post('/api/admission-pins/verify', async (req, res) => {
+    try {
+        const code = String(req.body?.code || '').trim().toUpperCase();
+        if (!/^[A-Z0-9]{10}$/.test(code)) {
+            return res.status(400).json({ success: false, message: 'Enter a valid 10-character PIN.' });
+        }
+
+        const pin = await AdmissionPin.findOne({ code, status: 'unused' }).select('_id code status');
+        if (!pin) {
+            return res.status(400).json({ success: false, message: 'PIN is invalid or has already been used.' });
+        }
+
+        res.json({ success: true, message: 'PIN accepted.' });
+    } catch (err) {
+        console.error('Verify admission PIN error:', err);
+        res.status(500).json({ success: false, message: 'Could not verify admission PIN.' });
     }
 });
 

@@ -961,6 +961,246 @@
             box-sizing: border-box;
         }
 
+        .pin-access-card {
+            max-width: 440px;
+            margin-top: 12px;
+            background: linear-gradient(145deg, #7dd3fc 0%, #38bdf8 42%, #2563eb 100%);
+            border: 1px solid rgba(186, 230, 253, 0.8);
+            box-shadow: 0 30px 70px rgba(14, 116, 144, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        #pinAccessModal #pinAccessTitle,
+        #pinAccessModal > .pin-access-card > p {
+            color: #ffffff !important;
+        }
+
+        #pinAccessModal > .pin-access-card > p {
+            text-shadow: 0 1px 2px rgba(14, 116, 144, 0.25);
+        }
+
+        #pinAccessModal {
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+
+        .pin-access-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #e0f2fe, #0284c7);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(3, 105, 161, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .pin-access-icon svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .pin-whatsapp-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            padding: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 14px;
+            background: rgba(240, 253, 244, 0.9);
+            color: #166534;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .pin-payment-box {
+            margin: 16px 0;
+            padding: 14px;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 14px;
+            background: rgba(239, 246, 255, 0.94);
+            color: #1e3a8a;
+            font-size: 0.82rem;
+        }
+
+        .pin-payment-box p {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 5px 0;
+        }
+
+        .pin-account-row {
+            align-items: center;
+        }
+
+        .children-stepper {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px;
+            border-radius: 10px;
+            background: #dbeafe;
+        }
+
+        .children-stepper button {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 7px;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 1.1rem;
+            line-height: 1;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .children-stepper input {
+            width: 34px;
+            min-height: 28px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #1e3a8a;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .pin-total-row {
+            margin-top: 10px !important;
+            padding-top: 10px;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 0.92rem;
+        }
+
+        #pinAccessModal #admissionPinInput {
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            background: rgba(15, 23, 42, 0.9);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(14, 116, 144, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        #pinAccessModal #admissionPinInput::placeholder {
+            color: #bae6fd;
+        }
+
+        .copy-account-btn,
+        .paid-confirm-btn,
+        .pin-whatsapp-box {
+            cursor: pointer;
+        }
+
+        .copy-account-btn {
+            border: 0;
+            border-radius: 8px;
+            padding: 5px 8px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .paid-confirm-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #15803d, #22c55e);
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, 0.24);
+        }
+
+        .pin-paid-details {
+            display: none;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .pin-paid-details.is-visible {
+            display: block;
+        }
+
+        .pin-paid-details label {
+            margin-top: 10px;
+            color: var(--text-light);
+        }
+
+        .pin-paid-details input {
+            min-height: 42px;
+            margin-top: 4px;
+        }
+
+        .pin-whatsapp-box {
+            width: 100%;
+            justify-content: center;
+            background: linear-gradient(135deg, #15803d, #22c55e);
+            border-color: #16a34a;
+            color: #ffffff;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, 0.24);
+        }
+
+        .pin-whatsapp-box img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .admin-pin-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .admin-pin-toolbar input {
+            flex: 1 1 220px;
+            min-width: 0;
+        }
+
+        .pin-status {
+            display: inline-flex;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .pin-status-unused { background: #dcfce7; color: #166534; }
+        .pin-status-used { background: #fee2e2; color: #991b1b; }
+
+        .dark .pin-access-card {
+            background: linear-gradient(145deg, #7dd3fc 0%, #38bdf8 42%, #2563eb 100%);
+        }
+
+        .dark .pin-whatsapp-box {
+            background: linear-gradient(135deg, #166534, #16a34a);
+            color: #bbf7d0;
+        }
+
+        .dark .pin-payment-box {
+            background: rgba(30, 64, 175, 0.2);
+            color: #bfdbfe;
+        }
+
+        .dark .children-stepper {
+            background: rgba(30, 64, 175, 0.45);
+        }
+
+        .dark .children-stepper input {
+            color: #dbeafe;
+        }
+
         .cbt-access-modal {
             display: none;
         }
@@ -1330,6 +1570,78 @@
             transform: translateY(-5px) scale(1.08);
         }
 
+        .whatsapp-float {
+            position: fixed;
+            left: 20px;
+            bottom: 24px;
+            z-index: 998;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border: 2px solid #22c55e;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #16a34a;
+            text-decoration: none;
+            font-weight: 800;
+            box-shadow: 0 12px 28px rgba(22, 163, 74, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(14px) scale(0.82);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease, box-shadow 0.25s ease, filter 0.25s ease;
+            animation: whatsappPulse 3s ease-in-out infinite;
+        }
+
+        .whatsapp-float.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .whatsapp-float img {
+            width: 48px;
+            height: 48px;
+            display: block;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .whatsapp-float span {
+            display: none;
+        }
+
+        .whatsapp-float:hover {
+            transform: translateY(-4px) scale(1.04);
+            filter: saturate(1.12);
+            box-shadow: 0 16px 34px rgba(22, 163, 74, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        @keyframes whatsappPulse {
+            0%, 70%, 100% { box-shadow: 0 12px 28px rgba(22, 163, 74, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+            82% { box-shadow: 0 12px 28px rgba(22, 163, 74, 0.35), 0 0 0 9px rgba(34, 197, 94, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .whatsapp-float {
+                animation: none;
+                transition: opacity 0.01s linear, visibility 0.01s linear;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .whatsapp-float {
+                left: 16px;
+                bottom: 18px;
+                width: 52px;
+                height: 52px;
+            }
+        }
+
         footer {
             background: var(--card-dark);
             color: var(--text-muted);
@@ -1636,7 +1948,7 @@
             <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
             <div class="hero-btns">
                 <a href="/portal.html" class="btn-primary">Check Student Result</a>
-                <a href="#programs" class="btn-secondary">Make an Enquiry</a>
+                <a href="javascript:void(0)" onclick="requestEnquiryAccess()" class="btn-secondary">Make an Enquiry</a>
             </div>
         </div>
     </div>
@@ -1682,7 +1994,7 @@
                         <li>Introductory Business & ICT Skills</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('JSS 1')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for JSS</button>
+                <button onclick="requestEnquiryAccess('JSS 1')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for JSS</button>
             </div>
 
             <div class="program-card">
@@ -1696,7 +2008,7 @@
                         <li>Technical & Applied Science Studies</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('SS 1', 'Science')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Science</button>
+                <button onclick="requestEnquiryAccess('SS 1', 'Science')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Science</button>
             </div>
 
             <div class="program-card">
@@ -1710,10 +2022,42 @@
                         <li>Public Speaking & Debating Club</li>
                     </ul>
                 </div>
-                <button onclick="openEnquiryModal('SS 1', 'Art')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Arts/Comm</button>
+                <button onclick="requestEnquiryAccess('SS 1', 'Art')" class="btn-primary" style="width: 100%; background: var(--grad-primary); color: #FFFFFF;">Enquire for Arts/Comm</button>
             </div>
         </div>
     </section>
+
+    <!-- ADMISSION PIN ACCESS MODAL -->
+    <div id="pinAccessModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pinAccessTitle">
+        <div class="modal-card pin-access-card">
+            <span class="close-modal" onclick="closePinAccessModal()" aria-label="Close PIN access">&times;</span>
+            <div class="pin-access-icon"><i data-lucide="key-round" aria-hidden="true"></i></div>
+            <h2 id="pinAccessTitle" style="color: var(--text-light); text-align: center; font-weight: 800; margin-bottom: 8px;">Admission Form PIN</h2>
+            <p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; margin-bottom: 18px;">Enter the 10-character PIN supplied by the school to open the admission form.</p>
+            <input type="text" id="admissionPinInput" maxlength="10" minlength="10" pattern="[A-Za-z0-9]{10}" autocomplete="off" placeholder="Enter 10-character PIN" style="text-align: center; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800;">
+            <div class="pin-payment-box">
+                <p><strong>Account Name:</strong><span>Dynolinks Global C.</span></p>
+                <p class="pin-account-row"><strong>Account Number:</strong><span><strong id="admissionAccountNumber">0075016282</strong> <button type="button" class="copy-account-btn" onclick="copyAdmissionAccount()">Copy</button></span></p>
+                <p><strong>Bank Name:</strong><span>Stanbic IBTC</span></p>
+                <p class="pin-account-row"><strong>Number of children:</strong><span class="children-stepper"><button type="button" onclick="changeChildrenCount(-1)" aria-label="Decrease number of children">−</button><input type="text" id="childrenCount" value="1" readonly aria-label="Number of children"><button type="button" onclick="changeChildrenCount(1)" aria-label="Increase number of children">+</button></span></p>
+                <p class="pin-total-row"><strong>Total amount to pay:</strong><strong id="totalPaymentAmount">₦2,050</strong></p>
+            </div>
+            <button type="button" class="paid-confirm-btn" onclick="showPaidDetails()">Click, if paid</button>
+            <div id="pinPaidDetails" class="pin-paid-details">
+                <label for="payerBankName">Full bank account name</label>
+                <input type="text" id="payerBankName" placeholder="Enter the full name on the paying bank account" autocomplete="name">
+                <a id="pinWhatsappButton" class="pin-whatsapp-box" href="#" onclick="messagePaymentConfirmation(event)" aria-label="Message us after payment">
+                    <img src="whatsapp.png" alt="">
+                    <span>Message Us</span>
+                </a>
+            </div>
+            <p id="pinAccessError" class="alert alert-error" style="display: none; margin: 10px 0 0;"></p>
+            <div style="display: flex; gap: 10px; margin-top: 18px;">
+                <button type="button" onclick="closePinAccessModal()" class="btn-secondary" style="min-height: 46px; padding: 10px 18px; max-width: none;">Cancel</button>
+                <button type="button" onclick="verifyAdmissionPin()" class="btn-primary" style="min-height: 46px; padding: 10px 18px; max-width: none; background: var(--grad-primary); color: #ffffff;">Continue</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ENQUIRY / ADMISSION FORM MODAL -->
     <div id="enquiryModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="enquiryModalTitle">
@@ -1930,7 +2274,7 @@
                 <!-- Tab Switcher Navigation -->
                 <div class="tab-navigation">
                     <button class="tab-btn active" id="tab-btn-enquiry" onclick="switchAdminTab('enquiry')">Enquiry Submitted</button>
-                    <button class="tab-btn" id="tab-btn-cbt" onclick="switchAdminTab('cbt')">CBT Exam</button>
+                    <button class="tab-btn" id="tab-btn-cbt" onclick="switchAdminTab('cbt')">Admission PIN Generator</button>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -1966,30 +2310,28 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: CBT Exam Table -->
+                <!-- TAB 2: ADMISSION PIN GENERATOR -->
                 <div id="adminCbtView" class="tab-content">
                     <div class="admin-summary-box">
+                        <div class="admin-pin-toolbar">
+                            <input type="text" id="manualAdmissionPin" maxlength="10" placeholder="Manual PIN (exactly 10 letters/numbers)" autocomplete="off">
+                            <button type="button" onclick="createAdmissionPin(true)" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Create Manual PIN</button>
+                            <button type="button" onclick="createAdmissionPin(false)" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Generate PIN</button>
+                            <button type="button" onclick="loadAdmissionPins()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Refresh</button>
+                        </div>
                         <div class="table-responsive">
                             <table class="enquiry-table">
                                 <thead>
                                     <tr>
-                                        <th>Date Taken</th>
-                                        <th>Student Name</th>
-                                        <th>Exam Score</th>
+                                        <th>PIN Code</th>
                                         <th>Status</th>
-                                        <th>Action</th>
+                                        <th>Created</th>
+                                        <th>Used At</th>
                                     </tr>
                                 </thead>
                                 <tbody id="cbtListBody">
                                     <tr>
-                                        <td>2026-08-12</td>
-                                        <td><strong>ADEBAYO Oluwaseun David</strong></td>
-                                        <td>84%</td>
-                                        <td style="color: #10B981; font-weight: bold;">Passed</td>
-                                        <td>
-                                            <button class="btn-view-form">View Results</button>
-                                            <button class="btn-delete-form">Delete</button>
-                                        </td>
+                                        <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No admission PINs loaded.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2184,6 +2526,10 @@
 
     <div class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</div>
 
+    <a id="whatsappFloat" class="whatsapp-float" href="https://wa.me/2348079831549?text=Hello%20Dynolinks%20Global%20College%2C%20I%20would%20like%20to%20make%20an%20enquiry." target="_blank" rel="noopener" aria-label="Chat with Dynolinks Global College on WhatsApp" title="Chat with us on WhatsApp">
+        <img src="whatsapp.png" alt="" aria-hidden="true">
+    </a>
+
     <footer>
         <div class="footer-content">
             <div class="footer-brand">
@@ -2204,6 +2550,16 @@
     <script>
         if (window.lucide) {
             lucide.createIcons();
+        }
+
+        const whatsappFloat = document.getElementById('whatsappFloat');
+        const enquirySection = document.getElementById('programs');
+
+        if (whatsappFloat && enquirySection && 'IntersectionObserver' in window) {
+            const enquiryObserver = new IntersectionObserver(([entry]) => {
+                whatsappFloat.classList.toggle('is-visible', entry.isIntersecting);
+            }, { threshold: 0.2 });
+            enquiryObserver.observe(enquirySection);
         }
 
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -2308,6 +2664,10 @@
             }
         ];
 
+        let currentAdmissionPin = '';
+        let pendingEnquiryClass = '';
+        let pendingEnquiryTrack = '';
+
         const menuToggle = document.getElementById('menuToggle');
         const navMenu = document.getElementById('navMenu');
 
@@ -2346,6 +2706,100 @@
                 trackBox.style.display = 'none';
                 const sssRadios = document.querySelectorAll('input[name="sssTrack"]');
                 sssRadios.forEach(radio => radio.checked = false);
+            }
+        }
+
+        function requestEnquiryAccess(proposedClass = '', proposedTrack = '') {
+            pendingEnquiryClass = proposedClass;
+            pendingEnquiryTrack = proposedTrack;
+            document.body.classList.add('modal-open');
+            document.getElementById('pinAccessModal').style.display = 'flex';
+            document.getElementById('pinAccessError').style.display = 'none';
+            document.getElementById('pinPaidDetails').classList.remove('is-visible');
+            document.getElementById('payerBankName').value = '';
+            document.getElementById('childrenCount').value = '1';
+            updateTotalPayment();
+            const input = document.getElementById('admissionPinInput');
+            input.value = '';
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function showPaidDetails() {
+            document.getElementById('pinPaidDetails').classList.add('is-visible');
+            document.getElementById('payerBankName').focus();
+        }
+
+        function changeChildrenCount(amount) {
+            const input = document.getElementById('childrenCount');
+            const currentCount = Number.parseInt(input.value, 10) || 1;
+            input.value = String(Math.max(1, currentCount + amount));
+            updateTotalPayment();
+        }
+
+        function updateTotalPayment() {
+            const count = Number.parseInt(document.getElementById('childrenCount').value, 10) || 1;
+            document.getElementById('totalPaymentAmount').textContent = `₦${(2050 * count).toLocaleString('en-NG')}`;
+        }
+
+        async function copyAdmissionAccount() {
+            const accountNumber = document.getElementById('admissionAccountNumber').textContent;
+            try {
+                await navigator.clipboard.writeText(accountNumber);
+                alert('Account number copied.');
+            } catch (err) {
+                alert(`Copy failed. Account number: ${accountNumber}`);
+            }
+        }
+
+        function messagePaymentConfirmation(event) {
+            event.preventDefault();
+            const bankName = document.getElementById('payerBankName').value.trim();
+            const children = Number.parseInt(document.getElementById('childrenCount').value, 10);
+            const totalAmount = 2050 * children;
+            const error = document.getElementById('pinAccessError');
+
+            if (!bankName || !Number.isInteger(children) || children < 1) {
+                error.textContent = 'Please enter the full bank account name and the number of children.';
+                error.style.display = 'block';
+                return;
+            }
+
+            const message = `Hello Dynolinks Global College. I have paid for the admission/enquiry form.\n\nFull bank account name: ${bankName}\nNumber of children: ${children}\nTotal amount paid: ₦${totalAmount.toLocaleString('en-NG')}\n\nPlease confirm my payment and provide the admission form PIN. Thank you.`;
+            window.open(`https://wa.me/2348079831549?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+        }
+
+        function closePinAccessModal() {
+            document.getElementById('pinAccessModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        async function verifyAdmissionPin() {
+            const input = document.getElementById('admissionPinInput');
+            const error = document.getElementById('pinAccessError');
+            const code = input.value.trim().toUpperCase();
+            error.style.display = 'none';
+
+            if (!/^[A-Z0-9]{10}$/.test(code)) {
+                error.textContent = 'Enter a valid 10-character PIN.';
+                error.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admission-pins/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'PIN could not be verified.');
+
+                currentAdmissionPin = code;
+                closePinAccessModal();
+                openEnquiryModal(pendingEnquiryClass, pendingEnquiryTrack);
+            } catch (err) {
+                error.textContent = err.message || 'PIN could not be verified.';
+                error.style.display = 'block';
             }
         }
 
@@ -2410,6 +2864,7 @@
                 immunizedDisease: document.getElementById('immunizedDisease').value.trim(),
                 restrictedActivities: document.getElementById('restrictedActivities').value.trim(),
                 otherHealthInfo: document.getElementById('otherHealthInfo').value.trim(),
+                admissionPin: currentAdmissionPin,
                 parentSign: document.getElementById('parentSign').value.trim(),
                 parentSignDate: document.getElementById('parentSignDate').value,
                 classAdmitted: classSelected,
@@ -2446,6 +2901,7 @@
                     alertBox.style.display = 'none';
                     document.getElementById('enquiryAdmissionForm').reset();
                     document.getElementById('sssTrackBox').style.display = 'none';
+                    currentAdmissionPin = '';
                     closeEnquiryModal();
                 }, 2500);
             } catch (err) {
@@ -2502,7 +2958,65 @@
                 btnCbt.classList.add('active');
                 btnEnquiry.classList.remove('active');
                 dashboardTitle.innerText = 'CBT Exam Results';
+                loadAdmissionPins();
             }
+        }
+
+        async function loadAdmissionPins() {
+            const tbody = document.getElementById('cbtListBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading PINs...</td></tr>';
+
+            try {
+                const response = await fetch('/api/admin/admission-pins');
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Failed to load PINs.');
+
+                if (!data.pins.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No admission PINs created yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.pins.map(pin => `
+                    <tr>
+                        <td><strong style="letter-spacing: 0.12em;">${escapeHtml(pin.code)}</strong></td>
+                        <td><span class="pin-status pin-status-${pin.status}">${escapeHtml(pin.status)}</span></td>
+                        <td>${pin.createdAt ? new Date(pin.createdAt).toLocaleString() : 'N/A'}</td>
+                        <td>${pin.usedAt ? new Date(pin.usedAt).toLocaleString() : 'Not used'}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #dc2626;">${escapeHtml(err.message || 'Failed to load PINs.')}</td></tr>`;
+            }
+        }
+
+        async function createAdmissionPin(manual) {
+            const input = document.getElementById('manualAdmissionPin');
+            const code = manual ? input.value.trim().toUpperCase() : '';
+            if (manual && !/^[A-Z0-9]{10}$/.test(code)) {
+                return alert('Manual PIN must contain exactly 10 letters or numbers.');
+            }
+
+            try {
+                const response = await fetch('/api/admin/admission-pins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Failed to create PIN.');
+                if (input) input.value = '';
+                await loadAdmissionPins();
+                alert(`Admission PIN created: ${data.pin.code}`);
+            } catch (err) {
+                alert(err.message || 'Failed to create PIN.');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[character]));
         }
 
         function fetchEnquiries() {
@@ -2661,6 +3175,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeEnquiryModal();
+                closePinAccessModal();
                 closeAdminModal();
                 closeAdminViewFormModal();
                 closeCBTAccessModal();
