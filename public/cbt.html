@@ -2,7 +2,7 @@
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="icon" type="image/png" href="mini.png">
     <title>Dynolinks College - CBT & School Management System</title>
     <!-- Tailwind CSS CDN -->
@@ -30,8 +30,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        html, body {
+            width: 100%;
+            min-height: 100%;
+        }
+
         body { font-family: 'Inter', sans-serif; }
+        body {
+            min-height: 100svh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        main {
+            min-height: calc(100svh - 4rem);
+            min-height: calc(100dvh - 4rem);
+        }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -70,6 +88,210 @@
             background: #ffffff;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
         }
+
+        /* Admin control-room visual system */
+        #viewAdminPortal {
+            position: relative;
+            isolation: isolate;
+            padding: clamp(1rem, 2vw, 2rem);
+            border: 1px solid rgba(59, 130, 246, 0.16);
+            border-radius: 1.75rem;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.18), transparent 32%),
+                radial-gradient(circle at 0% 100%, rgba(236, 72, 153, 0.13), transparent 30%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.9));
+            box-shadow: 0 24px 70px rgba(30, 64, 175, 0.12);
+            animation: adminPageIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        #viewAdminPortal::before,
+        #viewAdminPortal::after {
+            content: '';
+            position: absolute;
+            width: 16rem;
+            height: 16rem;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(2px);
+            opacity: 0.35;
+            animation: adminOrbFloat 9s ease-in-out infinite alternate;
+        }
+
+        #viewAdminPortal::before {
+            top: 8rem;
+            right: -8rem;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.35), transparent 68%);
+        }
+
+        #viewAdminPortal::after {
+            bottom: 4rem;
+            left: -9rem;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.24), transparent 68%);
+            animation-delay: -4s;
+        }
+
+        .dark #viewAdminPortal {
+            border-color: rgba(96, 165, 250, 0.2);
+            background:
+                radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.2), transparent 32%),
+                radial-gradient(circle at 0% 100%, rgba(236, 72, 153, 0.15), transparent 30%),
+                linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96));
+            box-shadow: 0 24px 70px rgba(2, 6, 23, 0.35);
+        }
+
+        #viewAdminPortal > div:first-child {
+            position: relative;
+            padding: 1.25rem;
+            border: 1px solid rgba(59, 130, 246, 0.18);
+            border-radius: 1.25rem;
+            background: linear-gradient(110deg, rgba(30, 64, 175, 0.96), rgba(14, 165, 233, 0.9) 55%, rgba(168, 85, 247, 0.88));
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2);
+            overflow: hidden;
+        }
+
+        #viewAdminPortal > div:first-child::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.2) 48%, transparent 72%);
+            transform: translateX(-120%);
+            animation: adminHeaderSweep 7s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        #viewAdminPortal > div:first-child h2,
+        #viewAdminPortal > div:first-child p {
+            color: #ffffff !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        #viewAdminPortal > div:first-child h2 i {
+            color: #fde68a;
+        }
+
+        #viewAdminPortal > div:first-child .flex.flex-wrap {
+            position: relative;
+            z-index: 2;
+        }
+
+        #viewAdminPortal [id^="btnTab"] {
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            background: rgba(15, 23, 42, 0.22) !important;
+            color: rgba(255, 255, 255, 0.84) !important;
+            backdrop-filter: blur(10px);
+            transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        #viewAdminPortal [id^="btnTab"]:hover,
+        #viewAdminPortal [id^="btnTab"].admin-tab-active {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #viewAdminPortal > div:not(:first-child) > div,
+        #viewAdminPortal > div:not(:first-child) > .bg-white,
+        #viewAdminPortal > div:not(:first-child) > .bg-gray-800 {
+            border-color: rgba(99, 102, 241, 0.18) !important;
+            box-shadow: 0 12px 30px rgba(30, 64, 175, 0.08) !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        #viewAdminPortal > div:not(:first-child) > div:hover,
+        #viewAdminPortal > div:not(:first-child) > .bg-white:hover,
+        #viewAdminPortal > div:not(:first-child) > .bg-gray-800:hover {
+            border-color: rgba(14, 165, 233, 0.42) !important;
+            box-shadow: 0 18px 38px rgba(37, 99, 235, 0.14) !important;
+        }
+
+        #viewAdminPortal input,
+        #viewAdminPortal select,
+        #viewAdminPortal textarea {
+            border-color: rgba(99, 102, 241, 0.24) !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        #viewAdminPortal input:focus,
+        #viewAdminPortal select:focus,
+        #viewAdminPortal textarea:focus {
+            border-color: #06b6d4 !important;
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.14), 0 8px 18px rgba(37, 99, 235, 0.1) !important;
+            transform: translateY(-1px);
+        }
+
+        #viewAdminPortal button:not([id^="btnTab"]) {
+            transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #viewAdminPortal button:not([id^="btnTab"]):hover {
+            filter: saturate(1.15);
+            transform: translateY(-2px);
+        }
+
+        #viewAdminPortal table thead tr {
+            background: linear-gradient(100deg, rgba(14, 165, 233, 0.12), rgba(168, 85, 247, 0.1)) !important;
+        }
+
+        #viewAdminPortal table tbody tr {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        #viewAdminPortal table tbody tr:hover {
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        #viewAdminPortal > div:not(:first-child) {
+            animation: adminContentIn 0.45s ease both;
+        }
+
+        @keyframes adminPageIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes adminContentIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes adminOrbFloat {
+            from { transform: translate3d(0, 0, 0) scale(0.94); }
+            to { transform: translate3d(18px, -16px, 0) scale(1.08); }
+        }
+
+        @keyframes adminHeaderSweep {
+            0%, 55% { transform: translateX(-120%); }
+            75%, 100% { transform: translateX(120%); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #viewAdminPortal,
+            #viewAdminPortal::before,
+            #viewAdminPortal::after,
+            #viewAdminPortal > div:first-child::after,
+            #viewAdminPortal > div:not(:first-child) {
+                animation: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            #viewAdminPortal {
+                padding: 0.75rem;
+                border-radius: 1.25rem;
+            }
+
+            #viewAdminPortal > div:first-child {
+                padding: 1rem;
+            }
+
+            #viewAdminPortal [id^="btnTab"] {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-height: 2.5rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-full flex flex-col transition-colors duration-200">
@@ -95,8 +317,8 @@
                     <i class="fa-solid fa-house text-blue-600"></i>
                     <span>Home</span>
                 </a>
-                <a href="portal.html" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student result portal">
-                    <i class="fa-solid fa-file-lines text-emerald-600"></i>
+                <a href="cbt.html" onclick="showDashboard()" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student CBT portal">
+                    <i class="fa-solid fa-laptop-code text-blue-600"></i>
                     <span>Student Portal</span>
                 </a>
 
@@ -139,7 +361,7 @@
                 <div class="relative z-10 max-w-3xl">
                     <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-md uppercase tracking-wider">Dynolinks Global College</span>
                     <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-2">Computer Based Testing Portal</h1>
-                    <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class level below to begin your examination. Ensure your registration details match system records.</p>
+                    <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class level below to begin your assignment. Ensure your registration details match system records.</p>
                 </div>
             </div>
 
@@ -149,7 +371,7 @@
                     <h2 class="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-graduate text-blue-600"></i> Student Candidate Registration
                     </h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Please complete all required fields accurately before starting the examination.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Please complete all required fields accurately before starting the Assignmment.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -190,7 +412,7 @@
                     <button onclick="showDashboard()" class="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2 hover:underline flex items-center gap-1">
                         <i class="fa-solid fa-arrow-left"></i> Change Candidate Info / Back
                     </button>
-                    <h2 class="text-2xl font-black text-gray-900 dark:text-white" id="instExamTitle">Examination Guidelines</h2>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white" id="instExamTitle">Assignmment Guidelines</h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="instExamMeta">Candidate: John Doe | Class: JSS 1</p>
                 </div>
 
@@ -211,7 +433,7 @@
 
                 <div class="pt-4 flex justify-end gap-3">
                     <button onclick="showDashboard()" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
-                    <button onclick="startExamNow()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition">Begin Examination</button>
+                    <button onclick="startExamNow()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition">Begin Assignmment</button>
                 </div>
             </div>
         </section>
@@ -312,7 +534,7 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 4: SUBMISSION CONFIRMATION & SCORECARD-->
+        <!-- VIEW 4: PRIVATE SUBMISSION CONFIRMATION -->
         <!-- ========================================== -->
         <section id="viewSubmissionSuccess" class="hidden max-w-3xl mx-auto my-auto w-full space-y-6">
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
@@ -320,32 +542,14 @@
                     <div class="w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
-                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">Exam Completed & Submitted!</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400" id="scorecardMeta">Candidate Performance Breakdown</p>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">Assignment Completed & Submitted!</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Your Assignment has been submitted successfully.</p>
                 </div>
 
-                <!-- Performance Card -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
-                        <p class="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase">Total Score</p>
-                        <p class="text-2xl font-black text-blue-700 dark:text-blue-300 mt-1" id="scorecardPoints">0 / 0</p>
-                    </div>
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                        <p class="text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase">Percentage</p>
-                        <p class="text-2xl font-black text-indigo-700 dark:text-indigo-300 mt-1" id="scorecardPercent">0%</p>
-                    </div>
-                    <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-800">
-                        <p class="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase">Grade Assessment</p>
-                        <p class="text-2xl font-black text-purple-700 dark:text-purple-300 mt-1" id="scorecardGrade">N/A</p>
-                    </div>
-                </div>
-
-                <!-- Subject-by-Subject Score Table -->
-                <div class="space-y-2">
-                    <h4 class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Subject Performance Summary:</h4>
-                    <div class="divide-y divide-gray-200 dark:divide-gray-700 border rounded-xl overflow-hidden" id="scorecardSubjectTable">
-                        <!-- Dynamic Subject Scores -->
-                    </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 text-center">
+                    <i class="fa-solid fa-lock text-blue-600 dark:text-blue-400 text-xl mb-2"></i>
+                    <p class="text-sm font-semibold text-blue-900 dark:text-blue-200">Your result has been recorded securely.</p>
+                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">Results are available only to the school administrator.</p>
                 </div>
 
                 <div class="text-center pt-2">
@@ -359,7 +563,7 @@
         <!-- ========================================== -->
         <!-- VIEW 5: DYNAMIC ADMIN / TEACHER PORTAL     -->
         <!-- ========================================== -->
-        <section id="viewAdminPortal" class="hidden space-y-6">
+        <section id="viewAdminPortal" class="hidden space-y-6 admin-ui">
             <!-- Top Admin Nav Bar -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
                 <div>
@@ -370,9 +574,6 @@
                 </div>
                 <!-- Navigation Tabs -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="showView('viewDashboard')" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 transition flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-left"></i> Student Portal
-                    </button>
                     <button onclick="showAdminSubView('builder')" id="btnTabBuilder" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow">
                         <i class="fa-solid fa-gear mr-1"></i> Exam Config & Timers
                     </button>
@@ -606,6 +807,7 @@
                                     <th class="p-4 font-semibold">Percentage</th>
                                     <th class="p-4 font-semibold">Grade</th>
                                     <th class="p-4 font-semibold">Date Submitted</th>
+                                    <th class="p-4 font-semibold">Save</th>
                                 </tr>
                             </thead>
                             <tbody id="cbtResultsTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -934,18 +1136,18 @@
             }
 
             if (rosterMatch.status === 'Suspended') {
-                return showCustomAlert('Access Suspended', `Student ID "${studentId}" has been suspended for this examination session. Please see your invigilator.`);
+                return showCustomAlert('Access Suspended', `Student ID "${studentId}" has been suspended for this Assignmment session. Please see your invigilator.`);
             }
 
             const priorResult = cbtResults.find(res => res.studentId && res.studentId.toUpperCase() === studentId && res.classKey === classKey);
             if (priorResult || rosterMatch.status === 'Completed/Attempted') {
-                return showCustomAlert('Exam Already Submitted', `Student ID "${studentId}" has already completed and submitted the examination for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
+                return showCustomAlert('Assignment Already Submitted', `Student ID "${studentId}" has already completed and submitted the assignment for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
             }
 
             currentCandidate = { name: rosterMatch.name || name, studentId: studentId, classKey: classKey };
             currentClassConfig = classConfigs[classKey];
 
-            document.getElementById('instExamTitle').innerText = `${currentClassConfig.label} Examination`;
+            document.getElementById('instExamTitle').innerText = `${currentClassConfig.label} Assignment`;
             document.getElementById('instExamMeta').innerText = `Candidate: ${currentCandidate.name} (${studentId}) | Timer Mode: ${currentClassConfig.timerMode === 'subject' ? 'Per-Subject Timers' : 'Blended Exam Timer'}`;
 
             const breakdownBox = document.getElementById('instSubjectBreakdown');
@@ -1025,7 +1227,7 @@
                         totalExamTimer--;
                     } else {
                         clearInterval(examTimerInterval);
-                        showCustomAlert('Time Expired!', 'Total examination time has elapsed. Submitting test automatically.', () => {
+                        showCustomAlert('Time Expired!', 'Total assignment time has elapsed. Submitting test automatically.', () => {
                             finalizeExamSubmission();
                         });
                         return;
@@ -1201,7 +1403,7 @@
 
         function promptSubmitExam() {
             showCustomConfirm(
-                'Submit Examination?',
+                'Submit Assignment?',
                 'Are you sure you want to finalize your submission? All answers will be logged.',
                 () => finalizeExamSubmission()
             );
@@ -1275,24 +1477,6 @@
 
             if (options.silent) return;
 
-            document.getElementById('scorecardMeta').innerText = `Candidate: ${currentCandidate.name} (${currentCandidate.studentId}) | ${currentClassConfig.label}`;
-            document.getElementById('scorecardPoints').innerText = `${totalAchieved} / ${totalPossible}`;
-            document.getElementById('scorecardPercent').innerText = `${percent}%`;
-            document.getElementById('scorecardGrade').innerText = grade;
-
-            const table = document.getElementById('scorecardSubjectTable');
-            table.innerHTML = '';
-            Object.keys(subjectBreakdown).forEach(sName => {
-                const item = subjectBreakdown[sName];
-                const row = document.createElement('div');
-                row.className = 'p-3 bg-white dark:bg-gray-800 flex justify-between items-center text-xs font-semibold';
-                row.innerHTML = `
-                    <span>${sName}</span>
-                    <span class="text-blue-600 dark:text-blue-400 font-bold">${item.score} / ${item.max} Points</span>
-                `;
-                table.appendChild(row);
-            });
-
             showView('viewSubmissionSuccess');
         }
 
@@ -1352,13 +1536,19 @@
                 const sub = document.getElementById('adminSub' + k.charAt(0).toUpperCase() + k.slice(1));
                 const btn = document.getElementById('btnTab' + k.charAt(0).toUpperCase() + k.slice(1));
                 if (sub) sub.classList.add('hidden');
-                if (btn) btn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200';
+                if (btn) {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200';
+                    btn.classList.remove('admin-tab-active');
+                }
             });
 
             const activeSub = document.getElementById('adminSub' + key.charAt(0).toUpperCase() + key.slice(1));
             const activeBtn = document.getElementById('btnTab' + key.charAt(0).toUpperCase() + key.slice(1));
             if (activeSub) activeSub.classList.remove('hidden');
-            if (activeBtn) activeBtn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow';
+            if (activeBtn) {
+                activeBtn.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow';
+                activeBtn.classList.add('admin-tab-active');
+            }
 
             if (key === 'builder') loadAdminClassConfig();
             if (key === 'roster') { populateRosterClassFilter(); renderRosterTable(); }
@@ -2420,7 +2610,7 @@
             tbody.innerHTML = '';
 
             if (cbtResults.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
                 return;
             }
 
@@ -2441,9 +2631,76 @@
                     <td class="p-4 font-bold text-indigo-600 dark:text-indigo-400">${res.percentage}%</td>
                     <td class="p-4 font-bold text-purple-600 dark:text-purple-400">${res.grade}</td>
                     <td class="p-4 text-xs text-gray-500 dark:text-gray-400">${res.timestamp}</td>
+                    <td class="p-4">
+                        <button onclick="saveCbtResultAsPicture('${res.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm">
+                            <i class="fa-solid fa-image mr-1"></i> Save Picture
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        async function saveCbtResultAsPicture(resultId) {
+            const result = cbtResults.find(item => item.id === resultId);
+            if (!result) return showToast('Result record not found.', 'error');
+            if (typeof html2canvas !== 'function') return showToast('Picture export is unavailable. Check your connection and try again.', 'error');
+
+            const subjectRows = Object.entries(result.subjectBreakdown || {}).map(([name, score]) => `
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #dbeafe;color:#334155;font-size:14px;">
+                    <span>${escapeResultPictureText(name)}</span>
+                    <strong style="color:#2563eb;">${score.score} / ${score.max}</strong>
+                </div>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.style.cssText = 'position:fixed;left:-10000px;top:0;width:900px;padding:42px;background:linear-gradient(135deg,#eff6ff 0%,#ffffff 48%,#fdf4ff 100%);font-family:Inter,Arial,sans-serif;color:#0f172a;';
+            card.innerHTML = `
+                <div style="border-radius:24px;overflow:hidden;background:#ffffff;box-shadow:0 20px 50px rgba(30,64,175,.18);border:1px solid #bfdbfe;">
+                    <div style="padding:30px 36px;background:linear-gradient(110deg,#1d4ed8,#0891b2 55%,#9333ea);color:#ffffff;">
+                        <div style="font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:.85;">Dynolinks Global College</div>
+                        <div style="font-size:32px;font-weight:800;margin-top:8px;">CBT Assignmment Result</div>
+                        <div style="font-size:14px;margin-top:6px;opacity:.85;">Official administrator record</div>
+                    </div>
+                    <div style="padding:30px 36px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;">
+                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Student</div><div style="font-size:22px;font-weight:800;margin-top:5px;">${escapeResultPictureText(result.studentName)}</div></div>
+                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Student ID</div><div style="font-size:18px;font-weight:700;margin-top:7px;color:#1d4ed8;">${escapeResultPictureText(result.studentId)}</div></div>
+                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Class Level</div><div style="font-size:16px;font-weight:700;margin-top:6px;">${escapeResultPictureText(result.classLevel)}</div></div>
+                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Date Submitted</div><div style="font-size:16px;font-weight:700;margin-top:6px;">${escapeResultPictureText(result.timestamp)}</div></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;">
+                            <div style="padding:18px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe;text-align:center;"><div style="font-size:11px;color:#2563eb;font-weight:800;text-transform:uppercase;">Total Score</div><div style="font-size:25px;font-weight:800;color:#1d4ed8;margin-top:5px;">${result.totalPoints} / ${result.maxPoints}</div></div>
+                            <div style="padding:18px;border-radius:14px;background:#ecfeff;border:1px solid #a5f3fc;text-align:center;"><div style="font-size:11px;color:#0891b2;font-weight:800;text-transform:uppercase;">Percentage</div><div style="font-size:25px;font-weight:800;color:#0e7490;margin-top:5px;">${result.percentage}%</div></div>
+                            <div style="padding:18px;border-radius:14px;background:#faf5ff;border:1px solid #e9d5ff;text-align:center;"><div style="font-size:11px;color:#9333ea;font-weight:800;text-transform:uppercase;">Grade</div><div style="font-size:21px;font-weight:800;color:#7e22ce;margin-top:8px;">${escapeResultPictureText(result.grade)}</div></div>
+                        </div>
+                        <div style="font-size:12px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Subject Breakdown</div>
+                        ${subjectRows}
+                    </div>
+                    <div style="padding:16px 36px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center;">Generated from the Dynolinks CBT administrator console</div>
+                </div>
+            `;
+            document.body.appendChild(card);
+
+            try {
+                const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#eff6ff', useCORS: true });
+                const link = document.createElement('a');
+                link.download = `Dynolinks_CBT_Result_${String(result.studentId).replace(/[^a-z0-9_-]/gi, '_')}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Result picture saved successfully!');
+            } catch (error) {
+                console.error('CBT result picture export failed:', error);
+                showToast('Could not save the result picture.', 'error');
+            } finally {
+                card.remove();
+            }
+        }
+
+        function escapeResultPictureText(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[character]));
         }
 
         function filterResultsTable() {

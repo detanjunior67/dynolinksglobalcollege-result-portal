@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="mini.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             /* Vibrant Dark Base (Default) */
@@ -191,24 +192,80 @@
 
         /* Glass Navigation Bar */
         header {
-            background: var(--header-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 14px 6%;
+            background: linear-gradient(110deg, rgba(14, 23, 42, 0.72), rgba(15, 118, 175, 0.32) 48%, rgba(30, 41, 59, 0.68));
+            backdrop-filter: blur(24px) saturate(155%);
+            -webkit-backdrop-filter: blur(24px) saturate(155%);
+            padding: 12px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid var(--border-dark);
+            box-shadow: 0 14px 36px rgba(2, 8, 23, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 0;
+            border-radius: 0 0 24px 24px;
+            overflow: hidden;
+            isolation: isolate;
+            animation: glassBarReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(125, 211, 252, 0.32), transparent 28%),
+                radial-gradient(circle at 84% 110%, rgba(244, 114, 182, 0.2), transparent 30%);
+            pointer-events: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -35%;
+            width: 28%;
+            height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+            transform: skewX(-20deg);
+            pointer-events: none;
+            animation: glassBarShimmer 8s ease-in-out infinite;
+        }
+
+        body.light-mode header {
+            background: linear-gradient(110deg, rgba(255, 255, 255, 0.76), rgba(224, 242, 254, 0.62) 48%, rgba(255, 255, 255, 0.72));
+            border-color: rgba(14, 116, 144, 0.2);
+            box-shadow: 0 14px 36px rgba(14, 116, 144, 0.12), inset 0 -1px 0 rgba(255, 255, 255, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        }
+
+        header > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes glassBarReveal {
+            from { opacity: 0; transform: translateY(-18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glassBarShimmer {
+            0%, 52% { transform: translateX(0) skewX(-20deg); opacity: 0; }
+            65% { opacity: 1; }
+            82%, 100% { transform: translateX(520%) skewX(-20deg); opacity: 0; }
         }
 
         .logo-container {
             display: flex;
             align-items: center;
             gap: 14px;
+            padding: 6px 12px 6px 6px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
         }
 
         .logo-img {
@@ -218,6 +275,12 @@
             object-fit: contain;
             border-radius: 4px;
             filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.3));
+        }
+
+        header nav a,
+        .theme-switch-wrapper,
+        .menu-toggle {
+            filter: drop-shadow(0 1px 3px rgba(2, 8, 23, 0.2));
         }
 
         .logo-text-group {
@@ -273,8 +336,7 @@
 
         .slider:before {
             position: absolute;
-            content: "🌙";
-            font-size: 14px;
+            content: "";
             display: flex;
             align-items: center;
             justify-content: center;
@@ -294,7 +356,24 @@
 
         input:checked + .slider:before {
             transform: translateX(29px);
-            content: "☀️";
+        }
+
+        .theme-icon {
+            position: absolute;
+            top: 50%;
+            left: 9px;
+            width: 12px;
+            height: 12px;
+            color: #0f172a;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .theme-icon-sun {
+            left: auto;
+            right: 9px;
+            color: #fef3c7;
         }
 
         .menu-toggle {
@@ -318,6 +397,25 @@
             transition: all 0.3s ease;
         }
 
+        .menu-toggle svg {
+            width: 25px;
+            height: 25px;
+            color: var(--crest-blue-light);
+            stroke-width: 2.5;
+        }
+
+        .menu-toggle .icon-close {
+            display: none;
+        }
+
+        .menu-toggle.is-open .icon-menu {
+            display: none;
+        }
+
+        .menu-toggle.is-open .icon-close {
+            display: block;
+        }
+
         nav {
             display: flex;
             align-items: center;
@@ -332,6 +430,45 @@
             transition: all 0.2s ease;
             cursor: pointer;
             position: relative;
+        }
+
+        nav a,
+        .nav-icon-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        nav a svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            stroke-width: 2.4;
+            flex: 0 0 auto;
+        }
+
+        nav a:hover svg {
+            transform: translateY(-2px) rotate(-4deg);
+        }
+
+        nav a svg {
+            transition: transform 0.25s ease, filter 0.25s ease;
+        }
+
+        .cbt-btn svg { color: #fde68a; }
+        .btn-portal svg { color: #bae6fd; }
+        .admin-link svg { color: #fecdd3; }
+
+        .btn-portal,
+        .admin-link,
+        .cbt-btn {
+            border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .btn-portal,
+        .admin-link,
+        .cbt-btn {
+            box-shadow: 0 8px 22px rgba(2, 8, 23, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
 
         nav a:not(.btn-portal):not(.admin-link):not(.cbt-btn)::after {
@@ -417,6 +554,7 @@
 
         .hero h1 span {
             background: linear-gradient(135deg, #ffffff 0%, #fde047 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -823,6 +961,129 @@
             box-sizing: border-box;
         }
 
+        .cbt-access-modal {
+            display: none;
+        }
+
+        .cbt-access-modal.is-visible {
+            display: flex;
+        }
+
+        .cbt-access-card {
+            max-width: 460px;
+            text-align: center;
+            transform: translateY(28px) scale(0.94);
+            opacity: 0;
+            animation: cbtModalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .cbt-access-icon {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            background: var(--grad-gold);
+            color: #ffffff;
+            font-size: 2rem;
+            box-shadow: var(--shadow-glow-gold);
+            animation: cbtIconFloat 2.8s ease-in-out infinite;
+        }
+
+        .cbt-access-card h2 {
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 8px;
+        }
+
+        .cbt-access-card p {
+            color: var(--text-muted);
+            margin-bottom: 22px;
+        }
+
+        .cbt-password-wrap {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .cbt-password-wrap input {
+            padding-right: 52px;
+            text-align: center;
+            letter-spacing: 0.12em;
+        }
+
+        .cbt-password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            border: 0;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .cbt-password-error {
+            min-height: 22px;
+            color: var(--crest-red-bright);
+            font-size: 0.82rem;
+            font-weight: 700;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .cbt-password-error.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            animation: cbtShake 0.35s ease-in-out;
+        }
+
+        .cbt-access-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .cbt-access-actions button {
+            flex: 1;
+            min-height: 48px;
+            border: 0;
+            border-radius: 50px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .cbt-enter-btn {
+            background: var(--grad-gold);
+            color: #ffffff;
+            box-shadow: var(--shadow-glow-gold);
+        }
+
+        .cbt-cancel-btn {
+            background: var(--bg-body);
+            color: var(--text-muted);
+            border: 1px solid var(--border-dark) !important;
+        }
+
+        @keyframes cbtModalIn {
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes cbtIconFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(-3deg); }
+        }
+
+        @keyframes cbtShake {
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
         .close-modal {
             position: absolute;
             top: 16px;
@@ -1129,6 +1390,10 @@
         }
 
         @media (max-width: 768px) {
+            header {
+                overflow: visible;
+            }
+
             .logo-text {
                 font-size: 1.1rem;
             }
@@ -1162,13 +1427,20 @@
                 top: 100%;
                 left: 0;
                 width: 100%;
-                background: var(--card-dark);
+                z-index: 1002;
+                background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(14, 116, 144, 0.78));
+                backdrop-filter: blur(24px) saturate(150%);
+                -webkit-backdrop-filter: blur(24px) saturate(150%);
                 flex-direction: column;
                 padding: 24px;
                 gap: 18px;
                 box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
                 border-bottom: 2px solid;
                 border-image: var(--grad-primary) 1;
+            }
+
+            body.light-mode nav {
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(224, 242, 254, 0.88));
             }
 
             nav.active {
@@ -1179,6 +1451,26 @@
                 font-size: 1.05rem;
                 width: 100%;
                 text-align: center;
+                justify-content: center;
+                border: 0;
+                background: transparent;
+                box-shadow: none;
+                padding: 8px 12px;
+            }
+
+            nav a svg {
+                display: block !important;
+                width: 19px;
+                height: 19px;
+                color: currentColor;
+                opacity: 1;
+            }
+
+            nav a.btn-portal,
+            nav a.admin-link,
+            nav a.cbt-btn {
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 8px 22px rgba(2, 8, 23, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.24);
             }
 
             .admission-form-grid {
@@ -1314,24 +1606,26 @@
             <div class="theme-switch-wrapper">
                 <label class="theme-switch" for="checkbox" title="Toggle Light/Dark Mode">
                     <input type="checkbox" id="checkbox" />
-                    <div class="slider"></div>
+                    <div class="slider">
+                        <i data-lucide="moon" class="theme-icon theme-icon-moon" aria-hidden="true"></i>
+                        <i data-lucide="sun" class="theme-icon theme-icon-sun" aria-hidden="true"></i>
+                    </div>
                 </label>
             </div>
 
-            <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
-                <span></span>
-                <span></span>
-                <span></span>
+            <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navMenu">
+                <i data-lucide="menu" class="icon-menu" aria-hidden="true"></i>
+                <i data-lucide="x" class="icon-close" aria-hidden="true"></i>
             </button>
         </div>
 
         <nav id="navMenu">
-            <a href="#about" onclick="closeMobileMenu()">About</a>
-            <a href="#programs" onclick="closeMobileMenu()">Programs</a>
-            <a href="#programs" onclick="closeMobileMenu()">Enquiries</a>
-            <a href="javascript:void(0)" onclick="accessCBT(); closeMobileMenu();" class="cbt-btn">CBT Exam</a>
-            <a href="/portal.html" class="btn-portal">Check Result</a>
-            <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();">🔒 Admin Only</a>
+            <a href="#about" onclick="closeMobileMenu()"><i data-lucide="compass" aria-hidden="true"></i><span>About</span></a>
+            <a href="#programs" onclick="closeMobileMenu()"><i data-lucide="book-open" aria-hidden="true"></i><span>Programs</span></a>
+            <a href="#programs" onclick="closeMobileMenu()"><i data-lucide="message-circle" aria-hidden="true"></i><span>Enquiries</span></a>
+            <a href="javascript:void(0)" onclick="accessCBT(); closeMobileMenu();" class="cbt-btn"><i data-lucide="monitor-play" aria-hidden="true"></i><span>CBT Exam</span></a>
+            <a href="/portal.html" class="btn-portal"><i data-lucide="chart-column" aria-hidden="true"></i><span>Check Result</span></a>
+            <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();"><i data-lucide="shield-check" aria-hidden="true"></i><span>Admin Only</span></a>
         </nav>
     </header>
 
@@ -1707,6 +2001,29 @@
         </div>
     </div>
 
+    <!-- CBT ACCESS MODAL -->
+    <div id="cbtAccessModal" class="modal-overlay cbt-access-modal" role="dialog" aria-modal="true" aria-labelledby="cbtAccessTitle">
+        <div class="modal-card cbt-access-card">
+            <span class="close-modal" onclick="closeCBTAccessModal()" aria-label="Close CBT Access Modal">&times;</span>
+            <div class="cbt-access-icon" aria-hidden="true">⌨</div>
+            <h2 id="cbtAccessTitle">Enter the CBT Portal</h2>
+            <p>Use your access password to begin the computer-based Assignment.</p>
+            <form id="cbtAccessForm">
+                <div class="cbt-password-wrap">
+                    <input type="password" id="cbtAccessPassword" placeholder="Access password" autocomplete="off" required>
+                    <button type="button" class="cbt-password-toggle" onclick="toggleCBTPassword()" aria-label="Show password">
+                        <span id="cbtPasswordIcon">Show</span>
+                    </button>
+                </div>
+                <div id="cbtPasswordError" class="cbt-password-error" role="alert">Incorrect password. Access denied.</div>
+                <div class="cbt-access-actions">
+                    <button type="button" class="cbt-cancel-btn" onclick="closeCBTAccessModal()">Cancel</button>
+                    <button type="submit" class="cbt-enter-btn">Enter CBT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ADMIN VIEW FILLED FORM MODAL -->
     <div id="adminViewFormModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="viewFormModalTitle">
         <div class="modal-card">
@@ -1885,17 +2202,49 @@
     </footer>
 
     <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
         document.getElementById('year').textContent = new Date().getFullYear();
 
         /* CBT Access Function with Password Verification */
         function accessCBT() {
-            const password = prompt("Enter Password to access the CBT Exam:");
-            if (password === 'cbtaccess') {
-                window.location.href = "cbt.html";
-            } else if (password !== null) {
-                alert("Incorrect password. Access denied.");
-            }
+            const modal = document.getElementById('cbtAccessModal');
+            const passwordInput = document.getElementById('cbtAccessPassword');
+            const error = document.getElementById('cbtPasswordError');
+            modal.classList.add('is-visible');
+            document.body.classList.add('modal-open');
+            error.classList.remove('is-visible');
+            passwordInput.value = '';
+            setTimeout(() => passwordInput.focus(), 120);
         }
+
+        function closeCBTAccessModal() {
+            document.getElementById('cbtAccessModal').classList.remove('is-visible');
+            document.body.classList.remove('modal-open');
+        }
+
+        function toggleCBTPassword() {
+            const passwordInput = document.getElementById('cbtAccessPassword');
+            const passwordIcon = document.getElementById('cbtPasswordIcon');
+            const showingPassword = passwordInput.type === 'text';
+            passwordInput.type = showingPassword ? 'password' : 'text';
+            passwordIcon.textContent = showingPassword ? 'Show' : 'Hide';
+        }
+
+        document.getElementById('cbtAccessForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('cbtAccessPassword').value;
+            const error = document.getElementById('cbtPasswordError');
+            if (password === 'cbtaccess') {
+                window.location.href = 'cbt.html';
+            } else {
+                error.classList.remove('is-visible');
+                void error.offsetWidth;
+                error.classList.add('is-visible');
+            }
+        });
 
         /* Theme Toggle Logic with System Default and Smooth Transition */
         const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
@@ -1963,11 +2312,17 @@
         const navMenu = document.getElementById('navMenu');
 
         menuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
+            const isOpen = navMenu.classList.toggle('active');
+            menuToggle.classList.toggle('is-open', isOpen);
+            menuToggle.setAttribute('aria-expanded', String(isOpen));
+            menuToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
         });
 
         function closeMobileMenu() {
             navMenu.classList.remove('active');
+            menuToggle.classList.remove('is-open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.setAttribute('aria-label', 'Open navigation menu');
         }
 
         const backToTop = document.getElementById('backToTop');
@@ -2308,6 +2663,7 @@
                 closeEnquiryModal();
                 closeAdminModal();
                 closeAdminViewFormModal();
+                closeCBTAccessModal();
             }
         });
     </script>
