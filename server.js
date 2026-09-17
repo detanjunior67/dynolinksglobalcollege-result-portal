@@ -84,8 +84,256 @@ async function sendEmail({ to, subject, html, replyTo }) {
     }
 }
 
+// Phone and device detection dictionary for incoming HTTP requests
+const SERVER_SAMSUNG_MAP = {
+    'SM-S928': 'Samsung Galaxy S24 Ultra',
+    'SM-S926': 'Samsung Galaxy S24+',
+    'SM-S921': 'Samsung Galaxy S24',
+    'SM-S918': 'Samsung Galaxy S23 Ultra',
+    'SM-S916': 'Samsung Galaxy S23+',
+    'SM-S911': 'Samsung Galaxy S23',
+    'SM-S908': 'Samsung Galaxy S22 Ultra',
+    'SM-S906': 'Samsung Galaxy S22+',
+    'SM-S901': 'Samsung Galaxy S22',
+    'SM-G998': 'Samsung Galaxy S21 Ultra',
+    'SM-G996': 'Samsung Galaxy S21+',
+    'SM-G991': 'Samsung Galaxy S21',
+    'SM-G990': 'Samsung Galaxy S21 FE',
+    'SM-G988': 'Samsung Galaxy S20 Ultra',
+    'SM-G986': 'Samsung Galaxy S20+',
+    'SM-G981': 'Samsung Galaxy S20',
+    'SM-G980': 'Samsung Galaxy S20',
+    'SM-G975': 'Samsung Galaxy S10+',
+    'SM-G973': 'Samsung Galaxy S10',
+    'SM-G970': 'Samsung Galaxy S10e',
+    'SM-N986': 'Samsung Galaxy Note 20 Ultra',
+    'SM-N985': 'Samsung Galaxy Note 20 Ultra',
+    'SM-N981': 'Samsung Galaxy Note 20',
+    'SM-N980': 'Samsung Galaxy Note 20',
+    'SM-N975': 'Samsung Galaxy Note 10+',
+    'SM-N970': 'Samsung Galaxy Note 10',
+    'SM-A546': 'Samsung Galaxy A54 5G',
+    'SM-A536': 'Samsung Galaxy A53 5G',
+    'SM-A528': 'Samsung Galaxy A52s 5G',
+    'SM-A526': 'Samsung Galaxy A52 5G',
+    'SM-A525': 'Samsung Galaxy A52',
+    'SM-A515': 'Samsung Galaxy A51',
+    'SM-A505': 'Samsung Galaxy A50',
+    'SM-A346': 'Samsung Galaxy A34 5G',
+    'SM-A336': 'Samsung Galaxy A33 5G',
+    'SM-A326': 'Samsung Galaxy A32 5G',
+    'SM-A325': 'Samsung Galaxy A32',
+    'SM-A245': 'Samsung Galaxy A24',
+    'SM-A235': 'Samsung Galaxy A23',
+    'SM-A236': 'Samsung Galaxy A23 5G',
+    'SM-A225': 'Samsung Galaxy A22',
+    'SM-A226': 'Samsung Galaxy A22 5G',
+    'SM-A155': 'Samsung Galaxy A15',
+    'SM-A156': 'Samsung Galaxy A15 5G',
+    'SM-A145': 'Samsung Galaxy A14',
+    'SM-A146': 'Samsung Galaxy A14 5G',
+    'SM-A137': 'Samsung Galaxy A13',
+    'SM-A135': 'Samsung Galaxy A13',
+    'SM-A127': 'Samsung Galaxy A12 Nacho',
+    'SM-A125': 'Samsung Galaxy A12',
+    'SM-A115': 'Samsung Galaxy A11',
+    'SM-A107': 'Samsung Galaxy A10s',
+    'SM-A105': 'Samsung Galaxy A10',
+    'SM-A057': 'Samsung Galaxy A05s',
+    'SM-A055': 'Samsung Galaxy A05',
+    'SM-A047': 'Samsung Galaxy A04s',
+    'SM-A045': 'Samsung Galaxy A04',
+    'SM-A042': 'Samsung Galaxy A04e',
+    'SM-A035': 'Samsung Galaxy A03',
+    'SM-A032': 'Samsung Galaxy A03 Core',
+    'SM-A025': 'Samsung Galaxy A02s',
+    'SM-A022': 'Samsung Galaxy A02'
+};
+
+const SERVER_TECNO_MAP = {
+    'CK7': 'Tecno Camon 20 Pro',
+    'CK8': 'Tecno Camon 20 Premier',
+    'CK6': 'Tecno Camon 20',
+    'CI6': 'Tecno Camon 19',
+    'CI8': 'Tecno Camon 19 Pro',
+    'CH6': 'Tecno Camon 18',
+    'CH7': 'Tecno Camon 18P',
+    'CH9': 'Tecno Camon 18 Premier',
+    'BG6': 'Tecno Spark 20',
+    'BG7': 'Tecno Spark 20 Pro',
+    'KI5': 'Tecno Spark 10',
+    'KI7': 'Tecno Spark 10 Pro',
+    'KG5': 'Tecno Spark 8C',
+    'KG6': 'Tecno Spark 8P',
+    'KF6': 'Tecno Spark 7',
+    'BF7': 'Tecno Pop 7',
+    'BG5': 'Tecno Pop 8',
+    'BD4': 'Tecno Pop 5',
+    'LH7': 'Tecno Pova 5 Pro'
+};
+
+const SERVER_INFINIX_MAP = {
+    'X6831': 'Infinix Hot 30',
+    'X6833': 'Infinix Hot 30i',
+    'X6816': 'Infinix Hot 12 Play',
+    'X6817': 'Infinix Hot 12',
+    'X688': 'Infinix Hot 10 Play',
+    'X689': 'Infinix Hot 10S',
+    'X682': 'Infinix Hot 9',
+    'X676': 'Infinix Note 12',
+    'X670': 'Infinix Note 11',
+    'X6515': 'Infinix Smart 7',
+    'X6511': 'Infinix Smart 6',
+    'X657': 'Infinix Smart 5'
+};
+
+function parseDeviceInfo(userAgent = '', clientDeviceName = '', clientDeviceInfo = {}, headers = {}) {
+    let exactModel = '';
+    let brand = '';
+    let os = '';
+    let browser = '';
+    let deviceType = 'Desktop';
+
+    const ua = userAgent || '';
+
+    // If client supplied high-accuracy model (e.g. detected via client-side fingerprinting)
+    if (clientDeviceInfo && clientDeviceInfo.exactModel && clientDeviceInfo.exactModel !== 'Unknown device') {
+        exactModel = clientDeviceInfo.exactModel;
+        brand = clientDeviceInfo.brand || '';
+        os = clientDeviceInfo.os || '';
+        browser = clientDeviceInfo.browser || '';
+        deviceType = clientDeviceInfo.deviceType || (/(iPhone|iPad|Android|Mobile)/i.test(ua) ? 'Mobile' : 'Desktop');
+    } else if (clientDeviceName && clientDeviceName !== 'Unknown device' && !/^(MacIntel|Win32|Linux arm|Linux x86)/i.test(clientDeviceName)) {
+        exactModel = clientDeviceName;
+    }
+
+    // OS detection from User-Agent
+    if (!os) {
+        if (/iPhone OS ([0-9_]+)/i.test(ua)) {
+            const ver = ua.match(/iPhone OS ([0-9_]+)/i)[1].replace(/_/g, '.');
+            os = `iOS ${ver}`;
+            deviceType = 'Mobile Phone';
+            brand = 'Apple';
+        } else if (/iPad.*OS ([0-9_]+)/i.test(ua)) {
+            const ver = ua.match(/OS ([0-9_]+)/i)[1].replace(/_/g, '.');
+            os = `iPadOS ${ver}`;
+            deviceType = 'Tablet';
+            brand = 'Apple';
+        } else if (/Android ([0-9.]+)/i.test(ua)) {
+            os = `Android ${ua.match(/Android ([0-9.]+)/i)[1]}`;
+            deviceType = 'Mobile Phone';
+        } else if (/Windows NT 10.0/i.test(ua)) {
+            os = 'Windows 10 / 11';
+            deviceType = 'Desktop PC';
+        } else if (/Mac OS X ([0-9_]+)/i.test(ua)) {
+            os = `macOS ${ua.match(/Mac OS X ([0-9_]+)/i)[1].replace(/_/g, '.')}`;
+            deviceType = 'Apple Mac';
+            brand = 'Apple';
+        } else if (/Linux/i.test(ua)) {
+            os = 'Linux';
+            deviceType = 'Desktop';
+        } else {
+            os = 'Unknown OS';
+        }
+    }
+
+    // Browser detection
+    if (!browser) {
+        if (/Edg\/([0-9.]+)/i.test(ua)) browser = `Edge ${ua.match(/Edg\/([0-9.]+)/i)[1].split('.')[0]}`;
+        else if (/Chrome\/([0-9.]+)/i.test(ua)) browser = `Chrome ${ua.match(/Chrome\/([0-9.]+)/i)[1].split('.')[0]}`;
+        else if (/Version\/([0-9.]+).*Safari/i.test(ua)) browser = `Safari Mobile ${ua.match(/Version\/([0-9.]+)/i)[1]}`;
+        else if (/Firefox\/([0-9.]+)/i.test(ua)) browser = `Firefox ${ua.match(/Firefox\/([0-9.]+)/i)[1].split('.')[0]}`;
+        else browser = 'Web Browser';
+    }
+
+    // Extract exact phone model if not yet found
+    if (!exactModel || exactModel === 'Unknown device' || exactModel === 'Apple iPhone') {
+        if (/iPhone/i.test(ua)) {
+            exactModel = exactModel && exactModel !== 'Unknown device' ? exactModel : 'Apple iPhone';
+            brand = 'Apple';
+            deviceType = 'Mobile Phone';
+        } else if (/Android/i.test(ua)) {
+            const match = ua.match(/Android [^;]+;\s*([^;)]+?)(?:\s+Build|\s*;|\))/i);
+            const rawModel = match && match[1] ? match[1].trim() : '';
+            if (rawModel) {
+                // Samsung Check
+                for (const [code, name] of Object.entries(SERVER_SAMSUNG_MAP)) {
+                    if (rawModel.toUpperCase().startsWith(code.toUpperCase())) {
+                        exactModel = `${name} (${rawModel})`;
+                        brand = 'Samsung';
+                        break;
+                    }
+                }
+                if (!exactModel && /^SM-[A-Z0-9]+/i.test(rawModel)) {
+                    exactModel = `Samsung Galaxy (${rawModel})`;
+                    brand = 'Samsung';
+                }
+
+                // Tecno Check
+                if (!exactModel) {
+                    for (const [code, name] of Object.entries(SERVER_TECNO_MAP)) {
+                        if (rawModel.toUpperCase().includes(code.toUpperCase())) {
+                            exactModel = `${name} (${rawModel})`;
+                            brand = 'Tecno';
+                            break;
+                        }
+                    }
+                }
+                if (!exactModel && /^TECNO\s*/i.test(rawModel)) {
+                    exactModel = rawModel;
+                    brand = 'Tecno';
+                }
+
+                // Infinix Check
+                if (!exactModel) {
+                    for (const [code, name] of Object.entries(SERVER_INFINIX_MAP)) {
+                        if (rawModel.toUpperCase().includes(code.toUpperCase())) {
+                            exactModel = `${name} (${rawModel})`;
+                            brand = 'Infinix';
+                            break;
+                        }
+                    }
+                }
+                if (!exactModel && /^Infinix\s*/i.test(rawModel)) {
+                    exactModel = rawModel;
+                    brand = 'Infinix';
+                }
+
+                // Google Pixel Check
+                if (!exactModel && /Pixel\s*[0-9a-zA-Z\s]+/i.test(rawModel)) {
+                    exactModel = `Google ${rawModel}`;
+                    brand = 'Google';
+                }
+
+                // Xiaomi / Redmi Check
+                if (!exactModel && /Redmi|POCO|Xiaomi|Mi\s*/i.test(rawModel)) {
+                    exactModel = rawModel;
+                    brand = 'Xiaomi';
+                }
+
+                if (!exactModel) exactModel = rawModel;
+            } else {
+                exactModel = 'Android Phone';
+            }
+            deviceType = 'Mobile Phone';
+        } else if (/Windows/i.test(ua)) {
+            exactModel = 'Windows 10 / 11 PC';
+            brand = 'PC';
+            deviceType = 'Desktop PC';
+        } else if (/Macintosh/i.test(ua)) {
+            exactModel = 'Apple Mac';
+            brand = 'Apple';
+            deviceType = 'Mac Computer';
+        } else {
+            exactModel = 'Desktop Computer';
+        }
+    }
+
+    return { exactModel, brand, os, browser, deviceType };
+}
+
 app.post('/api/admin/login', async (req, res) => {
-    const { password, surface = 'portal', deviceName = 'Unknown device' } = req.body || {};
+    const { password, surface = 'portal', deviceName = 'Unknown device', deviceInfo = {} } = req.body || {};
     const expectedPassword = surface === 'cbt'
         ? (process.env.CBT_ADMIN_PASSWORD || 'cbtadmin')
         : (process.env.ADMIN_PASSWORD || 'adminDGC');
@@ -94,21 +342,61 @@ app.post('/api/admin/login', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Invalid Administrator Password!' });
     }
 
+    const detectedDevice = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
     const loginTime = new Date();
-    sendEmail({
-            to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-            subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}`,
-            html: `
-                <h2>Administrator Login Notification</h2>
-                <p><strong>Portal:</strong> ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}</p>
-                <p><strong>Time:</strong> ${loginTime.toLocaleString()}</p>
-                <p><strong>IP address:</strong> ${req.ip || 'Unavailable'}</p>
-                <p><strong>Device:</strong> ${deviceName}</p>
-                <p><strong>User agent:</strong> ${req.get('user-agent') || 'Unavailable'}</p>
-            `
-        }).catch(err => console.error('Admin login notification failed:', err.response?.data || err.message));
 
-    res.json({ success: true, emailSent: true });
+    sendEmail({
+        to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+        subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'} (${detectedDevice.exactModel})`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 22px 20px; color: #ffffff; text-align: center;">
+                    <h2 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">DYNOLINKS GLOBAL COLLEGE</h2>
+                    <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">Administrator Security Login Alert</p>
+                </div>
+                <div style="padding: 24px; color: #1e293b;">
+                    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                        <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #0284c7; letter-spacing: 1px;">DEVICE IDENTIFICATION</p>
+                        <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a;">📱 ${detectedDevice.exactModel || 'Unknown Device'}</p>
+                        <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">${detectedDevice.brand ? detectedDevice.brand + ' • ' : ''}${detectedDevice.os} • ${detectedDevice.browser}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 38%;"><strong>Portal:</strong></td>
+                            <td style="padding: 8px 0; font-weight: 700; color: #0f172a;">${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Exact Phone / Device:</strong></td>
+                            <td style="padding: 8px 0; font-weight: 800; color: #0284c7; font-size: 14px;">${detectedDevice.exactModel}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Device Type:</strong></td>
+                            <td style="padding: 8px 0; color: #334155;">${detectedDevice.deviceType}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Operating System:</strong></td>
+                            <td style="padding: 8px 0; color: #334155;">${detectedDevice.os}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Browser:</strong></td>
+                            <td style="padding: 8px 0; color: #334155;">${detectedDevice.browser}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>IP Address:</strong></td>
+                            <td style="padding: 8px 0; color: #334155; font-family: monospace;">${req.ip || 'Unavailable'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Login Timestamp:</strong></td>
+                            <td style="padding: 8px 0; color: #334155;">${loginTime.toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `
+    }).catch(err => console.error('Admin login notification failed:', err.response?.data || err.message));
+
+    res.json({ success: true, emailSent: true, device: detectedDevice.exactModel });
 });
 
 // Helper function to format and grade subjects
@@ -170,9 +458,9 @@ const StudentSchema = new mongoose.Schema({
     picture: { type: String, default: '' },
     email: { type: String, default: '' },
     student_class: { type: String, required: true },
-    session: { type: String, required: true, default: '' },
-    term: { type: String, required: true, default: '' },
-    pin_code: { type: String, required: true, default: '' },
+    session: { type: String, default: '' },
+    term: { type: String, default: '' },
+    pin_code: { type: String, default: '' },
     usage_count: { type: Number, default: 0 },
     max_usage: { type: Number, default: 3 },
     results: [{
@@ -329,39 +617,21 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
     }
 });
 
-// Creates a new student (with required-but-blank session/term/pin_code fields properly
-// defaulted by Mongoose's normal document construction) or updates an existing one's
-// name/class/picture in place, without touching fields it doesn't own. Avoids upsert +
-// $setOnInsert, which was found to not reliably apply schema defaults on this deployment.
-const upsertStudentBasics = async (student) => {
-    const existing = await Student.findOne(buildStudentQuery(student.student_id));
-    if (existing) {
-        existing.student_id = student.student_id;
-        existing.full_name = student.full_name;
-        existing.student_class = student.student_class;
-        existing.picture = student.picture;
-        return existing.save();
-    }
-    return new Student({
-        student_id: student.student_id,
-        full_name: student.full_name,
-        student_class: student.student_class,
-        picture: student.picture,
-        session: '',
-        term: '',
-        pin_code: '',
-        usage_count: 0,
-        max_usage: 3
-    }).save();
-};
-
 app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res) => {
     try {
         const student = normalizeStudentData(req.body);
+        const originalId = String(req.body.originalStudentId || req.body.original_student_id || student.student_id).trim();
         if (!student.student_id || !student.full_name || !student.student_class) {
             return res.status(400).json({ success: false, message: 'Full name, student ID, and class are required.' });
         }
-        const saved = await upsertStudentBasics(student);
+        const saved = await Student.findOneAndUpdate(
+            buildStudentQuery(originalId),
+            {
+                $set: student,
+                $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
         res.json({ success: true, student: publicStudent(saved) });
     } catch (err) {
         console.error('Save student data error:', err.message);
@@ -375,7 +645,14 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
         const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
         if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
         for (const student of validItems) {
-            await upsertStudentBasics(student);
+            await Student.findOneAndUpdate(
+                buildStudentQuery(student.student_id),
+                {
+                    $set: student,
+                    $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
+                },
+                { upsert: true, new: true, runValidators: true }
+            );
         }
         res.json({ success: true, count: validItems.length });
     } catch (err) {
@@ -716,7 +993,7 @@ app.get('/api/admin/export-enquiries', async (req, res) => {
 // Check Student Result Endpoint
 app.post('/api/check-result', async (req, res) => {
     try {
-        const { studentId, pin, session, term } = req.body;
+        const { studentId, pin, session, term, deviceName, deviceInfo } = req.body;
 
         if (!studentId || !pin || !session || !term) {
             return res.status(400).json({ success: false, message: 'Please provide all search credentials.' });
@@ -740,6 +1017,7 @@ app.post('/api/check-result', async (req, res) => {
         student.usage_count += 1;
         await student.save();
 
+        const detectedDevice = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
         const checkTime = new Date();
         const resultRows = (student.results || []).map(result => `
                 <tr>
@@ -750,18 +1028,21 @@ app.post('/api/check-result', async (req, res) => {
                     <td>${result.grade || ''}</td>
                 </tr>
             `).join('');
+
         sendEmail({
                 to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-                subject: `Student Result Checked: ${student.student_id}`,
+                subject: `Student Result Checked: ${student.student_id} (${detectedDevice.exactModel})`,
                 html: `
                     <h2>Student Result Check Notification</h2>
                     <p>A student successfully checked an academic result.</p>
                     <p><strong>Student:</strong> ${student.full_name}</p>
                     <p><strong>Student ID:</strong> ${student.student_id}</p>
-                    <p><strong>Email:</strong> ${student.email || 'Not provided'}</p>
                     <p><strong>Class:</strong> ${student.student_class}</p>
                     <p><strong>Session:</strong> ${student.session}</p>
                     <p><strong>Term:</strong> ${student.term}</p>
+                    <p><strong>Phone / Device Model:</strong> <span style="color: #0284c7; font-weight: bold;">${detectedDevice.exactModel}</span></p>
+                    <p><strong>Device Type:</strong> ${detectedDevice.deviceType} (${detectedDevice.os} • ${detectedDevice.browser})</p>
+                    <p><strong>IP Address:</strong> ${req.ip || 'Unavailable'}</p>
                     <p><strong>Checks used:</strong> ${student.usage_count} of ${student.max_usage}</p>
                     <p><strong>Checks remaining:</strong> ${student.max_usage - student.usage_count}</p>
                     <p><strong>Time:</strong> ${checkTime.toLocaleString()}</p>
@@ -1323,7 +1604,62 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
     }
 });
 
+// POST notify admin via email when student starts CBT assignment
+app.post('/api/cbt/notify-start', async (req, res) => {
+    try {
+        const { candidate, deviceName, deviceInfo } = req.body || {};
+        if (!candidate || !candidate.studentId) {
+            return res.status(400).json({ success: false, message: 'Candidate details required' });
+        }
+
+        const detectedDevice = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
+        const startTime = new Date();
+
+        sendEmail({
+            to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+            subject: `CBT Exam Started: ${candidate.name || candidate.studentId} (${detectedDevice.exactModel})`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <div style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 22px 20px; color: #ffffff; text-align: center;">
+                        <h2 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">DYNOLINKS GLOBAL COLLEGE</h2>
+                        <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">CBT Examination Start Alert</p>
+                    </div>
+                    <div style="padding: 24px; color: #1e293b;">
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                            <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #16a34a; letter-spacing: 1px;">ACTIVE CANDIDATE</p>
+                            <p style="margin: 0; font-size: 19px; font-weight: 900; color: #0f172a;">${candidate.name} (${candidate.studentId})</p>
+                            <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">Class: <strong>${candidate.classLabel || candidate.classKey}</strong></p>
+                        </div>
+
+                        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                            <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #0284c7; letter-spacing: 1px;">DEVICE IDENTIFICATION</p>
+                            <p style="margin: 0; font-size: 18px; font-weight: 900; color: #0369a1;">📱 ${detectedDevice.exactModel}</p>
+                            <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">${detectedDevice.brand ? detectedDevice.brand + ' • ' : ''}${detectedDevice.os} • ${detectedDevice.browser}</p>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6;">
+                            <tr><td style="padding: 6px 0; color: #64748b; width: 38%;"><strong>Candidate Name:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${candidate.name}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Student ID:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${candidate.studentId}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Class:</strong></td><td style="padding: 6px 0; color: #334155;">${candidate.classLabel || candidate.classKey}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Exact Phone Model:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #0284c7; font-size: 14px;">${detectedDevice.exactModel}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Device Type:</strong></td><td style="padding: 6px 0; color: #334155;">${detectedDevice.deviceType}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>IP Address:</strong></td><td style="padding: 6px 0; color: #334155; font-family: monospace;">${req.ip || 'Unavailable'}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Start Time:</strong></td><td style="padding: 6px 0; color: #334155;">${startTime.toLocaleString()}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            `
+        }).catch(err => console.error('CBT start notification email error:', err.message));
+
+        res.json({ success: true, emailSent: true, device: detectedDevice.exactModel });
+    } catch (err) {
+        console.error('CBT notify start error:', err);
+        res.status(500).json({ success: false, message: 'Notification failed' });
+    }
+});
+
 // CBT RESULTS API ENDPOINTS
+
 
 // GET all completed CBT exam results
 app.get('/api/cbt-results', async (req, res) => {

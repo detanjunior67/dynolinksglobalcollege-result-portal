@@ -3082,7 +3082,14 @@
         }
 
         async function saveStudentData() {
-            const payload = { password: studentDataPassword, fullName: document.getElementById('studentDataFullName').value.trim(), studentId: document.getElementById('studentDataId').value.trim(), studentClass: document.getElementById('studentDataClass').value.trim(), picture: editingStudentDataPicture };
+            const payload = { 
+                password: studentDataPassword, 
+                originalStudentId: editingStudentDataId || '',
+                fullName: document.getElementById('studentDataFullName').value.trim(), 
+                studentId: document.getElementById('studentDataId').value.trim(), 
+                studentClass: document.getElementById('studentDataClass').value.trim(), 
+                picture: editingStudentDataPicture 
+            };
             const response = await fetch('/api/admin/student-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');

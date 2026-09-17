@@ -1,0 +1,200 @@
+/* ========================================================
+   DYNOLINKS PORTAL - MODERN DATABASE LOADER ANIMATION
+   ======================================================== */
+
+.dgc-loader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 15, 30, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dgc-loader-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.dgc-loader-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 90%;
+    max-width: 380px;
+    padding: 36px 28px 28px;
+    background: rgba(18, 26, 47, 0.94);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7),
+                0 0 35px rgba(14, 165, 233, 0.25);
+    transform: scale(0.92) translateY(8px);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #ffffff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+}
+
+.dgc-loader-overlay.active .dgc-loader-card {
+    transform: scale(1) translateY(0);
+}
+
+/* Outer card ambient glowing aura */
+.dgc-loader-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    animation: dgcAuraRotate 10s linear infinite;
+}
+
+/* Spinner Multi-Ring Structure */
+.dgc-spinner-wrapper {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.dgc-spinner-ring {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+}
+
+/* Outer ring - Glowing Cyan & Indigo */
+.dgc-ring-outer {
+    width: 84px;
+    height: 84px;
+    border-width: 3.5px;
+    border-color: rgba(56, 189, 248, 0.15);
+    border-top-color: #38bdf8;
+    border-right-color: #818cf8;
+    animation: dgcSpinClockwise 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+/* Middle ring - Radiant Rose & Amber */
+.dgc-ring-middle {
+    width: 62px;
+    height: 62px;
+    border-width: 3px;
+    border-color: rgba(244, 63, 94, 0.15);
+    border-bottom-color: #f43f5e;
+    border-left-color: #fbbf24;
+    animation: dgcSpinCounter 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+}
+
+/* Center Core Glowing Icon */
+.dgc-spinner-core {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(30, 58, 138, 0.8) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #38bdf8;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    animation: dgcCorePulse 1.6s ease-in-out infinite alternate;
+}
+
+/* Text Formatting */
+.dgc-loader-text {
+    z-index: 1;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.dgc-loader-title {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.2px;
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dgc-loader-subtitle {
+    margin: 0;
+    font-size: 12.5px;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+/* Bottom Glowing Progress Shimmer */
+.dgc-loader-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.dgc-loader-progress-shimmer {
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, transparent);
+    border-radius: 999px;
+    animation: dgcShimmerMove 1.4s ease-in-out infinite;
+}
+
+/* Keyframes */
+@keyframes dgcSpinClockwise {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes dgcSpinCounter {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+@keyframes dgcCorePulse {
+    0% {
+        transform: scale(0.92);
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    100% {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+    }
+}
+
+@keyframes dgcShimmerMove {
+    0% { left: -60%; }
+    100% { left: 120%; }
+}
+
+@keyframes dgcAuraRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
