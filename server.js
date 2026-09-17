@@ -337,8 +337,11 @@ app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res)
         }
         const saved = await Student.findOneAndUpdate(
             buildStudentQuery(student.student_id),
-            { $set: student },
-            { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+            {
+                $set: student,
+                $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
+            },
+            { upsert: true, new: true, runValidators: true }
         );
         res.json({ success: true, student: publicStudent(saved) });
     } catch (err) {
@@ -353,7 +356,14 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
         const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
         if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
         for (const student of validItems) {
-            await Student.findOneAndUpdate(buildStudentQuery(student.student_id), { $set: student }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true });
+            await Student.findOneAndUpdate(
+                buildStudentQuery(student.student_id),
+                {
+                    $set: student,
+                    $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
+                },
+                { upsert: true, new: true, runValidators: true }
+            );
         }
         res.json({ success: true, count: validItems.length });
     } catch (err) {
