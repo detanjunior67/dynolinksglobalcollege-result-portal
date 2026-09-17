@@ -338,11 +338,12 @@ app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res)
         const saved = await Student.findOneAndUpdate(
             buildStudentQuery(student.student_id),
             { $set: student },
-            { upsert: true, new: true, runValidators: true }
+            { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
         );
         res.json({ success: true, student: publicStudent(saved) });
     } catch (err) {
-        res.status(400).json({ success: false, message: 'Could not save student data.' });
+        console.error('Save student data error:', err.message);
+        res.status(400).json({ success: false, message: err.code === 11000 ? 'A student with that ID already exists.' : (err.message || 'Could not save student data.') });
     }
 });
 
@@ -352,11 +353,12 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
         const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
         if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
         for (const student of validItems) {
-            await Student.findOneAndUpdate(buildStudentQuery(student.student_id), { $set: student }, { upsert: true, new: true, runValidators: true });
+            await Student.findOneAndUpdate(buildStudentQuery(student.student_id), { $set: student }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true });
         }
         res.json({ success: true, count: validItems.length });
     } catch (err) {
-        res.status(400).json({ success: false, message: 'Could not import student data.' });
+        console.error('Bulk import student data error:', err.message);
+        res.status(400).json({ success: false, message: err.message || 'Could not import student data.' });
     }
 });
 
