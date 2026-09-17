@@ -329,20 +329,39 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
     }
 });
 
+// Creates a new student (with required-but-blank session/term/pin_code fields properly
+// defaulted by Mongoose's normal document construction) or updates an existing one's
+// name/class/picture in place, without touching fields it doesn't own. Avoids upsert +
+// $setOnInsert, which was found to not reliably apply schema defaults on this deployment.
+const upsertStudentBasics = async (student) => {
+    const existing = await Student.findOne(buildStudentQuery(student.student_id));
+    if (existing) {
+        existing.student_id = student.student_id;
+        existing.full_name = student.full_name;
+        existing.student_class = student.student_class;
+        existing.picture = student.picture;
+        return existing.save();
+    }
+    return new Student({
+        student_id: student.student_id,
+        full_name: student.full_name,
+        student_class: student.student_class,
+        picture: student.picture,
+        session: '',
+        term: '',
+        pin_code: '',
+        usage_count: 0,
+        max_usage: 3
+    }).save();
+};
+
 app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res) => {
     try {
         const student = normalizeStudentData(req.body);
         if (!student.student_id || !student.full_name || !student.student_class) {
             return res.status(400).json({ success: false, message: 'Full name, student ID, and class are required.' });
         }
-        const saved = await Student.findOneAndUpdate(
-            buildStudentQuery(student.student_id),
-            {
-                $set: student,
-                $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
-            },
-            { upsert: true, new: true, runValidators: true }
-        );
+        const saved = await upsertStudentBasics(student);
         res.json({ success: true, student: publicStudent(saved) });
     } catch (err) {
         console.error('Save student data error:', err.message);
@@ -356,14 +375,7 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
         const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
         if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
         for (const student of validItems) {
-            await Student.findOneAndUpdate(
-                buildStudentQuery(student.student_id),
-                {
-                    $set: student,
-                    $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
-                },
-                { upsert: true, new: true, runValidators: true }
-            );
+            await upsertStudentBasics(student);
         }
         res.json({ success: true, count: validItems.length });
     } catch (err) {
