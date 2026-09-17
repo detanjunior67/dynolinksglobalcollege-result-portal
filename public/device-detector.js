@@ -1,17 +1,19 @@
 /**
  * DYNOLINKS PORTAL - DEVICE DETECTOR & DATABASE LOADER UTILITY
  * High-accuracy phone model detection (iPhone 11, Samsung, Tecno, Infinix, etc.)
- * Fancy & smooth database contact loader overlay
+ * Modern glassmorphism database contact loader overlay
+ * Student photo normalizer and avatar fallback generator
  */
 
 (function () {
     'use strict';
 
     // ========================================================
-    // 1. EXACT PHONE & DEVICE MODEL DETECTION
+    // 1. PHONE & DEVICE MODEL DETECTION DICTIONARIES
     // ========================================================
 
     const SAMSUNG_MAP = {
+        // S Series
         'SM-S928': 'Samsung Galaxy S24 Ultra',
         'SM-S926': 'Samsung Galaxy S24+',
         'SM-S921': 'Samsung Galaxy S24',
@@ -32,12 +34,18 @@
         'SM-G975': 'Samsung Galaxy S10+',
         'SM-G973': 'Samsung Galaxy S10',
         'SM-G970': 'Samsung Galaxy S10e',
+        'SM-G965': 'Samsung Galaxy S9+',
+        'SM-G960': 'Samsung Galaxy S9',
+        // Note Series
         'SM-N986': 'Samsung Galaxy Note 20 Ultra',
         'SM-N985': 'Samsung Galaxy Note 20 Ultra',
         'SM-N981': 'Samsung Galaxy Note 20',
         'SM-N980': 'Samsung Galaxy Note 20',
         'SM-N975': 'Samsung Galaxy Note 10+',
         'SM-N970': 'Samsung Galaxy Note 10',
+        'SM-N960': 'Samsung Galaxy Note 9',
+        // A Series
+        'SM-A556': 'Samsung Galaxy A55 5G',
         'SM-A546': 'Samsung Galaxy A54 5G',
         'SM-A536': 'Samsung Galaxy A53 5G',
         'SM-A528': 'Samsung Galaxy A52s 5G',
@@ -45,19 +53,21 @@
         'SM-A525': 'Samsung Galaxy A52',
         'SM-A515': 'Samsung Galaxy A51',
         'SM-A505': 'Samsung Galaxy A50',
+        'SM-A356': 'Samsung Galaxy A35 5G',
         'SM-A346': 'Samsung Galaxy A34 5G',
         'SM-A336': 'Samsung Galaxy A33 5G',
         'SM-A326': 'Samsung Galaxy A32 5G',
         'SM-A325': 'Samsung Galaxy A32',
+        'SM-A256': 'Samsung Galaxy A25 5G',
         'SM-A245': 'Samsung Galaxy A24',
-        'SM-A235': 'Samsung Galaxy A23',
         'SM-A236': 'Samsung Galaxy A23 5G',
-        'SM-A225': 'Samsung Galaxy A22',
+        'SM-A235': 'Samsung Galaxy A23',
         'SM-A226': 'Samsung Galaxy A22 5G',
-        'SM-A155': 'Samsung Galaxy A15',
+        'SM-A225': 'Samsung Galaxy A22',
         'SM-A156': 'Samsung Galaxy A15 5G',
-        'SM-A145': 'Samsung Galaxy A14',
+        'SM-A155': 'Samsung Galaxy A15',
         'SM-A146': 'Samsung Galaxy A14 5G',
+        'SM-A145': 'Samsung Galaxy A14',
         'SM-A137': 'Samsung Galaxy A13',
         'SM-A135': 'Samsung Galaxy A13',
         'SM-A127': 'Samsung Galaxy A12 Nacho',
@@ -70,44 +80,70 @@
         'SM-A047': 'Samsung Galaxy A04s',
         'SM-A045': 'Samsung Galaxy A04',
         'SM-A042': 'Samsung Galaxy A04e',
+        'SM-A037': 'Samsung Galaxy A03s',
         'SM-A035': 'Samsung Galaxy A03',
         'SM-A032': 'Samsung Galaxy A03 Core',
         'SM-A025': 'Samsung Galaxy A02s',
-        'SM-A022': 'Samsung Galaxy A02'
+        'SM-A022': 'Samsung Galaxy A02',
+        // M Series
+        'SM-M546': 'Samsung Galaxy M54 5G',
+        'SM-M346': 'Samsung Galaxy M34 5G',
+        'SM-M146': 'Samsung Galaxy M14 5G',
+        'SM-M135': 'Samsung Galaxy M13',
+        // Z Flip / Fold
+        'SM-F946': 'Samsung Galaxy Z Fold 5',
+        'SM-F731': 'Samsung Galaxy Z Flip 5',
+        'SM-F936': 'Samsung Galaxy Z Fold 4',
+        'SM-F721': 'Samsung Galaxy Z Flip 4'
     };
 
     const TECNO_MAP = {
-        'CK7': 'Tecno Camon 20 Pro',
+        'CL8': 'Tecno Camon 30 Premier',
+        'CL7': 'Tecno Camon 30 Pro',
+        'CL6': 'Tecno Camon 30',
         'CK8': 'Tecno Camon 20 Premier',
+        'CK7': 'Tecno Camon 20 Pro',
         'CK6': 'Tecno Camon 20',
-        'CI6': 'Tecno Camon 19',
         'CI8': 'Tecno Camon 19 Pro',
-        'CH6': 'Tecno Camon 18',
-        'CH7': 'Tecno Camon 18P',
+        'CI6': 'Tecno Camon 19',
         'CH9': 'Tecno Camon 18 Premier',
-        'BG6': 'Tecno Spark 20',
+        'CH7': 'Tecno Camon 18P',
+        'CH6': 'Tecno Camon 18',
         'BG7': 'Tecno Spark 20 Pro',
-        'KI5': 'Tecno Spark 10',
+        'BG6': 'Tecno Spark 20',
+        'KJ5': 'Tecno Spark 20C',
         'KI7': 'Tecno Spark 10 Pro',
-        'KG5': 'Tecno Spark 8C',
+        'KI5': 'Tecno Spark 10',
+        'KH7': 'Tecno Spark 9 Pro',
+        'KH6': 'Tecno Spark 9',
+        'KG7': 'Tecno Spark 8 Pro',
         'KG6': 'Tecno Spark 8P',
+        'KG5': 'Tecno Spark 8C',
         'KF6': 'Tecno Spark 7',
-        'BF7': 'Tecno Pop 7',
         'BG5': 'Tecno Pop 8',
+        'BF7': 'Tecno Pop 7',
+        'BE7': 'Tecno Pop 6',
         'BD4': 'Tecno Pop 5',
+        'LI7': 'Tecno Pova 6 Pro',
         'LH7': 'Tecno Pova 5 Pro'
     };
 
     const INFINIX_MAP = {
-        'X6831': 'Infinix Hot 30',
+        'X6837': 'Infinix Hot 40 Pro',
+        'X6836': 'Infinix Hot 40',
         'X6833': 'Infinix Hot 30i',
-        'X6816': 'Infinix Hot 12 Play',
+        'X6831': 'Infinix Hot 30',
         'X6817': 'Infinix Hot 12',
-        'X688': 'Infinix Hot 10 Play',
+        'X6816': 'Infinix Hot 12 Play',
+        'X6812': 'Infinix Hot 11S',
+        'X662': 'Infinix Hot 11',
         'X689': 'Infinix Hot 10S',
+        'X688': 'Infinix Hot 10 Play',
         'X682': 'Infinix Hot 9',
+        'X6716': 'Infinix Note 30',
         'X676': 'Infinix Note 12',
         'X670': 'Infinix Note 11',
+        'X6525': 'Infinix Smart 8',
         'X6515': 'Infinix Smart 7',
         'X6511': 'Infinix Smart 6',
         'X657': 'Infinix Smart 5'
@@ -125,6 +161,7 @@
         }
     }
 
+    // High accuracy iPhone model detection matrix
     function detectIPhoneModel() {
         const ua = navigator.userAgent || '';
         if (!/iPhone/i.test(ua)) return null;
@@ -139,14 +176,14 @@
         const physH = Math.round(max * dpr);
         const gpu = getGpuRenderer();
 
-        // iPhone 11 / XR: 414 x 896 @2x -> 828 x 1792
+        // 1. iPhone 11 vs iPhone XR (414 x 896 @2x DPR -> physical 828 x 1792)
         if ((min === 414 && max === 896 && dpr === 2) || (physW === 828 && physH === 1792)) {
             if (/A13/i.test(gpu)) return 'iPhone 11';
             if (/A12/i.test(gpu)) return 'iPhone XR';
             return 'iPhone 11';
         }
 
-        // iPhone 11 Pro / XS / X / 12 mini / 13 mini: 375 x 812 @3x -> 1125 x 2436
+        // 2. iPhone 11 Pro / XS / X / 12 mini / 13 mini (375 x 812 @3x DPR -> physical 1125 x 2436)
         if ((min === 375 && max === 812 && dpr === 3) || (physW === 1125 && physH === 2436)) {
             if (/A13/i.test(gpu)) return 'iPhone 11 Pro';
             if (/A12/i.test(gpu)) return 'iPhone XS';
@@ -156,52 +193,55 @@
             return 'iPhone 11 Pro';
         }
 
-        // iPhone 11 Pro Max / XS Max: 414 x 896 @3x -> 1242 x 2688
+        // 3. iPhone 11 Pro Max / XS Max (414 x 896 @3x DPR -> physical 1242 x 2688)
         if ((min === 414 && max === 896 && dpr === 3) || (physW === 1242 && physH === 2688)) {
             if (/A13/i.test(gpu)) return 'iPhone 11 Pro Max';
             if (/A12/i.test(gpu)) return 'iPhone XS Max';
             return 'iPhone 11 Pro Max';
         }
 
-        // iPhone 12 / 12 Pro / 13 / 13 Pro / 14: 390 x 844 @3x -> 1170 x 2532
+        // 4. iPhone 12 / 12 Pro / 13 / 13 Pro / 14 (390 x 844 @3x DPR -> physical 1170 x 2532)
         if ((min === 390 && max === 844 && dpr === 3) || (physW === 1170 && physH === 2532)) {
             if (/A14/i.test(gpu)) return 'iPhone 12 / 12 Pro';
             if (/A15/i.test(gpu)) return 'iPhone 13 / 14';
+            if (/A16/i.test(gpu)) return 'iPhone 14';
             return 'iPhone 12 / 13 / 14';
         }
 
-        // iPhone 12 Pro Max / 13 Pro Max / 14 Plus: 428 x 926 @3x -> 1284 x 2778
+        // 5. iPhone 12 Pro Max / 13 Pro Max / 14 Plus (428 x 926 @3x DPR -> physical 1284 x 2778)
         if ((min === 428 && max === 926 && dpr === 3) || (physW === 1284 && physH === 2778)) {
             if (/A14/i.test(gpu)) return 'iPhone 12 Pro Max';
             if (/A15/i.test(gpu)) return 'iPhone 13 Pro Max / 14 Plus';
             return 'iPhone 12 / 13 Pro Max';
         }
 
-        // iPhone 14 Pro / 15 / 15 Pro / 16: 393 x 852 @3x -> 1179 x 2556
+        // 6. iPhone 14 Pro / 15 / 15 Pro / 16 (393 x 852 @3x DPR -> physical 1179 x 2556)
         if ((min === 393 && max === 852 && dpr === 3) || (physW === 1179 && physH === 2556)) {
+            if (/A16/i.test(gpu)) return 'iPhone 14 Pro / 15';
             if (/A17/i.test(gpu)) return 'iPhone 15 Pro';
             if (/A18/i.test(gpu)) return 'iPhone 16 / 16 Pro';
             return 'iPhone 14 Pro / 15';
         }
 
-        // iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus: 430 x 932 @3x -> 1290 x 2796
+        // 7. iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus (430 x 932 @3x DPR -> physical 1290 x 2796)
         if ((min === 430 && max === 932 && dpr === 3) || (physW === 1290 && physH === 2796)) {
+            if (/A16/i.test(gpu)) return 'iPhone 14 Pro Max / 15 Plus';
             if (/A17/i.test(gpu)) return 'iPhone 15 Pro Max';
             if (/A18/i.test(gpu)) return 'iPhone 16 Plus / Pro Max';
-            return 'iPhone 14 Pro Max / 15 Pro Max';
+            return 'iPhone 15 Pro Max / 16 Plus';
         }
 
-        // iPhone 16 Pro
+        // 8. iPhone 16 Pro
         if (min === 402 && max === 874) return 'iPhone 16 Pro';
-        // iPhone 16 Pro Max
+        // 9. iPhone 16 Pro Max
         if (min === 440 && max === 956) return 'iPhone 16 Pro Max';
 
-        // iPhone 6 / 7 / 8 / SE
+        // 10. iPhone SE / 8 / 7 (375 x 667 @2x DPR -> physical 750 x 1334)
         if ((min === 375 && max === 667 && dpr === 2) || (physW === 750 && physH === 1334)) {
             return 'iPhone SE / iPhone 8 / 7';
         }
 
-        // iPhone 8 Plus / 7 Plus / 6s Plus
+        // 11. iPhone 8 Plus / 7 Plus (414 x 736 @3x DPR -> physical 1242 x 2208)
         if ((min === 414 && max === 736 && dpr === 3) || (physW === 1242 && physH === 2208)) {
             return 'iPhone 8 Plus / 7 Plus';
         }
@@ -211,7 +251,7 @@
 
     function decodeAndroidModel(raw) {
         if (!raw) return 'Android Phone';
-        const clean = raw.trim();
+        const clean = String(raw).trim();
 
         // Samsung
         for (const [code, name] of Object.entries(SAMSUNG_MAP)) {
@@ -248,7 +288,7 @@
             return `Google ${clean}`;
         }
 
-        // Xiaomi / Redmi
+        // Xiaomi / Redmi / POCO
         if (/Redmi|POCO|Xiaomi|Mi\s*/i.test(clean)) {
             return clean;
         }
@@ -269,7 +309,7 @@
         if (iphone) {
             exactModel = iphone;
             brand = 'Apple';
-            deviceType = 'Mobile';
+            deviceType = 'Mobile Phone';
             const iosMatch = ua.match(/iPhone OS ([0-9_]+)/i);
             os = iosMatch ? `iOS ${iosMatch[1].replace(/_/g, '.')}` : 'iOS';
             browser = /Version\/([0-9.]+).*Safari/i.test(ua) ? `Safari Mobile ${ua.match(/Version\/([0-9.]+)/i)[1]}` : 'Safari Mobile';
@@ -306,7 +346,7 @@
 
         // 3. Check Android with Client Hints or UA
         if (/Android/i.test(ua)) {
-            deviceType = 'Mobile';
+            deviceType = 'Mobile Phone';
             const androidVerMatch = ua.match(/Android ([0-9.]+)/i);
             os = androidVerMatch ? `Android ${androidVerMatch[1]}` : 'Android';
 
@@ -332,7 +372,7 @@
             else if (/Tecno/i.test(exactModel)) brand = 'Tecno';
             else if (/Infinix/i.test(exactModel)) brand = 'Infinix';
             else if (/Google/i.test(exactModel)) brand = 'Google';
-            else if (/Xiaomi|Redmi/i.test(exactModel)) brand = 'Xiaomi';
+            else if (/Xiaomi|Redmi|POCO/i.test(exactModel)) brand = 'Xiaomi';
             else brand = 'Android';
 
             if (/Chrome\/([0-9.]+)/i.test(ua)) browser = `Chrome ${ua.match(/Chrome\/([0-9.]+)/i)[1].split('.')[0]}`;
@@ -396,6 +436,8 @@
     // ========================================================
 
     let loaderTimeout = null;
+    let loaderShownAt = 0;
+    const MIN_LOADER_DURATION_MS = 80;
 
     function ensureLoaderDom() {
         if (document.getElementById('dgcGlobalLoader')) return;
@@ -443,30 +485,64 @@
         if (titleEl) titleEl.textContent = title || 'Connecting to Database...';
         if (subtitleEl) subtitleEl.textContent = subtitle || 'Please wait while we securely process your request';
 
-        if (loaderTimeout) clearTimeout(loaderTimeout);
-
-        // Force reflow and activate smoothly
-        overlay.classList.add('active');
-
-        // Auto-safety release after 30s to prevent trapped state
-        loaderTimeout = setTimeout(() => {
-            hideDatabaseLoader();
-        }, 30000);
-    }
-
-    function hideDatabaseLoader() {
-        const overlay = document.getElementById('dgcGlobalLoader');
-        if (overlay) {
-            overlay.classList.remove('active');
-        }
         if (loaderTimeout) {
             clearTimeout(loaderTimeout);
             loaderTimeout = null;
         }
+
+        loaderShownAt = Date.now();
+
+        // Force reflow and activate smoothly
+        if (overlay) {
+            overlay.classList.add('active');
+        }
+
+        // Auto-safety release after 30s to prevent trapped state
+        loaderTimeout = setTimeout(() => {
+            hideDatabaseLoader(true);
+        }, 30000);
+    }
+
+    function hideDatabaseLoader(immediate = false) {
+        const overlay = document.getElementById('dgcGlobalLoader');
+        if (!overlay) return;
+
+        const performHide = () => {
+            overlay.classList.remove('active');
+            if (loaderTimeout) {
+                clearTimeout(loaderTimeout);
+                loaderTimeout = null;
+            }
+        };
+
+        if (immediate) {
+            performHide();
+            return;
+        }
+
+        // Guarantee minimum display time to prevent jarring flicker
+        const elapsed = Date.now() - loaderShownAt;
+        if (elapsed < MIN_LOADER_DURATION_MS) {
+            setTimeout(performHide, MIN_LOADER_DURATION_MS - elapsed);
+        } else {
+            performHide();
+        }
+    }
+
+    async function withDatabaseLoader(action, title, subtitle) {
+        showDatabaseLoader(title, subtitle);
+        try {
+            if (typeof action === 'function') {
+                return await action();
+            }
+            return await action;
+        } finally {
+            hideDatabaseLoader();
+        }
     }
 
     // ========================================================
-    // 3. STUDENT PICTURE NORMALIZER
+    // 3. STUDENT PICTURE NORMALIZER & AVATAR GENERATOR
     // ========================================================
 
     const STUDENT_PHOTO_FOLDER = '/stud-data/';
@@ -478,11 +554,57 @@
         return STUDENT_PHOTO_FOLDER + trimmed.replace(/^\.?\/+/, '');
     }
 
+    function createStudentInitialsAvatar(name, size = 128) {
+        const cleanName = String(name || '').trim();
+        const parts = cleanName.split(/\s+/).filter(Boolean);
+        let initials = 'ST';
+        if (parts.length >= 2) {
+            initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (parts.length === 1 && parts[0].length >= 1) {
+            initials = parts[0].slice(0, 2).toUpperCase();
+        }
+
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+            <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0284c7" />
+                    <stop offset="100%" stop-color="#1e40af" />
+                </linearGradient>
+            </defs>
+            <rect width="100%" height="100%" rx="${Math.round(size * 0.22)}" fill="url(#grad)"/>
+            <text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="${Math.round(size * 0.4)}" font-weight="800" fill="#ffffff" dominant-baseline="middle" text-anchor="middle" letter-spacing="1">${initials}</text>
+        </svg>`;
+
+        return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+
+    function attachStudentPhoto(imgElement, picturePath, studentName) {
+        if (!imgElement) return;
+        const normalized = normalizeStudentPicturePath(picturePath);
+        const fallbackAvatar = createStudentInitialsAvatar(studentName);
+
+        imgElement.crossOrigin = 'anonymous';
+        imgElement.onerror = function () {
+            this.onerror = null;
+            this.src = fallbackAvatar;
+        };
+
+        if (normalized) {
+            imgElement.src = normalized;
+        } else {
+            imgElement.src = fallbackAvatar;
+        }
+        imgElement.style.display = 'block';
+    }
+
     // Expose helpers globally
     window.getDeviceFingerprint = detectExactDevice;
     window.showDatabaseLoader = showDatabaseLoader;
     window.hideDatabaseLoader = hideDatabaseLoader;
+    window.withDatabaseLoader = withDatabaseLoader;
     window.normalizeStudentPicturePath = normalizeStudentPicturePath;
+    window.createStudentInitialsAvatar = createStudentInitialsAvatar;
+    window.attachStudentPhoto = attachStudentPhoto;
 
     // Ensure DOM is ready for loader insertion
     if (document.readyState === 'loading') {

@@ -1,6 +1,8 @@
 const express = require('express');
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+try {
+    dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4']);
+} catch (_) {}
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -48,23 +50,72 @@ const withTimeout = (promise, milliseconds, label) => Promise.race([
 ]);
 
 // Helper function to send email using Gmail REST API (Bypasses SMTP completely)
-async function sendEmail({ to, subject, html, replyTo }) {
+async function sendEmail({ to, subject, html, replyTo, attachments = [] }) {
     try {
         const senderEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-        
-        const messageParts = [
-            `From: Dynolinks Portal <${senderEmail}>`,
-            `To: ${to}`,
-            ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
-            'Content-Type: text/html; charset=utf-8',
-            'MIME-Version: 1.0',
-            `Subject: ${utf8Subject}`,
-            '',
-            html
-        ];
-        
-        const message = messageParts.join('\n');
+
+        let message = '';
+        if (Array.isArray(attachments) && attachments.length > 0) {
+            const boundary = `----=_Part_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+            const messageParts = [
+                `From: Dynolinks Portal <${senderEmail}>`,
+                `To: ${to}`,
+                ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
+                `Subject: ${utf8Subject}`,
+                'MIME-Version: 1.0',
+                `Content-Type: multipart/related; boundary="${boundary}"`,
+                '',
+                `--${boundary}`,
+                'Content-Type: text/html; charset=utf-8',
+                'Content-Transfer-Encoding: 7bit',
+                '',
+                html,
+                ''
+            ];
+
+            for (const att of attachments) {
+                let fileBuffer = null;
+                if (att.content) {
+                    fileBuffer = Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content, 'base64');
+                } else if (att.path && fs.existsSync(att.path)) {
+                    fileBuffer = fs.readFileSync(att.path);
+                }
+
+                if (fileBuffer) {
+                    const base64Content = fileBuffer.toString('base64');
+                    const contentType = att.contentType || 'image/jpeg';
+                    const filename = att.filename || 'attachment.jpg';
+                    messageParts.push(`--${boundary}`);
+                    messageParts.push(`Content-Type: ${contentType}; name="${filename}"`);
+                    messageParts.push('Content-Transfer-Encoding: base64');
+                    if (att.cid) {
+                        messageParts.push(`Content-ID: <${att.cid}>`);
+                        messageParts.push(`Content-Disposition: inline; filename="${filename}"`);
+                    } else {
+                        messageParts.push(`Content-Disposition: attachment; filename="${filename}"`);
+                    }
+                    messageParts.push('');
+                    messageParts.push(base64Content);
+                    messageParts.push('');
+                }
+            }
+            messageParts.push(`--${boundary}--`);
+            message = messageParts.join('\r\n');
+        } else {
+            const messageParts = [
+                `From: Dynolinks Portal <${senderEmail}>`,
+                `To: ${to}`,
+                ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
+                'Content-Type: text/html; charset=utf-8',
+                'MIME-Version: 1.0',
+                `Subject: ${utf8Subject}`,
+                '',
+                html
+            ];
+            message = messageParts.join('\n');
+        }
+
         const encodedMessage = Buffer.from(message)
             .toString('base64')
             .replace(/\+/g, '-')
@@ -456,6 +507,7 @@ const StudentSchema = new mongoose.Schema({
     student_id: { type: String, required: true, unique: true },
     full_name: { type: String, required: true },
     picture: { type: String, default: '' },
+    show_result: { type: Boolean, default: true },
     email: { type: String, default: '' },
     student_class: { type: String, required: true },
     session: { type: String, default: '' },
@@ -471,6 +523,8 @@ const StudentSchema = new mongoose.Schema({
         grade: String
     }]
 }, { timestamps: true });
+
+StudentSchema.index({ student_id: 1, pin_code: 1, session: 1, term: 1 });
 
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -542,6 +596,9 @@ const QuestionSchema = new mongoose.Schema({
     hint: { type: String, default: '' }
 }, { timestamps: true });
 
+QuestionSchema.index({ classKey: 1, subjectId: 1, qNumber: 1 });
+QuestionSchema.index({ classKey: 1 });
+
 const Question = mongoose.model('Question', QuestionSchema);
 
 // CBT Exam Result Schema
@@ -557,16 +614,57 @@ const CbtResultSchema = new mongoose.Schema({
     timestamp: { type: String, default: () => new Date().toLocaleString() }
 }, { timestamps: true });
 
+CbtResultSchema.index({ studentId: 1, classKey: 1 });
+CbtResultSchema.index({ createdAt: -1 });
+
 const CbtResult = mongoose.model('CbtResult', CbtResultSchema);
+
+// High-speed In-Memory Caches
+const questionCache = new Map();
+const studentLookupCache = new Map();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+function getCachedQuestions(classKey, subjectId) {
+    const key = `${classKey || 'ALL'}_${subjectId || 'ALL'}`;
+    const entry = questionCache.get(key);
+    if (entry && (Date.now() - entry.time < CACHE_TTL_MS)) {
+        return entry.data;
+    }
+    return null;
+}
+
+function setCachedQuestions(classKey, subjectId, data) {
+    const key = `${classKey || 'ALL'}_${subjectId || 'ALL'}`;
+    questionCache.set(key, { time: Date.now(), data });
+}
+
+function invalidateQuestionCache() {
+    questionCache.clear();
+}
+
+const normalizeStudentIdKey = (value = '') => String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+const expandStudentIdVariants = (value = '') => {
+    const base = normalizeStudentIdKey(value);
+    const variants = new Set([base]);
+    if (!base) return [];
+    variants.add(base.replace(/O/g, 'U'));
+    variants.add(base.replace(/U/g, 'O'));
+    variants.add(base.replace(/0/g, 'O'));
+    variants.add(base.replace(/O/g, '0'));
+    return Array.from(variants).filter(Boolean);
+};
 
 const buildStudentQuery = (studentId) => {
     const cleanId = decodeURIComponent(String(studentId)).trim();
-    const escapedId = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    const queryConditions = [
-        { student_id: cleanId },
-        { student_id: new RegExp(`^${escapedId}$`, 'i') }
-    ];
+    const aliases = expandStudentIdVariants(cleanId);
+    const queryConditions = aliases.flatMap(alias => {
+        const escapedId = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return [
+            { student_id: alias },
+            { student_id: new RegExp(`^${escapedId}$`, 'i') }
+        ];
+    });
     if (mongoose.Types.ObjectId.isValid(cleanId)) {
         queryConditions.push({ _id: cleanId });
     }
@@ -577,14 +675,16 @@ const publicStudent = (student) => ({
     student_id: student.student_id,
     full_name: student.full_name,
     student_class: student.student_class,
-    picture: student.picture || ''
+    picture: student.picture || '',
+    show_result: student.show_result !== false
 });
 
 const normalizeStudentData = (item = {}) => ({
     student_id: String(item.student_id || item.studentId || '').trim(),
     full_name: String(item.full_name || item.fullName || '').trim(),
     student_class: String(item.student_class || item.studentClass || item.class || '').trim(),
-    picture: String(item.picture || '').trim()
+    picture: String(item.picture || '').trim(),
+    show_result: item.show_result !== undefined ? Boolean(item.show_result) : (item.result_visible !== undefined ? Boolean(item.result_visible) : true)
 });
 
 // Student Data Manager API. The password is required for every write and search request.
@@ -602,14 +702,15 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 { student_class: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
             ]
         } : {};
-        const students = await Student.find(filter, 'student_id full_name student_class picture').sort({ full_name: 1 }).lean();
+        const students = await Student.find(filter, 'student_id full_name student_class picture show_result').sort({ full_name: 1 }).lean();
         const studentSummaries = students.map(student => ({
             _id: student._id,
             student_id: student.student_id,
             full_name: student.full_name,
             student_class: student.student_class,
             has_picture: Boolean(student.picture),
-            picture: student.picture || ''
+            picture: student.picture || '',
+            show_result: student.show_result !== false
         }));
         res.json({ success: true, students: studentSummaries });
     } catch (err) {
@@ -625,7 +726,7 @@ app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res)
             return res.status(400).json({ success: false, message: 'Full name, student ID, and class are required.' });
         }
         const saved = await Student.findOneAndUpdate(
-            buildStudentQuery(originalId),
+            buildStudentQuery(originalId || student.student_id),
             {
                 $set: student,
                 $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
@@ -648,7 +749,10 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
             await Student.findOneAndUpdate(
                 buildStudentQuery(student.student_id),
                 {
-                    $set: student,
+                    $set: {
+                        ...student,
+                        show_result: student.show_result !== false
+                    },
                     $setOnInsert: { session: '', term: '', pin_code: '', usage_count: 0, max_usage: 3 }
                 },
                 { upsert: true, new: true, runValidators: true }
@@ -663,9 +767,18 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
 
 app.get('/api/student-data/:studentId', async (req, res) => {
     try {
-        const student = await Student.findOne(buildStudentQuery(req.params.studentId), 'student_id full_name student_class picture');
+        const rawId = String(req.params.studentId || '').trim();
+        const cleanId = rawId.toUpperCase();
+        const cached = studentLookupCache.get(cleanId);
+        if (cached && (Date.now() - cached.time < CACHE_TTL_MS)) {
+            return res.json(cached.data);
+        }
+
+        const student = await Student.findOne(buildStudentQuery(rawId), 'student_id full_name student_class picture').lean();
         if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
-        res.json({ success: true, student: publicStudent(student) });
+        const responseData = { success: true, student: publicStudent(student) };
+        studentLookupCache.set(cleanId, { time: Date.now(), data: responseData });
+        res.json(responseData);
     } catch (err) {
         res.status(500).json({ success: false, message: 'Could not find student record.' });
     }
@@ -724,9 +837,9 @@ app.post('/api/admin/add-full-result', async (req, res) => {
 
         if (studentEmail) {
             sendEmail({
-                    to: studentEmail,
-                    subject: `Academic Result Published - ${session} (${term})`,
-                    html: `
+                to: studentEmail,
+                subject: `Academic Result Published - ${session} (${term})`,
+                html: `
                         <div style="font-family: Arial, sans-serif; padding: 20px; color: #0d233a;">
                             <h2 style="color: #0288d1; border-bottom: 2px solid #ffb300; padding-bottom: 8px;">
                                 Dynolinks Academic Result Notification
@@ -741,7 +854,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
                             <p>For enquiries, reach out to us via WhatsApp at <strong>+234 807 983 1549</strong>.</p>
                         </div>
                     `
-                }).catch(emailError => console.error('Result notification email failed:', emailError.response?.data || emailError.message));
+            }).catch(emailError => console.error('Result notification email failed:', emailError.response?.data || emailError.message));
         }
 
         res.json({
@@ -842,10 +955,10 @@ app.put('/api/admin/update-student', async (req, res) => {
             { upsert: true, new: true, runValidators: true }
         );
 
-        res.json({ 
-            success: true, 
-            message: 'Student record saved/updated successfully!', 
-            student: updatedStudent 
+        res.json({
+            success: true,
+            message: 'Student record saved/updated successfully!',
+            student: updatedStudent
         });
 
     } catch (err) {
@@ -879,7 +992,11 @@ app.post('/api/admin/reset-pin', async (req, res) => {
 // Delete Student Endpoint
 app.delete('/api/admin/delete-student', async (req, res) => {
     try {
-        const { studentId } = req.body;
+        const { studentId, password } = req.body || {};
+        const requestPassword = password || req.headers['x-student-data-password'];
+        if (requestPassword && requestPassword !== STUDENT_DATA_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'Invalid student data password.' });
+        }
         if (!studentId) return res.status(400).json({ success: false, message: 'Student ID required.' });
         await Student.deleteOne(buildStudentQuery(studentId));
         res.json({ success: true, message: `Student ${studentId} deleted successfully.` });
@@ -888,12 +1005,70 @@ app.delete('/api/admin/delete-student', async (req, res) => {
     }
 });
 
+app.post('/api/admin/student-result-visibility', async (req, res) => {
+    try {
+        const { studentId, showResult } = req.body || {};
+        if (!studentId) return res.status(400).json({ success: false, message: 'Student ID required.' });
+        const visibility = showResult !== undefined ? Boolean(showResult) : true;
+        const student = await Student.findOneAndUpdate(
+            buildStudentQuery(studentId),
+            { $set: { show_result: visibility } },
+            { new: true }
+        );
+        if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
+        return res.json({ success: true, studentId: student.student_id, show_result: student.show_result !== false });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Could not update result visibility.' });
+    }
+});
+
+app.post('/api/admin/student-result-visibility/bulk', async (req, res) => {
+    try {
+        const { studentIds, showResult, all, classKey } = req.body || {};
+        const visibility = showResult !== undefined ? Boolean(showResult) : true;
+
+        let filter = {};
+        if (all === true) {
+            filter = {};
+        } else if (classKey) {
+            filter = { student_class: classKey };
+        } else if (Array.isArray(studentIds) && studentIds.length) {
+            const ids = Array.from(new Set(studentIds.map(id => String(id).trim()).filter(Boolean)));
+            if (!ids.length) {
+                return res.status(400).json({ success: false, message: 'No student IDs supplied.' });
+            }
+
+            const allQueryParts = ids.flatMap((studentId) => {
+                const aliasVariants = expandStudentIdVariants(studentId);
+                return aliasVariants.flatMap((alias) => [
+                    { student_id: alias },
+                    { student_id: new RegExp(`^${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+                ]);
+            });
+            filter = { $or: allQueryParts };
+        } else {
+            return res.status(400).json({ success: false, message: 'Provide a target filter or choose all students.' });
+        }
+
+        const updateResult = await Student.updateMany(filter, { $set: { show_result: visibility } });
+        return res.json({
+            success: true,
+            matched: updateResult.matchedCount,
+            modified: updateResult.modifiedCount,
+            show_result: visibility
+        });
+    } catch (err) {
+        console.error('Bulk result visibility update failed:', err);
+        return res.status(500).json({ success: false, message: 'Could not update result visibility for the selected students.' });
+    }
+});
+
 // Export Results CSV Endpoint
 app.get('/api/admin/export-results', async (req, res) => {
     try {
         const students = await Student.find({});
         const headers = ['Student ID', 'Full Name', 'Email', 'Class', 'Session', 'Term', 'PIN', 'Subject', 'CA Score', 'Exam Score', 'Total Score', 'Grade'];
-        
+
         let csv = '\uFEFF' + headers.map(sanitizeCsvField).join(',') + '\n';
 
         students.forEach(s => {
@@ -1000,7 +1175,11 @@ app.post('/api/check-result', async (req, res) => {
         }
 
         const student = await Student.findOne({
-            student_id: new RegExp(`^${studentId.trim()}$`, 'i'),
+            $or: [
+                { student_id: new RegExp(`^${studentId.trim()}$`, 'i') },
+                { student_id: new RegExp(`^${studentId.trim().replace(/O/g, 'U')}$`, 'i') },
+                { student_id: new RegExp(`^${studentId.trim().replace(/U/g, 'O')}$`, 'i') }
+            ],
             pin_code: pin.trim(),
             session: session,
             term: term
@@ -1008,6 +1187,10 @@ app.post('/api/check-result', async (req, res) => {
 
         if (!student) {
             return res.status(400).json({ success: false, message: 'Invalid Student ID, Access PIN, or Session/Term selection.' });
+        }
+
+        if (student.show_result === false) {
+            return res.status(403).json({ success: false, message: 'This student result is currently hidden by the administrator.' });
         }
 
         if (student.usage_count >= student.max_usage) {
@@ -1030,9 +1213,9 @@ app.post('/api/check-result', async (req, res) => {
             `).join('');
 
         sendEmail({
-                to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-                subject: `Student Result Checked: ${student.student_id} (${detectedDevice.exactModel})`,
-                html: `
+            to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+            subject: `Student Result Checked: ${student.student_id} (${detectedDevice.exactModel})`,
+            html: `
                     <h2>Student Result Check Notification</h2>
                     <p>A student successfully checked an academic result.</p>
                     <p><strong>Student:</strong> ${student.full_name}</p>
@@ -1051,7 +1234,7 @@ app.post('/api/check-result', async (req, res) => {
                         <tbody>${resultRows || '<tr><td colspan="5">No subject results</td></tr>'}</tbody>
                     </table>
                 `
-            }).catch(emailError => console.error('Result check notification failed:', emailError.response?.data || emailError.message));
+        }).catch(emailError => console.error('Result check notification failed:', emailError.response?.data || emailError.message));
 
         res.json({
             success: true,
@@ -1145,10 +1328,10 @@ app.post('/api/enquiries', async (req, res) => {
 
         const recipientEmail = process.env.EMAIL_USER || 'infodynolinks@gmail.com';
         sendEmail({
-                to: recipientEmail,
-                replyTo: email || undefined,
-                subject: `New Admission Form: ${fullName} (${classAdmitted})`,
-                html: `
+            to: recipientEmail,
+            replyTo: email || undefined,
+            subject: `New Admission Form: ${fullName} (${classAdmitted})`,
+            html: `
                     <div style="font-family: Arial, sans-serif; padding: 20px; color: #0F172A;">
                         <h3 style="color: #0284C7; border-bottom: 2px solid #E11D48; padding-bottom: 8px;">
                             New Admission Form Submitted
@@ -1161,7 +1344,7 @@ app.post('/api/enquiries', async (req, res) => {
                         <p><strong>Address:</strong> ${address}</p>
                     </div>
                 `
-            }).catch(emailError => console.error('Admission notification email failed:', emailError.response?.data || emailError.message));
+        }).catch(emailError => console.error('Admission notification email failed:', emailError.response?.data || emailError.message));
 
         res.json({
             success: true,
@@ -1246,11 +1429,17 @@ app.post('/api/admission-pins/verify', async (req, res) => {
 app.get('/api/questions', async (req, res) => {
     try {
         const { classKey, subjectId } = req.query;
+        const cached = getCachedQuestions(classKey, subjectId);
+        if (cached) {
+            return res.json(cached);
+        }
+
         const filter = {};
         if (classKey) filter.classKey = classKey;
         if (subjectId) filter.subjectId = subjectId;
 
-        const questions = await Question.find(filter).sort({ qNumber: 1 });
+        const questions = await Question.find(filter).sort({ qNumber: 1 }).lean();
+        setCachedQuestions(classKey, subjectId, questions);
         res.json(questions);
     } catch (err) {
         console.error('Error fetching questions:', err);
@@ -1263,6 +1452,7 @@ app.post('/api/questions', async (req, res) => {
     try {
         const newQuestion = new Question(req.body);
         const saved = await newQuestion.save();
+        invalidateQuestionCache();
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error saving question:', err);
@@ -1274,13 +1464,14 @@ app.post('/api/questions', async (req, res) => {
 app.put('/api/questions/:id', async (req, res) => {
     try {
         const updatedQuestion = await Question.findByIdAndUpdate(
-            req.params.id, 
-            req.body, 
+            req.params.id,
+            req.body,
             { new: true, runValidators: true }
         );
         if (!updatedQuestion) {
             return res.status(404).json({ error: 'Question not found' });
         }
+        invalidateQuestionCache();
         res.json(updatedQuestion);
     } catch (err) {
         console.error('Error updating question:', err);
@@ -1295,6 +1486,7 @@ app.delete('/api/questions/:id', async (req, res) => {
         if (!deletedQuestion) {
             return res.status(404).json({ error: 'Question not found' });
         }
+        invalidateQuestionCache();
         res.json({ success: true, message: 'Question deleted successfully' });
     } catch (err) {
         console.error('Error deleting question:', err);
@@ -1533,6 +1725,33 @@ async function fetchGeminiQuestions(params) {
     return normalizeGeneratedQuestions(extractJsonObject(text), params.count);
 }
 
+async function fetchOpenRouterQuestions(params) {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) return [];
+    const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
+    const response = await withTimeout(fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'http://localhost:5000',
+            'X-Title': process.env.OPENROUTER_APP_NAME || 'Dynolinks Portal'
+        },
+        body: JSON.stringify({
+            model,
+            temperature: 0.4,
+            messages: [
+                { role: 'system', content: 'You generate accurate school examination questions and follow JSON schemas exactly.' },
+                { role: 'user', content: buildAiQuestionPrompt(params) }
+            ]
+        })
+    }), 15000, 'OpenRouter');
+    if (!response.ok) throw new Error(`OpenRouter request failed with status ${response.status}.`);
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    return normalizeGeneratedQuestions(extractJsonObject(text), params.count);
+}
+
 // Ask configured AI providers first, then use public sources to fill any gaps.
 app.post('/api/cbt/generate-questions', async (req, res) => {
     try {
@@ -1553,7 +1772,8 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
 
         const aiSettled = await Promise.allSettled([
             fetchChatGptQuestions(aiParams),
-            fetchGeminiQuestions(aiParams)
+            fetchGeminiQuestions(aiParams),
+            fetchOpenRouterQuestions(aiParams)
         ]);
 
         const aiQuestions = [];
@@ -1590,11 +1810,11 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
 
         questions = rankOnlineQuestions(aiQuestions, focus, count);
         if (!questions.length) {
-            return res.status(502).json({ error: 'No questions were generated. Configure OPENAI_API_KEY or GOOGLE_AI_API_KEY, then try again.' });
+            return res.status(502).json({ error: 'No questions were generated. Configure an AI key such as OPENAI_API_KEY, GOOGLE_AI_API_KEY, or OPENROUTER_API_KEY, then try again.' });
         }
 
         res.json({
-            source: process.env.OPENAI_API_KEY || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY ? 'ai-and-online' : 'online',
+            source: process.env.OPENAI_API_KEY || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY ? 'ai-and-online' : 'online',
             topic: focus,
             questions
         });
@@ -1615,9 +1835,46 @@ app.post('/api/cbt/notify-start', async (req, res) => {
         const detectedDevice = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
         const startTime = new Date();
 
+        // Resolve candidate passport photo for email notification
+        let candidatePhotoPath = candidate.picture || '';
+        if (!candidatePhotoPath && candidate.studentId) {
+            try {
+                const found = await Student.findOne({ student_id: new RegExp(`^${candidate.studentId.trim()}$`, 'i') }).select('picture').lean();
+                if (found && found.picture) candidatePhotoPath = found.picture;
+            } catch (dbErr) {
+                console.warn('Could not lookup candidate photo for notification:', dbErr.message);
+            }
+        }
+
+        const attachments = [];
+        let photoBlock = '';
+        if (candidatePhotoPath) {
+            const filename = path.basename(candidatePhotoPath.replace(/^[/\\]+stud-data[/\\]+/i, ''));
+            const localImgPath = path.join(__dirname, 'public', 'stud-data', filename);
+            if (fs.existsSync(localImgPath)) {
+                attachments.push({
+                    filename: filename,
+                    path: localImgPath,
+                    cid: 'candidatephoto',
+                    contentType: filename.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'
+                });
+                photoBlock = `
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="display: inline-block; width: 92px; height: 92px; border-radius: 50%; overflow: hidden; border: 3px solid #0284c7; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3); background: #e0f2fe;">
+                            <img src="cid:candidatephoto" alt="${candidate.name || 'Candidate'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                        </div>
+                        <div style="margin-top: 6px; font-size: 11px; font-weight: 800; color: #16a34a; letter-spacing: 0.8px; text-transform: uppercase;">
+                            ✓ Passport Photo Verified
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         sendEmail({
             to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
             subject: `CBT Exam Started: ${candidate.name || candidate.studentId} (${detectedDevice.exactModel})`,
+            attachments,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <div style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 22px 20px; color: #ffffff; text-align: center;">
@@ -1625,9 +1882,11 @@ app.post('/api/cbt/notify-start', async (req, res) => {
                         <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">CBT Examination Start Alert</p>
                     </div>
                     <div style="padding: 24px; color: #1e293b;">
-                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 18px; margin-bottom: 20px; text-align: center;">
+                            ${photoBlock}
                             <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #16a34a; letter-spacing: 1px;">ACTIVE CANDIDATE</p>
-                            <p style="margin: 0; font-size: 19px; font-weight: 900; color: #0f172a;">${candidate.name} (${candidate.studentId})</p>
+                            <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a;">${candidate.name}</p>
+                            <p style="margin: 4px 0 0; font-size: 14px; color: #0284c7; font-weight: 700; font-family: monospace;">ID: ${candidate.studentId}</p>
                             <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">Class: <strong>${candidate.classLabel || candidate.classKey}</strong></p>
                         </div>
 
@@ -1641,7 +1900,8 @@ app.post('/api/cbt/notify-start', async (req, res) => {
                             <tr><td style="padding: 6px 0; color: #64748b; width: 38%;"><strong>Candidate Name:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${candidate.name}</td></tr>
                             <tr><td style="padding: 6px 0; color: #64748b;"><strong>Student ID:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${candidate.studentId}</td></tr>
                             <tr><td style="padding: 6px 0; color: #64748b;"><strong>Class:</strong></td><td style="padding: 6px 0; color: #334155;">${candidate.classLabel || candidate.classKey}</td></tr>
-                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Exact Phone Model:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #0284c7; font-size: 14px;">${detectedDevice.exactModel}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Exact Phone Model:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #0284c7; font-size: 14px;">📱 ${detectedDevice.exactModel}</td></tr>
+                            <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidate Photo:</strong></td><td style="padding: 6px 0; color: #334155;">${photoBlock ? 'Attached / Verified' : 'Standard Avatar'}</td></tr>
                             <tr><td style="padding: 6px 0; color: #64748b;"><strong>Device Type:</strong></td><td style="padding: 6px 0; color: #334155;">${detectedDevice.deviceType}</td></tr>
                             <tr><td style="padding: 6px 0; color: #64748b;"><strong>IP Address:</strong></td><td style="padding: 6px 0; color: #334155; font-family: monospace;">${req.ip || 'Unavailable'}</td></tr>
                             <tr><td style="padding: 6px 0; color: #64748b;"><strong>Start Time:</strong></td><td style="padding: 6px 0; color: #334155;">${startTime.toLocaleString()}</td></tr>
@@ -1676,6 +1936,84 @@ app.post('/api/cbt-results', async (req, res) => {
     try {
         const cbtResult = new CbtResult(req.body);
         const saved = await cbtResult.save();
+
+        // Send submission alert email to admin with candidate photo and exact phone model
+        try {
+            const detectedDevice = parseDeviceInfo(req.get('user-agent'), req.body.deviceName, req.body.deviceInfo, req.headers);
+            let candidatePhotoPath = req.body.picture || '';
+            if (!candidatePhotoPath && req.body.studentId) {
+                const found = await Student.findOne({ student_id: new RegExp(`^${req.body.studentId.trim()}$`, 'i') }).select('picture').lean();
+                if (found && found.picture) candidatePhotoPath = found.picture;
+            }
+
+            const attachments = [];
+            let photoBlock = '';
+            if (candidatePhotoPath) {
+                const filename = path.basename(candidatePhotoPath.replace(/^[/\\]+stud-data[/\\]+/i, ''));
+                const localImgPath = path.join(__dirname, 'public', 'stud-data', filename);
+                if (fs.existsSync(localImgPath)) {
+                    attachments.push({
+                        filename: filename,
+                        path: localImgPath,
+                        cid: 'candidatesubmissionphoto',
+                        contentType: filename.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'
+                    });
+                    photoBlock = `
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <div style="display: inline-block; width: 92px; height: 92px; border-radius: 50%; overflow: hidden; border: 3px solid #16a34a; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3); background: #f0fdf4;">
+                                <img src="cid:candidatesubmissionphoto" alt="${req.body.studentName || 'Candidate'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                            </div>
+                            <div style="margin-top: 6px; font-size: 11px; font-weight: 800; color: #16a34a; letter-spacing: 0.8px; text-transform: uppercase;">
+                                ✓ Photo Verified Submission
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            sendEmail({
+                to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
+                subject: `CBT Exam Submitted: ${req.body.studentName || req.body.studentId} (${req.body.percentage}%, Grade ${req.body.grade}) - ${detectedDevice.exactModel}`,
+                attachments,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div style="background: linear-gradient(135deg, #15803d 0%, #0369a1 100%); padding: 22px 20px; color: #ffffff; text-align: center;">
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">DYNOLINKS GLOBAL COLLEGE</h2>
+                            <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">CBT Examination Submission Completed</p>
+                        </div>
+                        <div style="padding: 24px; color: #1e293b;">
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 18px; margin-bottom: 20px; text-align: center;">
+                                ${photoBlock}
+                                <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #16a34a; letter-spacing: 1px;">COMPLETED CANDIDATE</p>
+                                <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a;">${req.body.studentName} (${req.body.studentId})</p>
+                                <p style="margin: 4px 0 0; font-size: 15px; color: #059669; font-weight: 800;">Score: ${req.body.totalPoints} / ${req.body.maxPoints} (${req.body.percentage}%) • Grade: ${req.body.grade}</p>
+                                <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">Class: <strong>${req.body.classLevel}</strong></p>
+                            </div>
+
+                            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                                <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; font-weight: 800; color: #0284c7; letter-spacing: 1px;">DEVICE IDENTIFICATION</p>
+                                <p style="margin: 0; font-size: 18px; font-weight: 900; color: #0369a1;">📱 ${detectedDevice.exactModel}</p>
+                                <p style="margin: 4px 0 0; font-size: 13px; color: #475569;">${detectedDevice.brand ? detectedDevice.brand + ' • ' : ''}${detectedDevice.os} • ${detectedDevice.browser}</p>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6;">
+                                <tr><td style="padding: 6px 0; color: #64748b; width: 38%;"><strong>Candidate Name:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${req.body.studentName}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Student ID:</strong></td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${req.body.studentId}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Class:</strong></td><td style="padding: 6px 0; color: #334155;">${req.body.classLevel}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Exact Phone Model:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #0284c7; font-size: 14px;">📱 ${detectedDevice.exactModel}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Total Score:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #15803d;">${req.body.totalPoints} / ${req.body.maxPoints}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Percentage:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #0369a1;">${req.body.percentage}%</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Grade:</strong></td><td style="padding: 6px 0; font-weight: 800; color: #7e22ce;">${req.body.grade}</td></tr>
+                                <tr><td style="padding: 6px 0; color: #64748b;"><strong>Date Submitted:</strong></td><td style="padding: 6px 0; color: #334155;">${new Date().toLocaleString()}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                `
+            }).catch(e => console.warn('CBT result submission email notification failed:', e.message));
+        } catch (mailErr) {
+            console.warn('Could not construct submission email:', mailErr.message);
+        }
+
         res.status(201).json(saved);
     } catch (err) {
         res.status(400).json({ error: 'Failed to save CBT result', details: err.message });
@@ -1687,7 +2025,7 @@ app.get('/api/admin/export-cbt-results', async (req, res) => {
     try {
         const results = await CbtResult.find({}).sort({ createdAt: -1 });
         const headers = ['Student ID', 'Student Name', 'Class Level', 'Total Points', 'Max Points', 'Percentage', 'Grade', 'Date Submitted'];
-        
+
         let csv = '\uFEFF' + headers.map(sanitizeCsvField).join(',') + '\n';
 
         results.forEach(r => {

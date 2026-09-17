@@ -1880,6 +1880,8 @@
 
             .enquiry-table {
                 min-width: 500px;
+                display: block;
+                overflow-x: auto;
             }
 
             .close-modal {
@@ -1895,6 +1897,61 @@
                 align-items: flex-start !important;
                 gap: 8px !important;
             }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                min-width: 0;
+            }
+
+            .hero h1 {
+                font-size: clamp(1.8rem, 10vw, 2.7rem);
+            }
+
+            .logo-container {
+                gap: 8px;
+                padding: 5px 8px 5px 5px;
+            }
+
+            .logo-img {
+                height: 42px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+
+            section, footer {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .about-cards,
+            .programs-grid,
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        img, svg, video, canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        button, input, select, textarea {
+            font: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
     </style>
 </head>
@@ -3048,7 +3105,12 @@
                 <tr>
                     <td>${student.has_picture ? `<img src="${escapeHtml(student.picture || '')}" alt="" style="width: 42px; height: 42px; border-radius: 8px; object-fit: cover;" onerror="this.replaceWith(document.createTextNode('Missing file'))">` : 'No picture'}</td>
                     <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td>
-                    <td><button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button></td>
+                    <td>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteStudentData('${encodeURIComponent(student.student_id)}')">Delete</button>
+                        </div>
+                    </td>
                 </tr>`).join('') : '<tr><td colspan="5">No student records found.</td></tr>';
         }
 
@@ -3088,12 +3150,27 @@
                 fullName: document.getElementById('studentDataFullName').value.trim(), 
                 studentId: document.getElementById('studentDataId').value.trim(), 
                 studentClass: document.getElementById('studentDataClass').value.trim(), 
-                picture: editingStudentDataPicture 
+                picture: editingStudentDataPicture,
+                show_result: true
             };
             const response = await fetch('/api/admin/student-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');
             closeStudentDataEditor();
+            loadStudentData();
+        }
+
+        async function deleteStudentData(encodedId) {
+            const studentId = decodeURIComponent(encodedId);
+            if (!studentId) return;
+            if (!confirm(`Delete student ${studentId}? This cannot be undone.`)) return;
+            const response = await fetch('/api/admin/delete-student', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId, password: studentDataPassword })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) return alert(data.message || 'Could not delete student.');
             loadStudentData();
         }
 

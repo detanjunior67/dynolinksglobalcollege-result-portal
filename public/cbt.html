@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -29,10 +30,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="dgc-loader.css">
+    <script src="device-detector.js"></script>
     <style>
-        html, body {
+        html,
+        body {
             width: 100%;
             max-width: 100%;
             min-height: 100%;
@@ -42,7 +47,10 @@
             overflow-x: clip;
         }
 
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
         body {
             min-height: 100svh;
             min-height: 100dvh;
@@ -59,32 +67,58 @@
             min-height: calc(100dvh - 4rem);
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
         .toast-animate {
             animation: slideIn 0.3s ease-out forwards;
         }
+
         @keyframes slideIn {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
+
         /* Compact AI generator control */
         .btn-ai-physical {
             background: linear-gradient(135deg, #0284c7 0%, #38bdf8 52%, #8b5cf6 100%);
             box-shadow: 0 8px 18px rgba(2, 132, 199, 0.28);
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
+
         .btn-ai-physical:hover {
             transform: translateY(-2px);
             filter: saturate(1.12);
             box-shadow: 0 12px 24px rgba(2, 132, 199, 0.36);
         }
+
         .btn-ai-physical:active {
             transform: translateY(0);
             box-shadow: 0 5px 12px rgba(2, 132, 199, 0.24);
         }
+
         .ai-logo-mark {
             width: 1.65rem;
             height: 1.65rem;
@@ -96,6 +130,63 @@
             object-fit: cover;
             background: #ffffff;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+        }
+
+        /* Candidate Photo & Identification Card Styles */
+        .candidate-photo-frame {
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+            border: 2px solid #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.18);
+        }
+
+        .dark .candidate-photo-frame {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-color: #0284c7;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        }
+
+        .candidate-photo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: calc(1rem - 2px);
+        }
+
+        .candidate-photo-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 9999px;
+            background: #16a34a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark .candidate-photo-badge {
+            border-color: #1f2937;
+        }
+
+        .candidate-card-highlight {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+        }
+
+        .dark .candidate-card-highlight {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
         }
 
         /* Admin control-room visual system */
@@ -149,7 +240,7 @@
             box-shadow: 0 24px 70px rgba(2, 6, 23, 0.35);
         }
 
-        #viewAdminPortal > div:first-child {
+        #viewAdminPortal>div:first-child {
             position: relative;
             padding: 1.25rem;
             border: 1px solid rgba(59, 130, 246, 0.18);
@@ -159,7 +250,7 @@
             overflow: hidden;
         }
 
-        #viewAdminPortal > div:first-child::after {
+        #viewAdminPortal>div:first-child::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -169,18 +260,18 @@
             pointer-events: none;
         }
 
-        #viewAdminPortal > div:first-child h2,
-        #viewAdminPortal > div:first-child p {
+        #viewAdminPortal>div:first-child h2,
+        #viewAdminPortal>div:first-child p {
             color: #ffffff !important;
             position: relative;
             z-index: 1;
         }
 
-        #viewAdminPortal > div:first-child h2 i {
+        #viewAdminPortal>div:first-child h2 i {
             color: #fde68a;
         }
 
-        #viewAdminPortal > div:first-child .flex.flex-wrap {
+        #viewAdminPortal>div:first-child .flex.flex-wrap {
             position: relative;
             z-index: 2;
         }
@@ -201,17 +292,17 @@
             transform: translateY(-2px);
         }
 
-        #viewAdminPortal > div:not(:first-child) > div,
-        #viewAdminPortal > div:not(:first-child) > .bg-white,
-        #viewAdminPortal > div:not(:first-child) > .bg-gray-800 {
+        #viewAdminPortal>div:not(:first-child)>div,
+        #viewAdminPortal>div:not(:first-child)>.bg-white,
+        #viewAdminPortal>div:not(:first-child)>.bg-gray-800 {
             border-color: rgba(99, 102, 241, 0.18) !important;
             box-shadow: 0 12px 30px rgba(30, 64, 175, 0.08) !important;
             transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
-        #viewAdminPortal > div:not(:first-child) > div:hover,
-        #viewAdminPortal > div:not(:first-child) > .bg-white:hover,
-        #viewAdminPortal > div:not(:first-child) > .bg-gray-800:hover {
+        #viewAdminPortal>div:not(:first-child)>div:hover,
+        #viewAdminPortal>div:not(:first-child)>.bg-white:hover,
+        #viewAdminPortal>div:not(:first-child)>.bg-gray-800:hover {
             border-color: rgba(14, 165, 233, 0.42) !important;
             box-shadow: 0 18px 38px rgba(37, 99, 235, 0.14) !important;
         }
@@ -252,46 +343,74 @@
             background: rgba(14, 165, 233, 0.08);
         }
 
-        #viewAdminPortal > div:not(:first-child) {
+        #viewAdminPortal>div:not(:first-child) {
             animation: adminContentIn 0.45s ease both;
         }
 
         @keyframes adminPageIn {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes adminContentIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes adminOrbFloat {
-            from { transform: translate3d(0, 0, 0) scale(0.94); }
-            to { transform: translate3d(18px, -16px, 0) scale(1.08); }
+            from {
+                transform: translate3d(0, 0, 0) scale(0.94);
+            }
+
+            to {
+                transform: translate3d(18px, -16px, 0) scale(1.08);
+            }
         }
 
         @keyframes adminHeaderSweep {
-            0%, 55% { transform: translateX(-120%); }
-            75%, 100% { transform: translateX(120%); }
+
+            0%,
+            55% {
+                transform: translateX(-120%);
+            }
+
+            75%,
+            100% {
+                transform: translateX(120%);
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             #viewAdminPortal,
             #viewAdminPortal::before,
             #viewAdminPortal::after,
-            #viewAdminPortal > div:first-child::after,
-            #viewAdminPortal > div:not(:first-child) {
+            #viewAdminPortal>div:first-child::after,
+            #viewAdminPortal>div:not(:first-child) {
                 animation: none;
             }
         }
 
         @media (max-width: 640px) {
-            header > div {
+            header>div {
                 min-width: 0;
             }
 
-            header > div:first-child {
+            header>div:first-child {
                 gap: 0.5rem;
             }
 
@@ -325,11 +444,11 @@
                 display: none;
             }
 
-            .header-controls > div:last-child {
+            .header-controls>div:last-child {
                 display: none;
             }
 
-            .header-controls > button:last-of-type {
+            .header-controls>button:last-of-type {
                 flex: 0 0 auto;
             }
 
@@ -338,7 +457,7 @@
                 border-radius: 1.25rem;
             }
 
-            #viewAdminPortal > div:first-child {
+            #viewAdminPortal>div:first-child {
                 padding: 1rem;
             }
 
@@ -347,48 +466,116 @@
                 min-height: 2.5rem;
             }
         }
+
+        @media (max-width: 480px) {
+            body {
+                min-width: 0;
+            }
+
+            main,
+            header .max-w-7xl,
+            #viewDashboard,
+            #viewInstructions,
+            #viewExamPortal,
+            #viewSubmissionSuccess,
+            #viewAdminPortal {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #candidateProfileCard,
+            #viewInstructions > div,
+            #viewExamPortal > div,
+            #viewAdminPortal > div {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .header-controls {
+                gap: 0.25rem !important;
+            }
+
+            .header-controls a,
+            .header-controls button {
+                min-width: 0;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        img, svg, video, canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        button, input, select, textarea {
+            font: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-full flex flex-col transition-colors duration-200">
+
+<body
+    class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-full flex flex-col transition-colors duration-200">
 
     <!-- Navigation Header -->
     <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <!-- Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
-                <img src="logo.jpg" alt="Dynolinks Global College logo" class="w-10 h-10 rounded-xl object-cover shadow-md shadow-blue-500/20">
+                <img src="logo.jpg" alt="Dynolinks Global College logo"
+                    class="w-10 h-10 rounded-xl object-cover shadow-md shadow-blue-500/20">
                 <div>
-                    <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dynolinks Global College</span>
-                    <span class="hidden sm:inline-block text-xs ml-2 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">CBT & Portal</span>
+                    <span
+                        class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dynolinks
+                        Global College</span>
+                    <span
+                        class="hidden sm:inline-block text-xs ml-2 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">CBT
+                        & Portal</span>
                 </div>
             </div>
 
             <!-- Controls & Mode Toggle -->
             <div class="header-controls flex items-center space-x-3 sm:space-x-4">
                 <!-- Home Navigation -->
-                <a href="index.html" class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Go to home page">
+                <a href="index.html"
+                    class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2"
+                    title="Go to home page">
                     <i class="fa-solid fa-house text-blue-600"></i>
                     <span>Home</span>
                 </a>
-                <a href="cbt.html" onclick="showDashboard()" class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2" title="Open student CBT portal">
+                <a href="cbt.html" onclick="showDashboard()"
+                    class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2"
+                    title="Open student CBT portal">
                     <i class="fa-solid fa-laptop-code text-blue-600"></i>
                     <span>Student Portal</span>
                 </a>
 
                 <!-- Admin Lock Button -->
-                <button id="portalToggleBtn" onclick="openAdminAuthModal()" class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
+                <button id="portalToggleBtn" onclick="openAdminAuthModal()"
+                    class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
                     <i class="fa-solid fa-lock text-amber-500"></i>
                     <span id="portalToggleText">🔒 Admin Only</span>
                 </button>
 
                 <!-- Dark Mode Toggle -->
-                <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Toggle Light/Dark Theme">
+                <button onclick="toggleDarkMode()"
+                    class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    title="Toggle Light/Dark Theme">
                     <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
                 </button>
 
                 <!-- Profile Badge -->
                 <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 dark:border-gray-700">
-                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm"
+                        id="userAvatar">
                         ST
                     </div>
                     <div class="hidden md:block text-left text-xs">
@@ -407,54 +594,95 @@
         <!-- ========================================== -->
         <section id="viewDashboard" class="space-y-6">
             <!-- Hero Banner -->
-            <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+            <div
+                class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
                 <div class="absolute -right-10 -bottom-10 opacity-10">
                     <i class="fa-solid fa-laptop-code text-[220px]"></i>
                 </div>
                 <div class="relative z-10 max-w-3xl">
-                    <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-md uppercase tracking-wider">Dynolinks Global College</span>
+                    <span
+                        class="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-md uppercase tracking-wider">Dynolinks
+                        Global College</span>
                     <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-2">Computer Based Testing Portal</h1>
-                    <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class level below to begin your assignment. Ensure your registration details match system records.</p>
+                    <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class
+                        level below to begin your assignment. Ensure your registration details match system records.</p>
                 </div>
             </div>
 
             <!-- Student Registration & Class Selection -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl mx-auto space-y-6">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl mx-auto space-y-6">
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
                     <h2 class="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-graduate text-blue-600"></i> Student Candidate Registration
                     </h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Please complete all required fields accurately before starting the Assignmment.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Please complete all required fields
+                        accurately before starting the Assignmment.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Full Candidate Name *</label>
-                        <input type="text" id="studentFullName" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. John Doe">
+                        <label
+                            class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Full
+                            Candidate Name *</label>
+                        <input type="text" id="studentFullName"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="e.g. John Doe">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Student ID *</label>
-                        <input type="text" id="studentIdInput" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase" placeholder="e.g. STU-2026-001">
+                        <label
+                            class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Student
+                            ID *</label>
+                        <input type="text" id="studentIdInput"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase"
+                            placeholder="e.g. STU-2026-001">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Class Level *</label>
-                        <select id="studentClassSelect" onchange="handleClassChange()" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label
+                            class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Class
+                            Level *</label>
+                        <select id="studentClassSelect" onchange="handleClassChange()"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                             <!-- Dynamic class options loaded from JS state -->
                         </select>
                     </div>
-                    <div class="sm:col-span-2 flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                        <img id="studentCandidatePicture" src="" alt="Student picture" class="hidden w-14 h-14 rounded-xl object-cover">
-                        <p id="studentProfileStatus" class="text-xs text-gray-500 dark:text-gray-400">Enter a saved Student ID to load the candidate profile.</p>
+                    <div id="candidateProfileCard"
+                        class="sm:col-span-2 flex items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700/60 dark:to-gray-800/60 rounded-2xl p-4 border border-blue-100 dark:border-gray-700 shadow-sm transition-all">
+                        <div class="candidate-photo-frame w-16 h-16 sm:w-20 sm:h-20 shadow-md">
+                            <img id="studentCandidatePicture" src="" alt="Candidate Photo" class="candidate-photo-img">
+                            <div id="candidatePhotoBadge" class="candidate-photo-badge hidden"
+                                title="Identity Verified">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h4 id="candidateCardName"
+                                    class="font-black text-gray-900 dark:text-white text-base truncate">Candidate Name
+                                </h4>
+                                <span id="candidateVerifiedBadge"
+                                    class="hidden text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Verified</span>
+                            </div>
+                            <p id="candidateCardMeta"
+                                class="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5 font-bold">Candidate
+                                Passport & Record</p>
+                            <p id="studentProfileStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter a
+                                saved Student ID to load your photo and profile records.</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Exam Subjects Summary Preview Card -->
-                <div id="examSubjectPreview" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-900 dark:text-blue-200 space-y-1">
-                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Exam Overview:</p>
-                    <p id="examSubjectPreviewText">Select your class level to view applicable subjects and duration breakdown.</p>
+                <div id="examSubjectPreview"
+                    class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Exam
+                        Overview:</p>
+                    <p id="examSubjectPreviewText">Select your class level to view applicable subjects and duration
+                        breakdown.</p>
                 </div>
 
-                <button onclick="prepareStudentExam()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2">
+                <button onclick="prepareStudentExam()"
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-play"></i> Proceed to Guidelines
                 </button>
             </div>
@@ -464,22 +692,52 @@
         <!-- VIEW 2: EXAM INSTRUCTION PRE-VIEW          -->
         <!-- ========================================== -->
         <section id="viewInstructions" class="hidden max-w-3xl mx-auto w-full space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6">
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <button onclick="showDashboard()" class="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2 hover:underline flex items-center gap-1">
+                    <button onclick="showDashboard()"
+                        class="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2 hover:underline flex items-center gap-1">
                         <i class="fa-solid fa-arrow-left"></i> Change Candidate Info / Back
                     </button>
-                    <h2 class="text-2xl font-black text-gray-900 dark:text-white" id="instExamTitle">Assignmment Guidelines</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="instExamMeta">Candidate: John Doe | Class: JSS 1</p>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white" id="instExamTitle">Assignmment
+                        Guidelines</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="instExamMeta">Candidate: John Doe |
+                        Class: JSS 1</p>
+                </div>
+
+                <!-- Candidate Identity Card with Passport Photo -->
+                <div
+                    class="p-4 sm:p-5 rounded-2xl candidate-card-highlight flex flex-col sm:flex-row items-center gap-5 border border-blue-200/60 dark:border-blue-800/40">
+                    <div class="candidate-photo-frame w-20 h-20 sm:w-24 sm:h-24 shadow-lg shrink-0">
+                        <img id="instCandidatePicture" src="" alt="Candidate Passport" class="candidate-photo-img">
+                        <div class="candidate-photo-badge" title="Identity Verified"><i
+                                class="fa-solid fa-check text-xs"></i></div>
+                    </div>
+                    <div class="text-center sm:text-left flex-grow min-w-0 space-y-1">
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <h3 id="instCandidateName"
+                                class="text-lg sm:text-xl font-black text-gray-900 dark:text-white truncate">Candidate
+                                Full Name</h3>
+                            <span
+                                class="px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 text-[11px] font-bold uppercase tracking-wider">Candidate
+                                Photo Verified</span>
+                        </div>
+                        <p class="text-sm font-semibold text-blue-600 dark:text-blue-400 font-mono"
+                            id="instCandidateId">Student ID: —</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400" id="instCandidateClass">Class Level: — •
+                            Ready to commence examination</p>
+                    </div>
                 </div>
 
                 <div class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
                     <h3 class="font-bold text-gray-900 dark:text-white text-base">Rules & Instructions:</h3>
                     <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm">
-                        <li>Each subject section has its allocated time limit or total exam timer as configured by school administration.</li>
+                        <li>Each subject section has its allocated time limit or total exam timer as configured by
+                            school administration.</li>
                         <li>Switching between subject tabs is permitted during the exam.</li>
                         <li>Questions marked with "Review" will be highlighted in purple on the palette sidebar.</li>
-                        <li class="font-semibold text-amber-600 dark:text-amber-400">Scores will be calculated automatically and submitted securely to the Admin records upon completion.</li>
+                        <li class="font-semibold text-amber-600 dark:text-amber-400">Scores will be calculated
+                            automatically and submitted securely to the Admin records upon completion.</li>
                     </ul>
 
                     <!-- Dynamic Subject Breakdown Pill Grid -->
@@ -489,8 +747,11 @@
                 </div>
 
                 <div class="pt-4 flex justify-end gap-3">
-                    <button onclick="showDashboard()" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
-                    <button onclick="startExamNow()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition">Begin Assignmment</button>
+                    <button onclick="showDashboard()"
+                        class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
+                    <button onclick="startExamNow()"
+                        class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition">Begin
+                        Assignmment</button>
                 </div>
             </div>
         </section>
@@ -499,37 +760,66 @@
         <!-- VIEW 3: LIVE CBT EXAM INTERFACE            -->
         <!-- ========================================== -->
         <section id="viewExamPortal" class="hidden flex-grow flex flex-col space-y-4">
-            <!-- Top Control Bar: Subject Navigation & Active Timer -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Top Control Bar: Subject Navigation, Candidate Badge & Active Timer -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
                 <!-- Subject Pills -->
                 <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0" id="sectionTabs">
                     <!-- Dynamic Pills -->
                 </div>
 
-                <!-- Timer Box -->
-                <div id="timerContainer" class="flex items-center space-x-3 shrink-0 bg-red-50 dark:bg-red-900/30 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 transition-colors">
-                    <i class="fa-solid fa-clock text-red-600 text-lg animate-pulse" id="timerIcon"></i>
-                    <span class="text-xs uppercase font-bold text-red-600 dark:text-red-400" id="timerLabel">Time Left:</span>
-                    <span id="examTimer" class="font-mono text-xl font-black text-red-600 dark:text-red-400">00:00</span>
+                <!-- Right Side: Candidate Photo Badge & Timer Box -->
+                <div class="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
+                    <!-- Candidate Photo Badge in Exam -->
+                    <div
+                        class="flex items-center gap-2.5 bg-blue-50/70 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl border border-blue-100 dark:border-gray-600">
+                        <div class="candidate-photo-frame w-9 h-9 shrink-0">
+                            <img id="examCandidatePhoto" src="" alt="Candidate" class="candidate-photo-img">
+                        </div>
+                        <div class="text-left text-xs">
+                            <div id="examCandidateName"
+                                class="font-bold text-gray-900 dark:text-white truncate max-w-[130px]">Candidate</div>
+                            <div id="examCandidateId"
+                                class="text-blue-600 dark:text-blue-400 font-mono text-[10px] font-semibold">ID: —</div>
+                        </div>
+                    </div>
+
+                    <!-- Timer Box -->
+                    <div id="timerContainer"
+                        class="flex items-center space-x-3 shrink-0 bg-red-50 dark:bg-red-900/30 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 transition-colors">
+                        <i class="fa-solid fa-clock text-red-600 text-lg animate-pulse" id="timerIcon"></i>
+                        <span class="text-xs uppercase font-bold text-red-600 dark:text-red-400" id="timerLabel">Time
+                            Left:</span>
+                        <span id="examTimer"
+                            class="font-mono text-xl font-black text-red-600 dark:text-red-400">00:00</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Main Question & Palette Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow items-start">
                 <!-- Question Card (3 cols) -->
-                <div class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col min-h-[480px] justify-between">
+                <div
+                    class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col min-h-[480px] justify-between">
                     <div>
                         <!-- Header -->
-                        <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
-                            <span class="font-bold text-sm text-blue-600 dark:text-blue-400" id="currentQNumText">Question 1 of 10</span>
+                        <div
+                            class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+                            <span class="font-bold text-sm text-blue-600 dark:text-blue-400"
+                                id="currentQNumText">Question 1 of 10</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold" id="qPointWeight">1 Point</span>
-                                <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 font-medium text-gray-600 dark:text-gray-300" id="currentSectionBadge">Subject</span>
+                                <span
+                                    class="text-xs px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold"
+                                    id="qPointWeight">1 Point</span>
+                                <span
+                                    class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 font-medium text-gray-600 dark:text-gray-300"
+                                    id="currentSectionBadge">Subject</span>
                             </div>
                         </div>
 
                         <!-- Stem -->
-                        <div class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed" id="questionText">
+                        <div class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed"
+                            id="questionText">
                             <!-- Question Stem -->
                         </div>
 
@@ -540,24 +830,30 @@
                     </div>
 
                     <!-- Bottom Nav Toolbar -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
+                    <div
+                        class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="clearResponse()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition">
+                            <button onclick="clearResponse()"
+                                class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Clear Selection
                             </button>
-                            <button onclick="toggleMarkForReview()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition">
+                            <button onclick="toggleMarkForReview()"
+                                class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition">
                                 <i class="fa-solid fa-bookmark mr-1"></i> Mark Review
                             </button>
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <button id="btnPrevQ" onclick="navigateQuestion(-1)" class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <button id="btnPrevQ" onclick="navigateQuestion(-1)"
+                                class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fa-solid fa-chevron-left mr-1"></i> Prev
                             </button>
-                            <button id="btnNextQ" onclick="navigateQuestion(1)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow transition">
+                            <button id="btnNextQ" onclick="navigateQuestion(1)"
+                                class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow transition">
                                 Next <i class="fa-solid fa-chevron-right ml-1"></i>
                             </button>
-                            <button onclick="promptSubmitExam()" class="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow transition ml-2">
+                            <button onclick="promptSubmitExam()"
+                                class="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow transition ml-2">
                                 <i class="fa-solid fa-paper-plane mr-1"></i> Final Submit
                             </button>
                         </div>
@@ -565,24 +861,31 @@
                 </div>
 
                 <!-- Palette Sidebar (1 col) -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-                    <h3 class="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Question Palette</h3>
-                    
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+                    <h3
+                        class="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+                        Question Palette</h3>
+
                     <div id="paletteGrid" class="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
                         <!-- Buttons -->
                     </div>
 
                     <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 text-xs">
                         <div class="flex justify-between">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-500 inline-block"></span> Answered:</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="w-3 h-3 rounded bg-green-500 inline-block"></span> Answered:</span>
                             <span class="font-bold" id="countAnswered">0</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-300 dark:bg-gray-600 inline-block"></span> Unanswered:</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="w-3 h-3 rounded bg-gray-300 dark:bg-gray-600 inline-block"></span>
+                                Unanswered:</span>
                             <span class="font-bold" id="countUnanswered">0</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-600 inline-block"></span> Marked Review:</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="w-3 h-3 rounded bg-purple-600 inline-block"></span> Marked Review:</span>
                             <span class="font-bold" id="countMarked">0</span>
                         </div>
                     </div>
@@ -594,23 +897,30 @@
         <!-- VIEW 4: PRIVATE SUBMISSION CONFIRMATION -->
         <!-- ========================================== -->
         <section id="viewSubmissionSuccess" class="hidden max-w-3xl mx-auto my-auto w-full space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
                 <div class="text-center space-y-2">
-                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
+                    <div
+                        class="w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <h2 class="text-2xl font-black text-gray-900 dark:text-white">Assignment Completed & Submitted!</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Your Assignment has been submitted successfully.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Your Assignment has been submitted successfully.
+                    </p>
                 </div>
 
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 text-center">
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 text-center">
                     <i class="fa-solid fa-lock text-blue-600 dark:text-blue-400 text-xl mb-2"></i>
-                    <p class="text-sm font-semibold text-blue-900 dark:text-blue-200">Your result has been recorded securely.</p>
-                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">Results are available only to the school administrator.</p>
+                    <p class="text-sm font-semibold text-blue-900 dark:text-blue-200">Your result has been recorded
+                        securely.</p>
+                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">Results are available only to the school
+                        administrator.</p>
                 </div>
 
                 <div class="text-center pt-2">
-                    <button onclick="showDashboard()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md transition">
+                    <button onclick="showDashboard()"
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md transition">
                         Return to Student Portal
                     </button>
                 </div>
@@ -622,25 +932,31 @@
         <!-- ========================================== -->
         <section id="viewAdminPortal" class="hidden space-y-6 admin-ui">
             <!-- Top Admin Nav Bar -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+            <div
+                class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-blue-600"></i> Teacher & Admin Management Console
                     </h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Customize curriculum, edit timers, build question banks, and monitor student test logs.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Customize curriculum, edit timers, build
+                        question banks, and monitor student test logs.</p>
                 </div>
                 <!-- Navigation Tabs -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="showAdminSubView('builder')" id="btnTabBuilder" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow">
+                    <button onclick="showAdminSubView('builder')" id="btnTabBuilder"
+                        class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow">
                         <i class="fa-solid fa-gear mr-1"></i> Exam Config & Timers
                     </button>
-                    <button onclick="showAdminSubView('roster')" id="btnTabRoster" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                    <button onclick="showAdminSubView('roster')" id="btnTabRoster"
+                        class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
                         <i class="fa-solid fa-id-card mr-1"></i> Authorized Roster
                     </button>
-                    <button onclick="showAdminSubView('questions')" id="btnTabQuestions" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                    <button onclick="showAdminSubView('questions')" id="btnTabQuestions"
+                        class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
                         <i class="fa-solid fa-list-check mr-1"></i> Question Bank & AI Setup
                     </button>
-                    <button onclick="showAdminSubView('results')" id="btnTabResults" class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                    <button onclick="showAdminSubView('results')" id="btnTabResults"
+                        class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
                         <i class="fa-solid fa-chart-line mr-1"></i> Test Results
                     </button>
                 </div>
@@ -649,16 +965,20 @@
             <!-- ADMIN TAB 1: DYNAMIC EXAM & CURRICULUM CONFIGURATION ENGINE -->
             <div id="adminSubBuilder" class="space-y-6">
                 <!-- Class Selection & Configuration Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-3">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-3">
                         <h3 class="font-extrabold text-base text-gray-900 dark:text-white flex items-center gap-2">
                             <i class="fa-solid fa-pen-to-square text-blue-600"></i> Target Class & Curriculum Setup
                         </h3>
                         <div class="flex items-center gap-2">
-                            <button onclick="addNewClassLevelModal()" class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100 transition flex items-center gap-1">
+                            <button onclick="addNewClassLevelModal()"
+                                class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100 transition flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> New Class Level
                             </button>
-                            <button onclick="resetClassConfigToDefault()" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition">
+                            <button onclick="resetClassConfigToDefault()"
+                                class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition">
                                 Reset Defaults
                             </button>
                         </div>
@@ -666,18 +986,24 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Select Class to Edit</label>
-                            <select id="adminActiveClassSelect" onchange="loadAdminClassConfig()" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Select Class to
+                                Edit</label>
+                            <select id="adminActiveClassSelect" onchange="loadAdminClassConfig()"
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                 <!-- Dynamic options populated by JS -->
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Class Display Name</label>
-                            <input type="text" id="adminClassLabelInput" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-semibold">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Class Display
+                                Name</label>
+                            <input type="text" id="adminClassLabelInput"
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-semibold">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Timer Execution Mode</label>
-                            <select id="adminTimerModeSelect" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Timer Execution
+                                Mode</label>
+                            <select id="adminTimerModeSelect"
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold">
                                 <option value="subject">Per-Subject Timers</option>
                                 <option value="blended">Blended / Combined Exam Timer</option>
                             </select>
@@ -685,7 +1011,8 @@
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button onclick="saveClassConfigState()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+                        <button onclick="saveClassConfigState()"
+                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
                             <i class="fa-solid fa-floppy-disk"></i> Save Class Settings
                         </button>
                     </div>
@@ -694,8 +1021,10 @@
                 <!-- Subject Cards & Timers Management -->
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                        <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider">Configured Subjects & Timers</h4>
-                        <button onclick="addSubjectToClassConfig()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1">
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider">Configured
+                            Subjects & Timers</h4>
+                        <button onclick="addSubjectToClassConfig()"
+                            class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1">
                             <i class="fa-solid fa-plus"></i> Add Subject
                         </button>
                     </div>
@@ -709,42 +1038,57 @@
             <!-- ADMIN TAB 1.5: AUTHORIZED STUDENT ROSTER MANAGER -->
             <div id="adminSubRoster" class="hidden space-y-6">
                 <!-- Roster Tools & Filter -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-3">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-3">
                         <h3 class="font-extrabold text-base text-gray-900 dark:text-white flex items-center gap-2">
                             <i class="fa-solid fa-users-gear text-blue-600"></i> Authorized Student IDs & Roster Manager
                         </h3>
-                        <div class="flex items-center gap-2">
-                            <button onclick="openBulkAddModal()" class="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="openBulkAddModal()"
+                                class="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100">
                                 <i class="fa-solid fa-file-import mr-1"></i> Bulk Import IDs
                             </button>
-                            <button onclick="openSingleAddRosterModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">
+                            <button onclick="openSingleAddRosterModal()"
+                                class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">
                                 <i class="fa-solid fa-user-plus mr-1"></i> Add Student ID
+                            </button>
+                            <button id="toggleAllResultVisibilityBtn" onclick="toggleAllStudentResultVisibility()"
+                                class="px-3.5 py-1.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold hover:bg-amber-200 dark:hover:bg-amber-900/60">
+                                <i class="fa-solid fa-eye-slash mr-1"></i> Toggle All Results
                             </button>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Filter by Class Level</label>
-                            <select id="rosterClassFilterSelect" onchange="renderRosterTable()" class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Filter by Class
+                                Level</label>
+                            <select id="rosterClassFilterSelect" onchange="renderRosterTable()"
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                 <option value="ALL">All Classes</option>
                                 <!-- Dynamic options -->
                             </select>
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Search Student ID or Name</label>
-                            <input type="text" id="rosterSearchInput" onkeyup="renderRosterTable()" placeholder="Search STU-2026-001 or Student Name..." class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-medium">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Search Student ID or
+                                Name</label>
+                            <input type="text" id="rosterSearchInput" onkeyup="renderRosterTable()"
+                                placeholder="Search STU-2026-001 or Student Name..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-medium">
                         </div>
                     </div>
                 </div>
 
                 <!-- Roster List Table -->
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs sm:text-sm">
                             <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                                     <th class="p-4 font-semibold">Student ID</th>
                                     <th class="p-4 font-semibold">Student Name</th>
                                     <th class="p-4 font-semibold">Assigned Class</th>
@@ -763,19 +1107,24 @@
             <!-- ADMIN TAB 2: QUESTION BANK & DYNAMIC BOX SETUP WITH AI GENERATOR -->
             <div id="adminSubQuestions" class="hidden space-y-6">
                 <!-- Top Control & Action Bar -->
-                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
                     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         <!-- Class & Subject Selectors -->
                         <div class="flex flex-wrap items-center gap-3">
                             <div>
-                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Class Level</label>
-                                <select id="qBankClassSelect" onchange="updateSubjectBankSelector(); renderAdminQuestionBank()" class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Class
+                                    Level</label>
+                                <select id="qBankClassSelect"
+                                    onchange="updateSubjectBankSelector(); renderAdminQuestionBank()"
+                                    class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                     <!-- Class options -->
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Subject</label>
-                                <select id="qBankSubjectSelect" onchange="renderAdminQuestionBank()" class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                <select id="qBankSubjectSelect" onchange="renderAdminQuestionBank()"
+                                    class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                     <!-- Subject options -->
                                 </select>
                             </div>
@@ -784,12 +1133,15 @@
                         <!-- Action Buttons: Setup Boxes & AI Button -->
                         <div class="flex flex-wrap items-center gap-3">
                             <!-- Update/Configure Question Boxes Button -->
-                            <button onclick="promptUpdateQuestionsSetup()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
+                            <button onclick="promptUpdateQuestionsSetup()"
+                                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
                                 <i class="fa-solid fa-boxes-stacked"></i> Update Questions (Open Boxes)
                             </button>
 
                             <!-- AI QUESTION GENERATOR -->
-                            <button onclick="openAiAutofillModal()" class="btn-ai-physical px-3.5 py-2 text-white text-xs font-black rounded-xl flex items-center gap-2 tracking-wide cursor-pointer" title="Generate questions with AI">
+                            <button onclick="openAiAutofillModal()"
+                                class="btn-ai-physical px-3.5 py-2 text-white text-xs font-black rounded-xl flex items-center gap-2 tracking-wide cursor-pointer"
+                                title="Generate questions with AI">
                                 <img src="ai.jpg" alt="AI" class="ai-logo-mark">
                                 <span>Manuel AI</span>
                             </button>
@@ -798,22 +1150,29 @@
                 </div>
 
                 <!-- Dynamic Question Boxes Workspace (Rendered when setup or AI autofill is triggered) -->
-                <div id="batchQuestionWorkspace" class="hidden space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-6 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-indigo-200 dark:border-indigo-800 pb-3">
+                <div id="batchQuestionWorkspace"
+                    class="hidden space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-6 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60">
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-indigo-200 dark:border-indigo-800 pb-3">
                         <div>
-                            <h3 class="text-base font-extrabold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                            <h3
+                                class="text-base font-extrabold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
                                 <i class="fa-solid fa-pen-ruler text-indigo-600"></i> Active Question Boxes Editor
                             </h3>
-                            <p id="workspaceMetaText" class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Configuring questions for selected class & subject.</p>
+                            <p id="workspaceMetaText" class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+                                Configuring questions for selected class & subject.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="addSingleQuestionBoxToWorkspace()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1">
+                            <button onclick="addSingleQuestionBoxToWorkspace()"
+                                class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Add Box
                             </button>
-                            <button onclick="saveAllWorkspaceBoxes()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow flex items-center gap-1">
+                            <button onclick="saveAllWorkspaceBoxes()"
+                                class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow flex items-center gap-1">
                                 <i class="fa-solid fa-floppy-disk"></i> Save All Questions
                             </button>
-                            <button onclick="closeWorkspace()" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-300">
+                            <button onclick="closeWorkspace()"
+                                class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-300">
                                 Close Editor
                             </button>
                         </div>
@@ -825,7 +1184,8 @@
                     </div>
 
                     <div class="pt-2 flex justify-end">
-                        <button onclick="saveAllWorkspaceBoxes()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-2">
+                        <button onclick="saveAllWorkspaceBoxes()"
+                            class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-2">
                             <i class="fa-solid fa-check-double"></i> Confirm & Save All Boxes to Bank
                         </button>
                     </div>
@@ -833,7 +1193,8 @@
 
                 <!-- Existing Saved Questions Bank List -->
                 <div class="space-y-3">
-                    <h4 class="font-extrabold text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center gap-2">
+                    <h4
+                        class="font-extrabold text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-database text-blue-600"></i> Saved Question Bank List
                     </h4>
                     <div id="adminQuestionBankList" class="space-y-3">
@@ -845,17 +1206,22 @@
             <!-- ADMIN TAB 3: STUDENT EXAM RESULTS LOGS -->
             <div id="adminSubResults" class="hidden space-y-4">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <input type="text" id="searchResultInput" onkeyup="filterResultsTable()" placeholder="Search by student name or class..." class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full sm:w-64">
-                    <button onclick="exportCbtResultsCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">
+                    <input type="text" id="searchResultInput" onkeyup="filterResultsTable()"
+                        placeholder="Search by student name or class..."
+                        class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full sm:w-64">
+                    <button onclick="exportCbtResultsCSV()"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">
                         <i class="fa-solid fa-file-csv mr-1"></i> Export Results CSV
                     </button>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs sm:text-sm">
                             <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                                     <th class="p-4 font-semibold">Student ID</th>
                                     <th class="p-4 font-semibold">Student Name</th>
                                     <th class="p-4 font-semibold">Class Level</th>
@@ -864,6 +1230,7 @@
                                     <th class="p-4 font-semibold">Percentage</th>
                                     <th class="p-4 font-semibold">Grade</th>
                                     <th class="p-4 font-semibold">Date Submitted</th>
+                                    <th class="p-4 font-semibold">Result Access</th>
                                     <th class="p-4 font-semibold">Save</th>
                                 </tr>
                             </thead>
@@ -880,10 +1247,12 @@
 
     <!-- Custom Modal Container -->
     <div id="appModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div id="modalCard" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div id="modalCard"
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 id="modalTitle" class="text-lg font-extrabold text-gray-900 dark:text-white"></h3>
             <div id="modalBody" class="text-xs sm:text-sm text-gray-600 dark:text-gray-300"></div>
-            <div id="modalActions" class="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700"></div>
+            <div id="modalActions" class="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+            </div>
         </div>
     </div>
 
@@ -896,9 +1265,12 @@
         // ========================================================
         const API_BASE_URL = '/api'; // Replace with Node.js/Express server API endpoint linked to MongoDB
 
-        async function apiFetchQuestions(classKey, subjectId) {
+        async function apiFetchQuestions(classKey, subjectId = '') {
             try {
-                const response = await fetch(`${API_BASE_URL}/questions?classKey=${classKey}&subjectId=${subjectId}`);
+                const url = subjectId
+                    ? `${API_BASE_URL}/questions?classKey=${encodeURIComponent(classKey)}&subjectId=${encodeURIComponent(subjectId)}`
+                    : `${API_BASE_URL}/questions?classKey=${encodeURIComponent(classKey)}`;
+                const response = await fetch(url);
                 if (response.ok) {
                     const questions = await response.json();
                     return questions.map(question => ({ ...question, id: question.id || question._id }));
@@ -906,7 +1278,10 @@
             } catch (err) {
                 console.warn('MongoDB API fetch failed, falling back to local memory:', err);
             }
-            return (questionBank[classKey] && questionBank[classKey][subjectId]) || [];
+            if (subjectId) {
+                return (questionBank[classKey] && questionBank[classKey][subjectId]) || [];
+            }
+            return [];
         }
 
         async function apiSaveQuestion(classKey, subjectId, questionObj) {
@@ -971,10 +1346,18 @@
         }
 
         async function apiSaveCbtResult(result, keepalive = false) {
+            const deviceData = (typeof window.getDeviceFingerprint === 'function')
+                ? await window.getDeviceFingerprint()
+                : { exactModel: 'Unknown Device' };
+            const payload = {
+                ...result,
+                deviceName: deviceData.exactModel || 'Unknown Device',
+                deviceInfo: deviceData
+            };
             const response = await fetch(`${API_BASE_URL}/cbt-results`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(result),
+                body: JSON.stringify(payload),
                 keepalive
             });
             if (!response.ok) throw new Error('MongoDB could not save the CBT result.');
@@ -1091,6 +1474,7 @@
         let studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
         let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
+        let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
 
         // Student Exam Session
         let currentCandidate = { name: '', studentId: '', classKey: '' };
@@ -1101,16 +1485,58 @@
         let studentAnswers = {}; // { 'subId-qIdx': optIdx }
         let markedForReview = {}; // { 'subId-qIdx': true }
         let examSubmissionStarted = false;
-        
+
         // Timer Mechanics
         let sectionTimers = {}; // { subId: remainingSeconds }
         let totalExamTimer = 0; // blended mode seconds
         let examTimerInterval = null;
 
-        window.onload = function() {
+        window.onload = function () {
             savePersistentData();
             populateStudentClassDropdown();
             populateAdminClassDropdown();
+            setStudentProfileCardVisibility(false);
+            void loadStudentRosterFromDatabase();
+
+            // Initialize Candidate photo placeholder
+            const initPic = document.getElementById('studentCandidatePicture');
+            if (initPic && typeof window.attachStudentPhoto === 'function') {
+                window.attachStudentPhoto(initPic, '', 'Candidate');
+            }
+
+            // Real-time Student Candidate auto-lookup & picture loader
+            const idInput = document.getElementById('studentIdInput');
+            if (idInput) {
+                let lookupTimeout = null;
+                const triggerLookup = () => {
+                    const val = idInput.value.trim().toUpperCase();
+                    if (val.length >= 3) {
+                        loadSavedStudentProfile(val, false); // Fast inline check without blocking screen
+                    } else if (val.length === 0) {
+                        currentStudentPicture = '';
+                        const pic = document.getElementById('studentCandidatePicture');
+                        if (pic && typeof window.attachStudentPhoto === 'function') {
+                            window.attachStudentPhoto(pic, '', 'Candidate');
+                        }
+                        const badge = document.getElementById('candidatePhotoBadge');
+                        if (badge) badge.classList.add('hidden');
+                        const verified = document.getElementById('candidateVerifiedBadge');
+                        if (verified) verified.classList.add('hidden');
+                        const cardName = document.getElementById('candidateCardName');
+                        if (cardName) cardName.innerText = 'Candidate Name';
+                        const cardMeta = document.getElementById('candidateCardMeta');
+                        if (cardMeta) cardMeta.innerText = 'Candidate Passport & Record';
+                        const statusEl = document.getElementById('studentProfileStatus');
+                        if (statusEl) statusEl.innerText = 'Enter a saved Student ID to load your photo and profile records.';
+                    }
+                };
+                idInput.addEventListener('input', () => {
+                    clearTimeout(lookupTimeout);
+                    lookupTimeout = setTimeout(triggerLookup, 400);
+                });
+                idInput.addEventListener('change', triggerLookup);
+                idInput.addEventListener('blur', triggerLookup);
+            }
         };
 
         function savePersistentData() {
@@ -1123,9 +1549,8 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast-animate pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 text-white ${
-                type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
-            }`;
+            toast.className = `toast-animate pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 text-white ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+                }`;
             toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${message}`;
             container.appendChild(toast);
             setTimeout(() => {
@@ -1136,8 +1561,8 @@
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const icon = document.getElementById('themeIcon');
-            icon.className = document.documentElement.classList.contains('dark') 
-                ? 'fa-solid fa-sun text-lg text-amber-400' 
+            icon.className = document.documentElement.classList.contains('dark')
+                ? 'fa-solid fa-sun text-lg text-amber-400'
                 : 'fa-solid fa-moon text-lg text-gray-600';
         }
 
@@ -1178,24 +1603,129 @@
             }
         }
 
-        async function loadSavedStudentProfile(studentId) {
-            if (!studentId) return null;
-            const response = await fetch(`/api/student-data/${encodeURIComponent(studentId)}`);
-            if (!response.ok) return null;
-            const data = await response.json();
-            if (!data.success) return null;
-            const student = data.student;
-            document.getElementById('studentFullName').value = student.full_name || '';
+        function setStudentProfileCardVisibility(isVisible) {
+            const card = document.getElementById('candidateProfileCard');
+            if (!card) return;
+            card.style.display = isVisible ? 'flex' : 'none';
+        }
+
+        function normalizeClassKey(rawValue) {
+            const value = String(rawValue || '').trim();
+            if (!value) return '';
+
+            const directKey = Object.keys(classConfigs).find(key =>
+                key.toUpperCase() === value.toUpperCase() ||
+                classConfigs[key].label.toLowerCase() === value.toLowerCase() ||
+                classConfigs[key].label.toUpperCase().replace(/[^A-Z0-9]/g, '') === value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+            );
+            if (directKey) return directKey;
+
+            const compact = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const match = Object.keys(classConfigs).find(key => key.toUpperCase().replace(/[^A-Z0-9]/g, '') === compact ||
+                key.toUpperCase().replace(/[^A-Z0-9]/g, '').replace('SSS', 'SS') === compact ||
+                key.toUpperCase().replace(/[^A-Z0-9]/g, '').replace('SS', 'SSS') === compact);
+            if (match) return match;
+
+            if (compact.startsWith('JSS')) {
+                const jssMatch = compact.match(/JSS[1-3]/i);
+                if (jssMatch) return jssMatch[0].toUpperCase();
+            }
+            if (compact.startsWith('SS')) {
+                const ssMatch = compact.match(/SS[1-3]/i);
+                if (ssMatch) return `SSS${ssMatch[0].replace(/[^0-9]/g, '')}`;
+            }
+            return '';
+        }
+
+        function normalizeStudentIdKey(value) {
+            return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+
+        function studentIdsMatch(left, right) {
+            const lhs = normalizeStudentIdKey(left);
+            const rhs = normalizeStudentIdKey(right);
+            if (!lhs || !rhs) return lhs === rhs;
+            if (lhs === rhs) return true;
+            return lhs.replace(/O/g, 'U') === rhs || lhs.replace(/U/g, 'O') === rhs || rhs.replace(/O/g, 'U') === lhs || rhs.replace(/U/g, 'O') === lhs;
+        }
+
+        let currentStudentPicture = '';
+        const clientStudentCache = new Map();
+
+        function applyLoadedStudentProfile(student) {
+            if (!student) return;
+            if (student.full_name) {
+                document.getElementById('studentFullName').value = student.full_name;
+            }
             const classSelect = document.getElementById('studentClassSelect');
-            const baseClass = String(student.student_class || '').match(/^(JSS[1-3]|SSS[1-3])/i)?.[1]?.toUpperCase();
-            const classOption = [...classSelect.options].find(option => option.value === baseClass || option.value === student.student_class || option.textContent === student.student_class);
-            if (classOption) classSelect.value = classOption.value;
-            handleClassChange();
+            const normalizedClass = normalizeClassKey(student.student_class || '');
+            const baseClass = normalizedClass || String(student.student_class || '').match(/^(JSS[1-3]|SSS[1-3])/i)?.[1]?.toUpperCase();
+            const classOption = [...classSelect.options].find(option => option.value === baseClass || option.value === normalizedClass || option.value === student.student_class || option.textContent === student.student_class);
+            if (classOption) {
+                classSelect.value = classOption.value;
+                handleClassChange();
+            }
+
+            currentStudentPicture = student.picture || '';
             const picture = document.getElementById('studentCandidatePicture');
-            picture.src = student.picture || '';
-            picture.classList.toggle('hidden', !student.picture);
-            document.getElementById('studentProfileStatus').innerText = `Saved profile loaded for ${student.full_name}.`;
-            return student;
+            if (picture && typeof window.attachStudentPhoto === 'function') {
+                window.attachStudentPhoto(picture, currentStudentPicture, student.full_name);
+            } else if (picture) {
+                picture.src = currentStudentPicture;
+            }
+
+            const badge = document.getElementById('candidatePhotoBadge');
+            if (badge) badge.classList.remove('hidden');
+            const verified = document.getElementById('candidateVerifiedBadge');
+            if (verified) verified.classList.remove('hidden');
+            const cardName = document.getElementById('candidateCardName');
+            if (cardName) cardName.innerText = student.full_name || 'Candidate Name';
+            const cardMeta = document.getElementById('candidateCardMeta');
+            if (cardMeta) cardMeta.innerText = `ID: ${student.student_id} • Class: ${student.student_class || 'Registered'}`;
+
+            document.getElementById('studentProfileStatus').innerText = `Verified official profile loaded for ${student.full_name}.`;
+            setStudentProfileCardVisibility(false);
+        }
+
+        async function loadSavedStudentProfile(studentId, showLoader = false) {
+            if (!studentId) return null;
+            const cleanId = String(studentId).trim().toUpperCase();
+            if (!cleanId) return null;
+
+            // Instant response from client memory cache (0ms)
+            if (clientStudentCache.has(cleanId)) {
+                const student = clientStudentCache.get(cleanId);
+                applyLoadedStudentProfile(student);
+                return student;
+            }
+
+            if (showLoader && window.showDatabaseLoader) {
+                window.showDatabaseLoader('Connecting to Database...', `Verifying Candidate Profile for ${cleanId}...`);
+            } else {
+                const statusEl = document.getElementById('studentProfileStatus');
+                if (statusEl) statusEl.innerHTML = '<span class="text-blue-500 font-semibold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking ID...</span>';
+            }
+
+            try {
+                const response = await fetch(`/api/student-data/${encodeURIComponent(cleanId)}`);
+                if (!response.ok) {
+                    document.getElementById('studentProfileStatus').innerText = 'Student record not found in registered database.';
+                    return null;
+                }
+                const data = await response.json();
+                if (!data.success || !data.student) return null;
+                const student = data.student;
+                clientStudentCache.set(cleanId, student);
+                applyLoadedStudentProfile(student);
+                return student;
+            } catch (err) {
+                console.warn('Student profile lookup failed:', err);
+                return null;
+            } finally {
+                if (showLoader && window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         async function prepareStudentExam() {
@@ -1204,17 +1734,22 @@
             let classKey = document.getElementById('studentClassSelect').value;
 
             let savedProfile = null;
-            try { savedProfile = await loadSavedStudentProfile(studentId); } catch (error) { console.warn('Saved student profile lookup failed:', error); }
+            try {
+                savedProfile = await loadSavedStudentProfile(studentId, true);
+            } catch (error) {
+                console.warn('Saved student profile lookup failed:', error);
+            }
             classKey = document.getElementById('studentClassSelect').value;
 
             if (!name) return showCustomAlert('Validation Error', 'Please enter candidate full name.');
             if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
             if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
 
-            const rosterMatch = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey) || (savedProfile ? {
+            const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId) && (r.classKey === classKey || normalizeClassKey(r.classKey) === classKey)) || (savedProfile ? {
                 studentId: savedProfile.student_id,
                 name: savedProfile.full_name,
-                classKey,
+                classKey: normalizeClassKey(savedProfile.student_class) || classKey,
+                picture: savedProfile.picture,
                 status: 'Authorized'
             } : null);
 
@@ -1231,11 +1766,30 @@
                 return showCustomAlert('Assignment Already Submitted', `Student ID "${studentId}" has already completed and submitted the assignment for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
             }
 
-            currentCandidate = { name: rosterMatch.name || name, studentId: studentId, classKey: classKey };
+            const candidatePicture = savedProfile?.picture || rosterMatch?.picture || currentStudentPicture || '';
+            currentCandidate = {
+                name: rosterMatch.name || name,
+                studentId: studentId,
+                classKey: classKey,
+                picture: candidatePicture
+            };
             currentClassConfig = classConfigs[classKey];
+            setStudentProfileCardVisibility(true);
 
-            document.getElementById('instExamTitle').innerText = `${currentClassConfig.label} Assignment`;
+            // Update Instructions View with Candidate Identity & Photo
+            document.getElementById('instExamTitle').innerText = `${currentClassConfig.label} Assignment Guidelines`;
             document.getElementById('instExamMeta').innerText = `Candidate: ${currentCandidate.name} (${studentId}) | Timer Mode: ${currentClassConfig.timerMode === 'subject' ? 'Per-Subject Timers' : 'Blended Exam Timer'}`;
+
+            const instPic = document.getElementById('instCandidatePicture');
+            if (instPic && typeof window.attachStudentPhoto === 'function') {
+                window.attachStudentPhoto(instPic, currentCandidate.picture, currentCandidate.name);
+            }
+            const instName = document.getElementById('instCandidateName');
+            if (instName) instName.innerText = currentCandidate.name;
+            const instId = document.getElementById('instCandidateId');
+            if (instId) instId.innerText = `Student ID: ${currentCandidate.studentId}`;
+            const instClass = document.getElementById('instCandidateClass');
+            if (instClass) instClass.innerText = `Class Level: ${currentClassConfig.label} • Ready to commence examination`;
 
             const breakdownBox = document.getElementById('instSubjectBreakdown');
             breakdownBox.innerHTML = '';
@@ -1264,14 +1818,68 @@
             activeSubjectIdx = 0;
             activeQuestionIdx = 0;
 
-            // Sync with MongoDB for active class subjects
-            for (let sub of currentClassConfig.subjects) {
-                const remoteQs = await apiFetchQuestions(currentCandidate.classKey, sub.id);
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Connecting to Database...', 'Preparing & Loading Examination Questions...');
+            }
+
+            try {
+                // Sync with MongoDB for active class questions in one bulk request
+                const remoteQs = await apiFetchQuestions(currentCandidate.classKey);
                 if (remoteQs && remoteQs.length > 0) {
                     if (!questionBank[currentCandidate.classKey]) questionBank[currentCandidate.classKey] = {};
-                    questionBank[currentCandidate.classKey][sub.id] = remoteQs;
+                    remoteQs.forEach(q => {
+                        const sid = q.subjectId;
+                        if (sid) {
+                            if (!questionBank[currentCandidate.classKey][sid]) questionBank[currentCandidate.classKey][sid] = [];
+                            const list = questionBank[currentCandidate.classKey][sid];
+                            const idx = list.findIndex(existing => (existing.id && existing.id === q.id) || (existing.text === q.text));
+                            if (idx >= 0) {
+                                list[idx] = q;
+                            } else {
+                                list.push(q);
+                            }
+                        }
+                    });
+                }
+
+                // Detect exact phone model and notify administrator via Gmail
+                const deviceData = (typeof window.getDeviceFingerprint === 'function')
+                    ? await window.getDeviceFingerprint()
+                    : { exactModel: 'Unknown Device' };
+
+                fetch(`${API_BASE_URL}/cbt/notify-start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        candidate: {
+                            name: currentCandidate.name,
+                            studentId: currentCandidate.studentId,
+                            classKey: currentCandidate.classKey,
+                            classLabel: currentClassConfig.label,
+                            picture: currentCandidate.picture
+                        },
+                        deviceName: deviceData.exactModel || 'Unknown device',
+                        deviceInfo: deviceData
+                    })
+                }).catch(err => console.warn('CBT start notification failed:', err));
+
+            } catch (loadErr) {
+                console.warn('Error syncing remote questions:', loadErr);
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
                 }
             }
+
+            // Populate Live Exam Candidate Header with Photo
+            const examPhoto = document.getElementById('examCandidatePhoto');
+            if (examPhoto && typeof window.attachStudentPhoto === 'function') {
+                window.attachStudentPhoto(examPhoto, currentCandidate.picture, currentCandidate.name);
+            }
+            const examName = document.getElementById('examCandidateName');
+            if (examName) examName.innerText = currentCandidate.name;
+            const examId = document.getElementById('examCandidateId');
+            if (examId) examId.innerText = currentCandidate.studentId;
 
             currentClassConfig.subjects.forEach(sub => {
                 const sourceQuestions = (questionBank[currentCandidate.classKey] && questionBank[currentCandidate.classKey][sub.id]) || [];
@@ -1347,7 +1955,7 @@
         function updateTimerDisplay() {
             let secsRemaining = 0;
             const timerBox = document.getElementById('timerContainer');
-            
+
             if (currentClassConfig.timerMode === 'subject') {
                 const activeSub = currentClassConfig.subjects[activeSubjectIdx];
                 secsRemaining = sectionTimers[activeSub.id] || 0;
@@ -1373,11 +1981,10 @@
             container.innerHTML = '';
             currentClassConfig.subjects.forEach((sub, idx) => {
                 const btn = document.createElement('button');
-                btn.className = `px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                    idx === activeSubjectIdx 
-                        ? 'bg-blue-600 text-white shadow' 
+                btn.className = `px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${idx === activeSubjectIdx
+                        ? 'bg-blue-600 text-white shadow'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                }`;
+                    }`;
                 btn.innerText = sub.name;
                 btn.onclick = () => {
                     activeSubjectIdx = idx;
@@ -1423,11 +2030,10 @@
             q.options.forEach((optText, optIdx) => {
                 const isSelected = studentAnswers[answerKey] === optIdx;
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-xl border cursor-pointer transition flex items-center space-x-3 ${
-                    isSelected 
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20' 
+                card.className = `p-4 rounded-xl border cursor-pointer transition flex items-center space-x-3 ${isSelected
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20'
                         : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-800 dark:text-gray-200'
-                }`;
+                    }`;
                 card.onclick = () => {
                     studentAnswers[answerKey] = optIdx;
                     renderQuestion();
@@ -1435,8 +2041,7 @@
 
                 const letter = String.fromCharCode(65 + optIdx);
                 card.innerHTML = `
-                    <div class="w-7 h-7 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs font-bold ${
-                        isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700'
+                    <div class="w-7 h-7 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700'
                     }">${letter}</div>
                     <div class="text-sm font-medium flex-grow">${optText}</div>
                 `;
@@ -1558,6 +2163,7 @@
                 studentName: currentCandidate.name,
                 classKey: currentCandidate.classKey,
                 classLevel: currentClassConfig.label,
+                picture: currentCandidate.picture || '',
                 subjectBreakdown: subjectBreakdown,
                 totalPoints: totalAchieved,
                 maxPoints: totalPossible,
@@ -1575,11 +2181,19 @@
 
             savePersistentData();
 
+            if (!options.silent && window.showDatabaseLoader) {
+                window.showDatabaseLoader('Connecting to Database...', 'Securing & Logging Examination Submission...');
+            }
+
             try {
                 await apiSaveCbtResult(record, options.keepalive);
             } catch (err) {
                 console.error('CBT result MongoDB save failed:', err);
                 if (!options.silent) showToast('Exam saved locally, but the server could not save the result.', 'error');
+            } finally {
+                if (!options.silent && window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
 
             if (options.silent) return;
@@ -1617,14 +2231,22 @@
 
         async function verifyAdminPass() {
             const pass = document.getElementById('adminPassInput').value;
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Connecting to Database...', 'Verifying Administrator Credentials...');
+            }
             try {
+                const deviceData = (typeof window.getDeviceFingerprint === 'function')
+                    ? await window.getDeviceFingerprint()
+                    : { exactModel: 'Unknown device' };
+
                 const response = await fetch(`${API_BASE_URL}/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         password: pass,
                         surface: 'cbt',
-                        deviceName: navigator.userAgentData?.platform || navigator.platform || 'Unknown device'
+                        deviceName: deviceData.exactModel || 'Unknown device',
+                        deviceInfo: deviceData
                     })
                 });
                 const data = await response.json().catch(() => ({}));
@@ -1635,6 +2257,10 @@
                 showToast(data.emailSent === false ? 'Admin Portal unlocked, but login notification failed.' : 'Admin Portal unlocked successfully!');
             } catch (err) {
                 showCustomAlert('Access Denied', err.message || 'Incorrect Admin Password! Please try again.');
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
@@ -1666,6 +2292,37 @@
         // ========================================================
         // AUTHORIZED ROSTER MANAGER LOGIC
         // ========================================================
+        async function loadStudentRosterFromDatabase() {
+            const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
+            try {
+                const response = await fetch('/api/admin/student-data', {
+                    headers: { 'x-student-data-password': password }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success || !Array.isArray(data.students)) {
+                    throw new Error(data.message || 'Student Data Manager unavailable.');
+                }
+
+                studentRoster = data.students.map(student => ({
+                    studentId: String(student.student_id || '').trim().toUpperCase(),
+                    name: String(student.full_name || 'Candidate').trim(),
+                    classKey: normalizeClassKey(student.student_class || '') || String(student.student_class || '').trim(),
+                    status: 'Authorized',
+                    picture: String(student.picture || '').trim(),
+                    showResult: student.show_result !== false
+                })).filter(item => item.studentId && item.classKey);
+
+                localStorage.setItem('dgc_student_roster', JSON.stringify(studentRoster));
+                if (document.getElementById('rosterClassFilterSelect')) {
+                    populateRosterClassFilter();
+                }
+                renderRosterTable();
+            } catch (err) {
+                console.warn('Student Data Manager sync failed, keeping local roster:', err);
+                studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
+            }
+        }
+
         function populateRosterClassFilter() {
             const select = document.getElementById('rosterClassFilterSelect');
             select.innerHTML = '<option value="ALL">All Classes</option>';
@@ -1685,9 +2342,20 @@
 
             const filtered = studentRoster.filter(r => {
                 const matchClass = filterClass === 'ALL' || r.classKey === filterClass;
-                const matchSearch = r.studentId.toLowerCase().includes(search) || (r.name && r.name.toLowerCase().includes(search));
+                const matchSearch = !search || r.studentId.toLowerCase().includes(search) || (r.name && r.name.toLowerCase().includes(search));
                 return matchClass && matchSearch;
             });
+
+            const allVisible = filtered.length > 0 && filtered.every(r => r.showResult !== false);
+            const toggleBtn = document.getElementById('toggleAllResultVisibilityBtn');
+            if (toggleBtn) {
+                toggleBtn.innerHTML = allVisible
+                    ? '<i class="fa-solid fa-eye-slash mr-1"></i> Hide Results for All'
+                    : '<i class="fa-solid fa-eye mr-1"></i> Show Results for All';
+                toggleBtn.className = allVisible
+                    ? 'px-3.5 py-1.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold hover:bg-amber-200 dark:hover:bg-amber-900/60'
+                    : 'px-3.5 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/60';
+            }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No student IDs match the selected filter or search terms.</td></tr>`;
@@ -1696,6 +2364,7 @@
 
             filtered.forEach((item) => {
                 const classLabel = classConfigs[item.classKey] ? classConfigs[item.classKey].label : item.classKey;
+                const resultVisible = item.showResult !== false;
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition';
 
@@ -1710,9 +2379,12 @@
                     <td class="p-4">
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge}">${item.status || 'Authorized'}</span>
                     </td>
-                    <td class="p-4 space-x-2">
-                        <button onclick="toggleRosterStatus('${item.studentId}')" class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold">Toggle Status</button>
-                        <button onclick="deleteRosterItem('${item.studentId}')" class="text-xs text-red-500 hover:underline font-semibold">Remove</button>
+                    <td class="p-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="toggleRosterStatus('${item.studentId}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60">Toggle Status</button>
+                            <button onclick="toggleStudentResultVisibility('${item.studentId}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${resultVisible ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/60' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60'}">${resultVisible ? 'Hide Result' : 'Show Result'}</button>
+                            <button onclick="deleteRosterItem('${item.studentId}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60">Remove</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1804,17 +2476,132 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-bold mb-1">Paste Student IDs (Comma or Newline Separated)</label>
+                        <label class="block font-bold mb-1">Upload CSV File (.csv)</label>
+                        <input type="file" id="bulkRosterCsvFile" accept=".csv,text/csv" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Or paste Student IDs (Comma or Newline Separated)</label>
                         <textarea id="bulkIdsInput" rows="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-mono" placeholder="STU-2026-001&#10;STU-2026-002&#10;STU-2026-003"></textarea>
                     </div>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400">CSV columns can be: Student ID, Full Name, Class or Student ID, Full Name, Class, Status.</p>
                 </div>
             `;
             document.getElementById('modalActions').innerHTML = `
                 <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
                 <button onclick="processBulkRosterImport()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Import IDs</button>
+                <button onclick="processBulkRosterCsvFile()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow">Upload CSV</button>
             `;
             document.getElementById('appModal').classList.remove('hidden');
             document.getElementById('appModal').classList.add('flex');
+            const csvFileInput = document.getElementById('bulkRosterCsvFile');
+            if (csvFileInput) {
+                csvFileInput.addEventListener('change', (event) => {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const parsed = parseBulkRosterCsv(reader.result);
+                        if (!parsed.length) {
+                            showToast('No valid records found in the selected CSV file.', 'error');
+                            return;
+                        }
+                        const summary = parsed.slice(0, 3).map(r => `${r.studentId} (${r.name})`).join(', ');
+                        showToast(`CSV parsed: ${parsed.length} student record(s) ready to import. ${summary}${parsed.length > 3 ? '...' : ''}`);
+                    };
+                    reader.readAsText(file);
+                });
+            }
+        }
+
+        function parseBulkRosterCsv(text) {
+            const rows = [];
+            let row = [];
+            let value = '';
+            let quoted = false;
+            const input = String(text || '').replace(/^\uFEFF/, '');
+
+            for (let i = 0; i < input.length; i++) {
+                const ch = input[i];
+                const next = input[i + 1];
+                if (ch === '"') {
+                    if (quoted && next === '"') {
+                        value += '"';
+                        i += 1;
+                    } else {
+                        quoted = !quoted;
+                    }
+                } else if (ch === ',' && !quoted) {
+                    row.push(value.trim());
+                    value = '';
+                } else if ((ch === '\n' || ch === '\r') && !quoted) {
+                    if (ch === '\r' && next === '\n') i += 1;
+                    row.push(value.trim());
+                    if (row.some(cell => cell !== '')) rows.push(row);
+                    row = [];
+                    value = '';
+                } else {
+                    value += ch;
+                }
+            }
+            if (value || row.length) {
+                row.push(value.trim());
+                rows.push(row);
+            }
+
+            if (!rows.length) return [];
+
+            const header = rows[0].map(cell => String(cell).trim().toLowerCase().replace(/[^a-z]/g, ''));
+            const startIndex = header.some(cell => cell === 'studentid' || cell === 'id') ? 1 : 0;
+
+            return rows.slice(startIndex).filter(record => record.some(cell => String(cell).trim())).map(record => {
+                const values = record.slice(0, 4).map(cell => String(cell).trim());
+                const studentId = values[0] || '';
+                const fullName = values[1] || 'Candidate ' + studentId;
+                const classValue = values[2] || '';
+                const status = values[3] || 'Authorized';
+                const normalizedClass = normalizeClassKey(classValue) || document.getElementById('bulkClassSelect')?.value || '';
+                const safeId = studentId.trim().toUpperCase();
+                if (!safeId || !normalizedClass) return null;
+                return {
+                    studentId: safeId,
+                    name: fullName,
+                    classKey: normalizedClass,
+                    status: status === 'Suspended' ? 'Suspended' : status === 'Completed/Attempted' ? 'Completed/Attempted' : 'Authorized'
+                };
+            }).filter(Boolean);
+        }
+
+        function processBulkRosterCsvFile() {
+            const fileInput = document.getElementById('bulkRosterCsvFile');
+            const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+            if (!file) return showToast('Choose a CSV file to upload.', 'error');
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                const records = parseBulkRosterCsv(reader.result);
+                if (!records.length) {
+                    showToast('No valid roster rows were found in the CSV file.', 'error');
+                    return;
+                }
+                let addedCount = 0;
+                records.forEach(record => {
+                    const exists = studentRoster.some(r => r.studentId.toUpperCase() === record.studentId && r.classKey === record.classKey);
+                    if (!exists) {
+                        studentRoster.push({
+                            studentId: record.studentId,
+                            name: record.name,
+                            classKey: record.classKey,
+                            status: record.status
+                        });
+                        addedCount++;
+                    }
+                });
+                savePersistentData();
+                closeModal();
+                renderRosterTable();
+                showToast(`Uploaded ${addedCount} student records from CSV.`);
+            };
+            reader.readAsText(file);
         }
 
         function processBulkRosterImport() {
@@ -2663,7 +3450,7 @@
             const classKey = document.getElementById('qBankClassSelect').value;
             const subId = document.getElementById('qBankSubjectSelect').value;
             const qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
-            
+
             if (qList[idx]) {
                 qList[idx].text = document.getElementById('editQText').value.trim();
                 qList[idx].points = parseInt(document.getElementById('editQPoints').value) || 1;
@@ -2675,7 +3462,7 @@
                     document.getElementById('editOpt3').value.trim()
                 ];
                 qList[idx].correctIndex = parseInt(document.getElementById('editCorrectIdx').value);
-                
+
                 if (qList[idx].id) {
                     await apiUpdateQuestion(qList[idx].id, qList[idx]);
                 }
@@ -2690,7 +3477,7 @@
             const classKey = document.getElementById('qBankClassSelect').value;
             const subId = document.getElementById('qBankSubjectSelect').value;
             const qList = (questionBank[classKey] && questionBank[classKey][subId]) || [];
-            
+
             if (qList[idx]) {
                 if (qList[idx].id) {
                     await apiDeleteQuestion(qList[idx].id);
@@ -2712,12 +3499,80 @@
             renderCbtResultsTable();
         }
 
+        async function toggleStudentResultVisibility(studentId) {
+            const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId));
+            const nextVisible = rosterMatch ? (rosterMatch.showResult !== false) ? false : true : true;
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/student-result-visibility`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, showResult: nextVisible })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Could not update result visibility.');
+                if (rosterMatch) rosterMatch.showResult = nextVisible;
+                const rosterEntry = studentRoster.find(r => studentIdsMatch(r.studentId, studentId));
+                if (rosterEntry) rosterEntry.showResult = nextVisible;
+                savePersistentData();
+                renderCbtResultsTable();
+                showToast(`Result visibility set to ${nextVisible ? 'visible' : 'hidden'} for ${studentId}.`);
+            } catch (err) {
+                showToast(err.message || 'Could not update result visibility.', 'error');
+            }
+        }
+
+        async function toggleAllStudentResultVisibility() {
+            const filterClass = document.getElementById('rosterClassFilterSelect')?.value || 'ALL';
+            const search = (document.getElementById('rosterSearchInput')?.value || '').toLowerCase();
+            const targetStudents = studentRoster.filter((r) => {
+                const matchClass = filterClass === 'ALL' || r.classKey === filterClass;
+                const matchSearch = !search || r.studentId.toLowerCase().includes(search) || (r.name && r.name.toLowerCase().includes(search));
+                return matchClass && matchSearch;
+            });
+
+            if (!targetStudents.length) {
+                showToast('No students match the current roster filter.', 'error');
+                return;
+            }
+
+            const allVisible = targetStudents.every(student => student.showResult !== false);
+            const nextVisible = allVisible ? false : true;
+
+            targetStudents.forEach((student) => {
+                student.showResult = nextVisible;
+            });
+            savePersistentData();
+            renderRosterTable();
+            renderCbtResultsTable();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/student-result-visibility/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentIds: targetStudents.map(student => student.studentId),
+                        showResult: nextVisible,
+                        all: true
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Bulk server sync failed.');
+                }
+
+                showToast(`Result visibility set to ${nextVisible ? 'visible' : 'hidden'} for ${targetStudents.length} student${targetStudents.length > 1 ? 's' : ''}.`);
+            } catch (err) {
+                console.warn('Bulk result visibility sync failed:', err);
+                showToast(`Local roster updated. Server sync pending: ${nextVisible ? 'visible' : 'hidden'} for ${targetStudents.length} student${targetStudents.length > 1 ? 's' : ''}.`, 'warning');
+            }
+        }
+
         function renderCbtResultsTable() {
             const tbody = document.getElementById('cbtResultsTableBody');
             tbody.innerHTML = '';
 
             if (cbtResults.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
                 return;
             }
 
@@ -2725,6 +3580,9 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition';
 
+                const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, res.studentId));
+                const resultVisible = rosterMatch ? rosterMatch.showResult !== false : true;
+                const accessStateClass = resultVisible ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
                 const subBreakdownText = Object.keys(res.subjectBreakdown || {})
                     .map(sName => `${sName}: ${res.subjectBreakdown[sName].score}/${res.subjectBreakdown[sName].max}`)
                     .join(' | ');
@@ -2738,6 +3596,12 @@
                     <td class="p-4 font-bold text-indigo-600 dark:text-indigo-400">${res.percentage}%</td>
                     <td class="p-4 font-bold text-purple-600 dark:text-purple-400">${res.grade}</td>
                     <td class="p-4 text-xs text-gray-500 dark:text-gray-400">${res.timestamp}</td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${accessStateClass}">${resultVisible ? 'Visible' : 'Hidden'}</span>
+                        <button onclick="toggleStudentResultVisibility('${res.studentId}')" class="mt-2 block text-[10px] font-bold ${resultVisible ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'} hover:underline">
+                            ${resultVisible ? 'Hide Result' : 'Show Result'}
+                        </button>
+                    </td>
                     <td class="p-4">
                         <button onclick="saveCbtResultAsPicture('${res.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm">
                             <i class="fa-solid fa-image mr-1"></i> Save Picture
@@ -2753,6 +3617,10 @@
             if (!result) return showToast('Result record not found.', 'error');
             if (typeof html2canvas !== 'function') return showToast('Picture export is unavailable. Check your connection and try again.', 'error');
 
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Generating Result Picture...', 'Rendering high-resolution candidate result certificate...');
+            }
+
             const subjectRows = Object.entries(result.subjectBreakdown || {}).map(([name, score]) => `
                 <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #dbeafe;color:#334155;font-size:14px;">
                     <span>${escapeResultPictureText(name)}</span>
@@ -2760,22 +3628,37 @@
                 </div>
             `).join('');
 
+            const studentPhoto = result.picture || (studentRoster.find(r => r.studentId === result.studentId)?.picture) || '';
+            const photoUrl = (studentPhoto && typeof window.normalizeStudentPicturePath === 'function')
+                ? window.normalizeStudentPicturePath(studentPhoto)
+                : (typeof window.createStudentInitialsAvatar === 'function' ? window.createStudentInitialsAvatar(result.studentName) : '');
+
             const card = document.createElement('div');
             card.style.cssText = 'position:fixed;left:-10000px;top:0;width:900px;padding:42px;background:linear-gradient(135deg,#eff6ff 0%,#ffffff 48%,#fdf4ff 100%);font-family:Inter,Arial,sans-serif;color:#0f172a;';
             card.innerHTML = `
                 <div style="border-radius:24px;overflow:hidden;background:#ffffff;box-shadow:0 20px 50px rgba(30,64,175,.18);border:1px solid #bfdbfe;">
                     <div style="padding:30px 36px;background:linear-gradient(110deg,#1d4ed8,#0891b2 55%,#9333ea);color:#ffffff;">
                         <div style="font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:.85;">Dynolinks Global College</div>
-                        <div style="font-size:32px;font-weight:800;margin-top:8px;">CBT Assignmment Result</div>
+                        <div style="font-size:32px;font-weight:800;margin-top:8px;">CBT Assignment Result</div>
                         <div style="font-size:14px;margin-top:6px;opacity:.85;">Official administrator record</div>
                     </div>
                     <div style="padding:30px 36px;">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;">
-                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Student</div><div style="font-size:22px;font-weight:800;margin-top:5px;">${escapeResultPictureText(result.studentName)}</div></div>
-                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Student ID</div><div style="font-size:18px;font-weight:700;margin-top:7px;color:#1d4ed8;">${escapeResultPictureText(result.studentId)}</div></div>
-                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Class Level</div><div style="font-size:16px;font-weight:700;margin-top:6px;">${escapeResultPictureText(result.classLevel)}</div></div>
-                            <div><div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Date Submitted</div><div style="font-size:16px;font-weight:700;margin-top:6px;">${escapeResultPictureText(result.timestamp)}</div></div>
+                        <!-- Student Profile Header with Picture -->
+                        <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e2e8f0;">
+                            <div style="width:84px;height:84px;border-radius:18px;overflow:hidden;border:3px solid #3b82f6;flex-shrink:0;box-shadow:0 6px 16px rgba(59,130,246,0.25);background:#f1f5f9;">
+                                <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" />
+                            </div>
+                            <div style="flex-grow:1;">
+                                <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1.5px;">Student Candidate</div>
+                                <div style="font-size:26px;font-weight:900;color:#0f172a;margin-top:2px;">${escapeResultPictureText(result.studentName)}</div>
+                                <div style="font-size:14px;color:#2563eb;font-weight:700;margin-top:3px;font-family:monospace;">ID: ${escapeResultPictureText(result.studentId)} • Class: ${escapeResultPictureText(result.classLevel)}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:1px;">Date Submitted</div>
+                                <div style="font-size:14px;color:#334155;font-weight:700;margin-top:3px;">${escapeResultPictureText(result.timestamp)}</div>
+                            </div>
                         </div>
+
                         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;">
                             <div style="padding:18px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe;text-align:center;"><div style="font-size:11px;color:#2563eb;font-weight:800;text-transform:uppercase;">Total Score</div><div style="font-size:25px;font-weight:800;color:#1d4ed8;margin-top:5px;">${result.totalPoints} / ${result.maxPoints}</div></div>
                             <div style="padding:18px;border-radius:14px;background:#ecfeff;border:1px solid #a5f3fc;text-align:center;"><div style="font-size:11px;color:#0891b2;font-weight:800;text-transform:uppercase;">Percentage</div><div style="font-size:25px;font-weight:800;color:#0e7490;margin-top:5px;">${result.percentage}%</div></div>
@@ -2801,6 +3684,9 @@
                 showToast('Could not save the result picture.', 'error');
             } finally {
                 card.remove();
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
@@ -2865,20 +3751,29 @@
             document.getElementById('appModal').classList.add('flex');
         }
 
-        function showCustomConfirm(title, message, onConfirm) {
+        function showCustomConfirm(title, message, onConfirm = null) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalBody').innerText = message;
             document.getElementById('modalActions').innerHTML = `
-                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
-                <button id="confirmBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Confirm</button>
+                <button id="confirmCancelBtn" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs font-semibold">Cancel</button>
+                <button id="confirmOkBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Confirm</button>
             `;
-            document.getElementById('confirmBtn').onclick = () => {
-                closeModal();
-                if (onConfirm) onConfirm();
-            };
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            if (cancelBtn) {
+                cancelBtn.onclick = closeModal;
+            }
+            const okBtn = document.getElementById('confirmOkBtn');
+            if (okBtn) {
+                okBtn.onclick = () => {
+                    closeModal();
+                    if (onConfirm) onConfirm();
+                };
+            }
             document.getElementById('appModal').classList.remove('hidden');
             document.getElementById('appModal').classList.add('flex');
         }
     </script>
 </body>
+
 </html>
+    
