@@ -550,8 +550,25 @@
     function normalizeStudentPicturePath(value) {
         const trimmed = String(value || '').trim();
         if (!trimmed) return '';
-        if (/^(https?:\/\/|data:|\/)/i.test(trimmed)) return trimmed;
-        return STUDENT_PHOTO_FOLDER + trimmed.replace(/^\.?\/+/, '');
+        if (/^(https?:\/\/|data:)/i.test(trimmed)) return trimmed;
+
+        const cleaned = trimmed
+            .replace(/\\/g, '/')
+            .replace(/^\/+/, '')
+            .replace(/^public\//i, '')
+            .replace(/^stud-data\//i, '')
+            .replace(/^\.\//, '')
+            .replace(/\/+/g, '/');
+
+        const filename = cleaned.split('/').pop() || cleaned;
+        if (!filename) return '';
+
+        const normalizedName = filename.toLowerCase();
+        if (/\.(jpg|jpeg|png|webp|gif)$/i.test(normalizedName)) {
+            return STUDENT_PHOTO_FOLDER + normalizedName;
+        }
+
+        return STUDENT_PHOTO_FOLDER + normalizedName + '.jpg';
     }
 
     function createStudentInitialsAvatar(name, size = 128) {

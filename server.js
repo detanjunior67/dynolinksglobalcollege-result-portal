@@ -701,11 +701,31 @@ const compressStudentDataUrl = async (value = '') => {
     }
 };
 
+const normalizeStudentPictureValue = (value = '') => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return '';
+    if (/^(https?:\/\/|data:)/i.test(trimmed)) return trimmed;
+
+    const cleaned = trimmed
+        .replace(/\\/g, '/')
+        .replace(/^\/+/, '')
+        .replace(/^public\//i, '')
+        .replace(/^stud-data\//i, '')
+        .replace(/^\.\//, '')
+        .replace(/\/+/g, '/');
+
+    const filename = cleaned.split('/').pop() || cleaned;
+    if (!filename) return '';
+    const normalizedName = filename.toLowerCase();
+    const hasExtension = /\.(jpg|jpeg|png|webp|gif)$/i.test(normalizedName);
+    return `/stud-data/${hasExtension ? normalizedName : `${normalizedName}.jpg`}`;
+};
+
 const normalizeStudentData = (item = {}) => ({
     student_id: String(item.student_id || item.studentId || '').trim().toUpperCase(),
     full_name: String(item.full_name || item.fullName || '').trim(),
     student_class: String(item.student_class || item.studentClass || item.class || '').trim(),
-    picture: String(item.picture || '').trim(),
+    picture: normalizeStudentPictureValue(item.picture || ''),
     show_result: item.show_result !== undefined ? Boolean(item.show_result) : (item.result_visible !== undefined ? Boolean(item.result_visible) : true)
 });
 

@@ -3469,19 +3469,24 @@
         function normalizeStudentPicturePath(value) {
             const trimmed = String(value || '').trim();
             if (!trimmed) return '';
-            if (/^(https?:\/\/|data:|\/)/i.test(trimmed)) return trimmed;
+            if (/^(https?:\/\/|data:)/i.test(trimmed)) return trimmed;
 
             const cleanFilename = trimmed
-                .replace(/^\.?\/?stud-data\/?/i, '')
-                .replace(/^\.?\/?public\/?/i, '')
-                .replace(/^\.?\/?/, '')
-                .replace(/\\/g, '/');
+                .replace(/\\/g, '/')
+                .replace(/^\/+/, '')
+                .replace(/^public\//i, '')
+                .replace(/^stud-data\//i, '')
+                .replace(/^\.\//, '')
+                .replace(/\/+/g, '/');
 
-            if (!cleanFilename) return '';
-            if (/\.(jpg|jpeg|png|webp|gif)$/i.test(cleanFilename)) {
-                return STUDENT_PHOTO_FOLDER + cleanFilename;
+            const filename = cleanFilename.split('/').pop() || cleanFilename;
+            if (!filename) return '';
+
+            const normalizedFilename = filename.toLowerCase();
+            if (/\.(jpg|jpeg|png|webp|gif)$/i.test(normalizedFilename)) {
+                return STUDENT_PHOTO_FOLDER + normalizedFilename;
             }
-            return STUDENT_PHOTO_FOLDER + cleanFilename + '.jpg';
+            return STUDENT_PHOTO_FOLDER + normalizedFilename + '.jpg';
         }
 
         function deduplicateStudentImportRows(rows) {
