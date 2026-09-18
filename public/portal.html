@@ -1601,6 +1601,23 @@
             reader.readAsText(file);
         }
 
+        function scrollToSavedStudentRow(studentId) {
+            if (!studentId) return;
+            const targetRow = document.querySelector(`#adminStudentList tr[data-student-id="${CSS.escape(String(studentId).trim())}"]`);
+            if (targetRow) {
+                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetRow.style.outline = '2px solid rgba(250, 204, 21, 0.9)';
+                targetRow.style.outlineOffset = '2px';
+                setTimeout(() => {
+                    targetRow.style.outline = '';
+                    targetRow.style.outlineOffset = '';
+                }, 2200);
+                return;
+            }
+
+            document.getElementById('adminStudentList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         // Save or Update Single Student Result
         document.getElementById('addResultForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -1678,6 +1695,7 @@
                 if (data.success) {
                     alert(data.message);
                     fetchAdminStudentList();
+                    scrollToSavedStudentRow(studentId);
                     isEditingMode = false;
                     document.getElementById('formHeadingTitle').innerText = 'Upload / Update Single Student Result';
                     document.getElementById('submitResultBtn').textContent = 'Save Complete Student Result';
@@ -1716,6 +1734,7 @@
 
                     data.students.forEach(s => {
                         const tr = document.createElement('tr');
+                        tr.dataset.studentId = String(s.student_id || '').trim();
                         tr.innerHTML = `
                             <td>${s.student_id}</td>
                             <td>${s.full_name}</td>

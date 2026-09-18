@@ -1511,6 +1511,153 @@
             white-space: nowrap;
         }
 
+        .student-row-photo-editor {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 86px;
+            min-height: 86px;
+            margin: 0 auto;
+        }
+
+        .student-row-photo-editor img {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            object-fit: cover;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 12px 20px rgba(30, 64, 175, 0.18);
+        }
+
+        .student-row-edit-toggle {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: none;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(249, 115, 22, 0.28);
+            z-index: 2;
+        }
+
+        .student-inline-dropzone {
+            position: absolute;
+            inset: 6px 0 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+            text-align: center;
+            padding: 10px 8px;
+            border-radius: 14px;
+            background: rgba(4, 15, 31, 0.84);
+            border: 2px dashed rgba(96, 165, 250, 0.8);
+            backdrop-filter: blur(6px);
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.2s ease;
+        }
+
+        .student-inline-dropzone.hidden {
+            display: none;
+        }
+
+        .student-inline-dropzone.is-over {
+            border-color: var(--crest-gold);
+            background: rgba(19, 29, 49, 0.9);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+        }
+
+        .student-inline-dropzone input {
+            display: none;
+        }
+
+        .student-inline-dropzone span {
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: #dbeafe;
+            line-height: 1.3;
+        }
+
+        .student-image-dropzone {
+            position: relative;
+            min-height: 140px;
+            border: 2px dashed rgba(96, 165, 250, 0.7);
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .student-image-dropzone.is-over {
+            border-color: var(--crest-gold);
+            background: rgba(234, 179, 8, 0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.18);
+        }
+
+        .student-image-dropzone img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 130px;
+            max-height: 130px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 25px rgba(14, 116, 144, 0.18);
+        }
+
+        .student-drop-instructions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 18px;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .student-drop-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--crest-blue-light);
+        }
+
+        .student-data-editor-panel {
+            position: relative;
+            z-index: 12;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(96, 165, 250, 0.35);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: 0 20px 45px rgba(2, 8, 23, 0.28);
+        }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -2579,6 +2726,7 @@
                                 <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px; min-width: 0;">
                                 <button type="button" onclick="loadStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Search</button>
                                 <button type="button" onclick="openStudentDataEditor()" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Add</button>
+                                <button type="button" onclick="saveAllStudentDataEdits()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save All</button>
                                 <button type="button" onclick="exportStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Export</button>
                                 <label class="bulk-import-label" style="display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 50px; background: var(--grad-red); color: #FFFFFF; cursor: pointer; font-weight: 800; text-transform: none; letter-spacing: 0;">
                                     Bulk Import CSV
@@ -2589,15 +2737,27 @@
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
                             CSV columns: <strong>Student ID, Full Name, Class, Picture Data</strong>. For the picture column, just type the image's file name (e.g. <code>john-doe.jpg</code>) &mdash; the photo itself must already be saved in the server's <code>public/stud-data</code> folder. Full URLs also work if you have one.
                         </p>
-                        <div id="studentDataEditor" style="display: none; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">
+                        <div id="studentDataEditor" class="student-data-editor-panel" style="display: none; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                                <h4 style="margin: 0; color: var(--text-light); font-weight: 800;">Student Photo Editor</h4>
+                                <span style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Edit mode</span>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group"><label for="studentDataFullName">Full Name</label><input id="studentDataFullName" type="text" required></div>
                                 <div class="form-group"><label for="studentDataId">Student ID</label><input id="studentDataId" type="text" required></div>
                                 <div class="form-group"><label for="studentDataClass">Class</label><input id="studentDataClass" type="text" placeholder="e.g. JSS1" required></div>
                                 <div class="form-group"><label for="studentDataPicture">Picture</label><input id="studentDataPicture" type="file" accept="image/*" onchange="previewStudentDataPicture(event)"></div>
                             </div>
-                            <img id="studentDataPicturePreview" alt="Student preview" style="display: none; width: 72px; height: 72px; border-radius: 12px; object-fit: cover; margin-bottom: 12px;">
-                            <div style="display: flex; gap: 8px;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
+
+                            <div id="studentPictureDropZone" class="student-image-dropzone" tabindex="0" aria-label="Drag and drop a student photo or click to choose one">
+                                <div id="studentPictureDropContent" class="student-drop-instructions">
+                                    <div class="student-drop-icon">📷</div>
+                                    <div>Drag & drop a picture here<br>or tap to choose one</div>
+                                </div>
+                                <img id="studentDataPicturePreview" alt="Student preview" style="display: none;">
+                            </div>
+
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
                         </div>
                         <div class="table-responsive"><table class="enquiry-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
                     </div>
@@ -3246,6 +3406,7 @@
         let studentDataPassword = localStorage.getItem('dgc_student_data_password') || '';
         let editingStudentDataId = '';
         let editingStudentDataPicture = '';
+        let pendingStudentDataEdits = new Map();
 
         function compressStudentImageDataUrl(dataUrl, maxDimension = 900, quality = 0.68) {
             return new Promise((resolve) => {
@@ -3378,9 +3539,24 @@
                 tbody.innerHTML = `<tr><td colspan="5">${escapeHtml(data.message || 'Could not load students.')}</td></tr>`;
                 return;
             }
-            tbody.innerHTML = data.students.length ? data.students.map(student => `
-                <tr>
-                    <td>${student.has_picture ? `<img src="${escapeHtml(student.picture || '')}" alt="" style="width: 42px; height: 42px; border-radius: 8px; object-fit: cover;" onerror="this.replaceWith(document.createTextNode('Missing file'))">` : 'No picture'}</td>
+
+            tbody.innerHTML = data.students.length ? data.students.map(student => {
+                const studentId = String(student.student_id || '').trim();
+                const safePicture = String(student.picture || '').trim();
+                const fullName = String(student.full_name || '').trim();
+                const studentClass = String(student.student_class || '').trim();
+                return `
+                <tr data-student-id="${escapeHtml(studentId)}" data-full-name="${escapeHtml(fullName)}" data-student-class="${escapeHtml(studentClass)}">
+                    <td>
+                        <div class="student-row-photo-editor">
+                            <img class="student-inline-image" src="${escapeHtml(safePicture || '')}" alt="" onerror="this.style.display='none'; this.parentElement.querySelector('.student-row-edit-toggle').style.top='50%'; this.parentElement.querySelector('.student-row-edit-toggle').style.transform='translate(-50%, -50%)';" style="${safePicture ? '' : 'display:none;'}">
+                            <button type="button" class="student-row-edit-toggle" data-student-id="${escapeHtml(studentId)}">Edit mode</button>
+                            <div class="student-inline-dropzone hidden" data-student-id="${escapeHtml(studentId)}">
+                                <input type="file" accept="image/*" data-student-id="${escapeHtml(studentId)}">
+                                <span>Drop photo<br>or choose</span>
+                            </div>
+                        </div>
+                    </td>
                     <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td>
                     <td>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -3388,7 +3564,133 @@
                             <button type="button" class="btn btn-danger btn-sm" onclick="deleteStudentData('${encodeURIComponent(student.student_id)}')">Delete</button>
                         </div>
                     </td>
-                </tr>`).join('') : '<tr><td colspan="5">No student records found.</td></tr>';
+                </tr>`;
+            }).join('') : '<tr><td colspan="5">No student records found.</td></tr>';
+
+            bindStudentRowEditHandlers();
+        }
+
+        function bindStudentRowEditHandlers() {
+            const tbody = document.getElementById('studentDataListBody');
+            if (!tbody) return;
+
+            tbody.querySelectorAll('.student-row-edit-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const studentId = button.dataset.studentId;
+                    const dropZone = tbody.querySelector(`.student-inline-dropzone[data-student-id="${studentId}"]`);
+                    if (!dropZone) return;
+                    const willShow = dropZone.classList.contains('hidden');
+                    dropZone.classList.toggle('hidden', !willShow);
+                    button.textContent = willShow ? 'Close' : 'Edit mode';
+                });
+            });
+
+            tbody.querySelectorAll('.student-inline-dropzone').forEach(dropZone => {
+                const studentId = dropZone.dataset.studentId;
+                const input = dropZone.querySelector('input');
+
+                if (!input) return;
+
+                input.addEventListener('change', (event) => {
+                    const file = event.target.files && event.target.files[0];
+                    if (file) handleInlineStudentPictureFile(studentId, file);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        dropZone.classList.add('is-over');
+                    });
+                });
+
+                ['dragleave', 'drop', 'dragend'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        dropZone.classList.remove('is-over');
+                    });
+                });
+
+                dropZone.addEventListener('drop', (event) => {
+                    const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+                    if (file) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        handleInlineStudentPictureFile(studentId, file);
+                    }
+                });
+            });
+        }
+
+        function handleInlineStudentPictureFile(studentId, file) {
+            if (!file || !file.type || !file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const compressed = await compressStudentImageDataUrl(reader.result, 900, 0.68);
+                pendingStudentDataEdits.set(String(studentId).trim(), {
+                    studentId: String(studentId).trim(),
+                    picture: compressed
+                });
+
+                const row = document.querySelector(`tr[data-student-id="${CSS.escape(String(studentId).trim())}"]`);
+                const image = row ? row.querySelector('.student-inline-image') : null;
+                if (image) {
+                    image.src = compressed;
+                    image.style.display = 'block';
+                }
+
+                const dropZone = row ? row.querySelector('.student-inline-dropzone') : null;
+                const toggle = row ? row.querySelector('.student-row-edit-toggle') : null;
+                if (dropZone) dropZone.classList.add('hidden');
+                if (toggle) toggle.textContent = 'Edit mode';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveAllStudentDataEdits() {
+            if (!studentDataPassword) return alert('Please unlock student data first.');
+            if (!pendingStudentDataEdits.size) return alert('No student picture changes to save.');
+
+            const rows = Array.from(pendingStudentDataEdits.values());
+            const results = [];
+
+            for (const edit of rows) {
+                const row = document.querySelector(`tr[data-student-id="${CSS.escape(String(edit.studentId).trim())}"]`);
+                const studentId = String(edit.studentId || '').trim();
+                const fullName = row ? row.dataset.fullName || '' : '';
+                const studentClass = row ? row.dataset.studentClass || '' : '';
+                const payload = {
+                    password: studentDataPassword,
+                    originalStudentId: studentId,
+                    fullName,
+                    studentId,
+                    studentClass,
+                    picture: edit.picture || '',
+                    show_result: true
+                };
+
+                const response = await fetch('/api/admin/student-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json().catch(() => ({}));
+                results.push({ studentId, success: response.ok && data.success, message: data.message || 'Saved.' });
+            }
+
+            const failed = results.filter(result => !result.success);
+            pendingStudentDataEdits.clear();
+            await syncSharedStudentRoster();
+            loadStudentData();
+
+            if (failed.length) {
+                alert('Some changes could not be saved. Please review the student data manager and try again.');
+            } else {
+                alert('All student picture edits were saved successfully.');
+            }
         }
 
         function openStudentDataEditor(student = null) {
@@ -3412,19 +3714,86 @@
             if (data.success) openStudentDataEditor(data.student);
         }
 
-        function previewStudentDataPicture(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function handleStudentPictureFile(file) {
+            if (!file || !file.type || !file.type.startsWith('image/')) return;
 
             const reader = new FileReader();
             reader.onload = async () => {
                 editingStudentDataPicture = await compressStudentImageDataUrl(reader.result, 900, 0.68);
                 const preview = document.getElementById('studentDataPicturePreview');
+                const dropText = document.getElementById('studentPictureDropContent');
                 preview.src = editingStudentDataPicture;
                 preview.style.display = 'block';
+                if (dropText) dropText.style.display = 'none';
             };
             reader.readAsDataURL(file);
         }
+
+        function previewStudentDataPicture(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            handleStudentPictureFile(file);
+        }
+
+        function bindStudentPictureDropzone() {
+            const dropZone = document.getElementById('studentPictureDropZone');
+            const fileInput = document.getElementById('studentDataPicture');
+            if (!dropZone || !fileInput) return;
+
+            const openPicker = () => fileInput.click();
+            dropZone.addEventListener('click', openPicker);
+            dropZone.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openPicker();
+                }
+            });
+
+            ['dragenter', 'dragover'].forEach((eventName) => {
+                dropZone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropZone.classList.add('is-over');
+                });
+            });
+
+            ['dragleave', 'dragend'].forEach((eventName) => {
+                dropZone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropZone.classList.remove('is-over');
+                });
+            });
+
+            dropZone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropZone.classList.remove('is-over');
+                const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+                if (file) {
+                    fileInput.files = event.dataTransfer.files;
+                    handleStudentPictureFile(file);
+                }
+            });
+        }
+
+        function openStudentDataEditor(student = null) {
+            editingStudentDataId = student ? student.student_id : '';
+            editingStudentDataPicture = student ? (student.picture || '') : '';
+            document.getElementById('studentDataFullName').value = student?.full_name || '';
+            document.getElementById('studentDataId').value = student?.student_id || '';
+            document.getElementById('studentDataClass').value = student?.student_class || '';
+            document.getElementById('studentDataPicture').value = '';
+            const preview = document.getElementById('studentDataPicturePreview');
+            const dropText = document.getElementById('studentPictureDropContent');
+            preview.src = editingStudentDataPicture || '';
+            preview.style.display = editingStudentDataPicture ? 'block' : 'none';
+            if (dropText) dropText.style.display = editingStudentDataPicture ? 'none' : 'flex';
+            document.getElementById('studentDataEditor').style.display = 'block';
+            document.getElementById('studentDataEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeStudentDataEditor() { document.getElementById('studentDataEditor').style.display = 'none'; }
 
         async function saveStudentData() {
             const payload = { 
