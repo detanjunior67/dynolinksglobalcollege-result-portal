@@ -622,6 +622,13 @@ CbtResultSchema.index({ createdAt: -1 });
 
 const CbtResult = mongoose.model('CbtResult', CbtResultSchema);
 
+const CbtConfigSchema = new mongoose.Schema({
+    key: { type: String, unique: true, default: 'default' },
+    classConfigs: { type: mongoose.Schema.Types.Mixed, required: true }
+}, { timestamps: true });
+
+const CbtConfig = mongoose.model('CbtConfig', CbtConfigSchema);
+
 // High-speed In-Memory Caches
 const questionCache = new Map();
 const studentLookupCache = new Map();
@@ -895,7 +902,7 @@ app.get('/api/student-data/:studentId', async (req, res) => {
             return res.json(cached.data);
         }
 
-        const student = await Student.findOne(buildStudentQuery(rawId), 'student_id full_name student_class picture').lean();
+        const student = await Student.findOne(buildStudentQuery(rawId), 'student_id full_name student_class department picture').lean();
         if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
         const responseData = { success: true, student: publicStudent(student) };
         studentLookupCache.set(cleanId, { time: Date.now(), data: responseData });
@@ -1597,6 +1604,35 @@ app.get('/api/questions', async (req, res) => {
     }
 });
 
+app.get('/api/cbt-config', async (req, res) => {
+    try {
+        const config = await CbtConfig.findOne({ key: 'default' }).lean();
+        if (!config) return res.status(404).json({ error: 'CBT configuration has not been saved yet.' });
+        res.json({ classConfigs: config.classConfigs });
+    } catch (err) {
+        console.error('Error fetching CBT configuration:', err);
+        res.status(500).json({ error: 'Failed to fetch CBT configuration' });
+    }
+});
+
+app.put('/api/cbt-config', async (req, res) => {
+    try {
+        const { classConfigs } = req.body || {};
+        if (!classConfigs || typeof classConfigs !== 'object' || Array.isArray(classConfigs)) {
+            return res.status(400).json({ error: 'A valid class configuration object is required.' });
+        }
+        const config = await CbtConfig.findOneAndUpdate(
+            { key: 'default' },
+            { key: 'default', classConfigs },
+            { new: true, upsert: true, runValidators: true }
+        ).lean();
+        res.json({ classConfigs: config.classConfigs });
+    } catch (err) {
+        console.error('Error saving CBT configuration:', err);
+        res.status(400).json({ error: 'Failed to save CBT configuration' });
+    }
+});
+
 // POST a new CBT question
 app.post('/api/questions', async (req, res) => {
     try {
@@ -2263,7 +2299,9 @@ app.post('/api/questions/bulk', async (req, res) => {
             customTime: question.customTime,
             hint: question.hint || ''
         }));
+        await Question.deleteMany({ classKey, subjectId });
         const saved = await Question.insertMany(documents, { ordered: true });
+        invalidateQuestionCache();
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error bulk saving questions:', err);

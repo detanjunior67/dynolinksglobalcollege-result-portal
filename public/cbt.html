@@ -1391,6 +1391,24 @@
             return response.json();
         }
 
+        async function apiFetchCbtConfig() {
+            const response = await fetch(`${API_BASE_URL}/cbt-config`);
+            if (response.status === 404) return null;
+            if (!response.ok) throw new Error('MongoDB could not load CBT configuration.');
+            const data = await response.json();
+            return data.classConfigs || null;
+        }
+
+        async function apiSaveCbtConfig(config) {
+            const response = await fetch(`${API_BASE_URL}/cbt-config`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ classConfigs: config })
+            });
+            if (!response.ok) throw new Error('MongoDB could not save CBT configuration.');
+            return response.json();
+        }
+
         // ========================================================
         // DEFAULT COLLEGE CURRICULUM & QUESTION BANK STATE (6 CLASSES)
         // ========================================================
@@ -1591,7 +1609,16 @@
         let totalExamTimer = 0; // blended mode seconds
         let examTimerInterval = null;
 
-        window.onload = function () {
+        window.onload = async function () {
+            try {
+                const sharedClassConfigs = await apiFetchCbtConfig();
+                if (sharedClassConfigs) {
+                    classConfigs = sharedClassConfigs;
+                    savePersistentData();
+                }
+            } catch (err) {
+                console.warn('Shared CBT configuration unavailable; using local configuration:', err);
+            }
             savePersistentData();
             populateStudentClassDropdown();
             populateAdminClassDropdown();
@@ -3076,6 +3103,7 @@
             questionBank[key] = { 'eng': [] };
 
             savePersistentData();
+            void apiSaveCbtConfig(classConfigs).catch(err => console.warn('Shared CBT configuration save failed:', err));
             closeModal();
             populateStudentClassDropdown();
             populateAdminClassDropdown();
@@ -3084,7 +3112,7 @@
             showToast(`Created ${label}!`);
         }
 
-        function saveClassConfigState() {
+        async function saveClassConfigState() {
             const classKey = document.getElementById('adminActiveClassSelect').value;
             if (classConfigs[classKey]) {
                 const selectedDepartment = normalizeDepartmentName(document.getElementById('adminDepartmentSelect')?.value || classConfigs[classKey].department || '');
@@ -3097,6 +3125,13 @@
                     delete classConfigs[classKey].department;
                 }
                 savePersistentData();
+                try {
+                    await apiSaveCbtConfig(classConfigs);
+                } catch (err) {
+                    console.warn('Shared CBT configuration save failed:', err);
+                    showToast('Saved on this device, but the server could not save the class configuration.', 'error');
+                    return;
+                }
                 populateStudentClassDropdown();
                 showToast('Class configuration saved successfully!');
                 loadAdminClassConfig();
@@ -3107,6 +3142,7 @@
             showCustomConfirm('Reset Configurations?', 'This will revert class settings to factory defaults.', () => {
                 classConfigs = JSON.parse(JSON.stringify(defaultClassConfigurations));
                 savePersistentData();
+                void apiSaveCbtConfig(classConfigs).catch(err => console.warn('Shared CBT configuration save failed:', err));
                 populateStudentClassDropdown();
                 loadAdminClassConfig();
                 showToast('Reverted to defaults.');
