@@ -966,6 +966,46 @@
             box-sizing: border-box;
         }
 
+        #adminModal.student-data-fullscreen {
+            padding: 0;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        #adminModal.student-data-fullscreen .modal-card {
+            width: 100vw !important;
+            max-width: none !important;
+            height: 100vh;
+            max-height: none !important;
+            min-height: 100vh;
+            margin: 0;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        #adminModal.student-data-fullscreen #enquiriesDashboard {
+            min-height: 100vh;
+        }
+
+        #adminModal.student-data-fullscreen #adminStudentDataView.active {
+            position: absolute;
+            top: 56px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            padding: 24px clamp(20px, 3vw, 40px) 40px;
+            overflow-y: auto;
+            background: var(--card-dark);
+        }
+
+        #adminModal.student-data-fullscreen #studentDataManager {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            border-radius: 0;
+        }
+
         .pin-access-card {
             max-width: 440px;
             margin-top: 12px;
@@ -1356,13 +1396,16 @@
         /* Tab Navigation Styles */
         .tab-navigation {
             display: flex;
+            justify-content: center;
             gap: 12px;
             margin-bottom: 24px;
             border-bottom: 1px solid var(--border-dark);
             padding-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
+            flex: 0 0 auto;
             background-color: var(--bg-body);
             color: var(--text-muted);
             border: 1px solid var(--border-dark);
@@ -1461,6 +1504,7 @@
         .student-data-manager {
             max-width: 100%;
             min-height: min(72vh, 720px);
+            margin-top: 24px;
             display: flex;
             flex-direction: column;
         }
@@ -1505,6 +1549,22 @@
             gap: 8px;
             flex-wrap: wrap;
             justify-content: flex-end;
+        }
+
+        .student-data-action-cell {
+            min-width: 170px;
+        }
+
+        .student-data-row-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .student-data-row-actions button {
+            margin: 0;
+            white-space: nowrap;
         }
 
         .bulk-import-label {
@@ -1663,6 +1723,12 @@
             overflow-x: auto;
             margin-top: 16px;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            scrollbar-width: thin;
+        }
+
+        .table-responsive .enquiry-table {
+            min-width: 680px;
         }
 
         @media (max-width: 900px) {
@@ -2768,7 +2834,7 @@
 
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
                         </div>
-                        <div class="table-responsive"><table class="enquiry-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
+                        <div class="table-responsive"><table class="enquiry-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Department</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
                     </div>
                 </div>
 
@@ -3424,7 +3490,7 @@
         function verifyAdmin() {
             const pass = document.getElementById('adminPass').value;
             const err = document.getElementById('passErr');
-            if (pass === 'adminonlyDGC') {
+            if (pass === 'accessdata') {
                 err.style.display = 'none';
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('enquiriesDashboard').style.display = 'block';
@@ -3513,6 +3579,7 @@
         }
 
         function switchAdminTab(tabName) {
+            const adminModal = document.getElementById('adminModal');
             const enquiryView = document.getElementById('adminEnquiryView');
             const cbtView = document.getElementById('adminCbtView');
             const studentDataView = document.getElementById('adminStudentDataView');
@@ -3523,6 +3590,7 @@
 
             [enquiryView, cbtView, studentDataView].forEach(view => view.classList.remove('active'));
             [btnEnquiry, btnCbt, btnStudentData].forEach(button => button.classList.remove('active'));
+            adminModal.classList.toggle('student-data-fullscreen', tabName === 'studentData');
             if (tabName === 'enquiry') {
                 enquiryView.classList.add('active');
                 btnEnquiry.classList.add('active');
@@ -3591,8 +3659,8 @@
                         </div>
                     </td>
                     <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td><td>${escapeHtml(studentDepartment)}</td>
-                    <td>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <td class="student-data-action-cell">
+                        <div class="student-data-row-actions">
                             <button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button>
                             <button type="button" class="btn btn-danger btn-sm" onclick="deleteStudentData('${encodeURIComponent(student.student_id)}')">Delete</button>
                         </div>
