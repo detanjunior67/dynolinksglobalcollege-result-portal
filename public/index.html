@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="mini.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0284C7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/mini.png">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
@@ -1820,6 +1825,39 @@
             color: var(--crest-gold);
         }
 
+        .install-app-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 0 0 20px;
+        }
+
+        .install-app-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 22px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 12px 25px rgba(2, 132, 199, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .install-app-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.03);
+            box-shadow: 0 16px 30px rgba(2, 132, 199, 0.35);
+        }
+
+        .install-app-btn[hidden] {
+            display: none;
+        }
+
         .footer-bottom {
             text-align: center;
             padding-top: 28px;
@@ -2768,6 +2806,11 @@
                 <p><strong>Email:</strong> <a href="mailto:infodynolinks@gmail.com">infodynolinks@gmail.com</a></p>
             </div>
         </div>
+
+        <div class="install-app-wrap">
+            <button id="installAppBtn" class="install-app-btn" type="button" hidden>Install App</button>
+        </div>
+
         <div class="footer-bottom">
             &copy; <span id="year"></span> Dynolinks Global College. All Rights Reserved.
         </div>
@@ -2776,6 +2819,41 @@
     <script>
         if (window.lucide) {
             lucide.createIcons();
+        }
+
+        const installAppBtn = document.getElementById('installAppBtn');
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            if (installAppBtn) {
+                installAppBtn.hidden = false;
+            }
+        });
+
+        if (installAppBtn) {
+            installAppBtn.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) {
+                    window.alert('Use your browser menu to install this app on your phone.');
+                    return;
+                }
+
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installAppBtn.hidden = true;
+                }
+                deferredInstallPrompt = null;
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch((error) => {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
         }
 
         const whatsappFloat = document.getElementById('whatsappFloat');

@@ -1,0 +1,17 @@
+{
+  "name": "Dynolinks Global College",
+  "short_name": "Dynolinks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E172A",
+  "theme_color": "#0284C7",
+  "description": "Dynolinks Global College student portal and result access",
+  "icons": [
+    {
+      "src": "/mini.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
