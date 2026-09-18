@@ -1551,6 +1551,76 @@
             justify-content: flex-end;
         }
 
+        .student-data-actions input[type="search"] {
+            height: 44px !important;
+            width: 230px !important;
+            padding: 0 16px !important;
+            border: 1px solid rgba(125, 211, 252, 0.22) !important;
+            border-radius: 12px !important;
+            background: rgba(15, 23, 42, 0.72) !important;
+            color: var(--text-light) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .student-data-actions input[type="search"]:focus {
+            border-color: var(--crest-blue-light) !important;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14) !important;
+        }
+
+        .student-data-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 17px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: #fff;
+            font: inherit;
+            font-size: 0.84rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .student-data-action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        .student-data-action-btn:active {
+            transform: translateY(0);
+        }
+
+        .student-data-action-btn.search {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            box-shadow: 0 8px 18px rgba(14, 165, 233, 0.25);
+        }
+
+        .student-data-action-btn.add {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            box-shadow: 0 8px 18px rgba(245, 158, 11, 0.22);
+        }
+
+        .student-data-action-btn.save {
+            background: linear-gradient(135deg, #be123c, #f43f5e);
+            box-shadow: 0 8px 18px rgba(244, 63, 94, 0.22);
+        }
+
+        .student-data-action-btn.export {
+            background: linear-gradient(135deg, #0891b2, #06b6d4);
+            box-shadow: 0 8px 18px rgba(6, 182, 212, 0.22);
+        }
+
+        .student-data-action-btn.import {
+            min-height: 42px;
+            border-color: rgba(244, 114, 182, 0.55);
+            background: rgba(190, 24, 93, 0.16);
+            color: #fbcfe8;
+        }
+
         .student-data-action-cell {
             min-width: 170px;
         }
@@ -1729,6 +1799,54 @@
 
         .table-responsive .enquiry-table {
             min-width: 680px;
+        }
+
+        .cbt-table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            scrollbar-width: thin;
+        }
+
+        .cbt-table-responsive .enquiry-table {
+            min-width: 760px;
+        }
+
+        .cbt-table-responsive .enquiry-table th:first-child,
+        .cbt-table-responsive .enquiry-table td:first-child {
+            width: 230px;
+            min-width: 230px;
+        }
+
+        .pin-code-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .pin-code-value {
+            letter-spacing: 0.12em;
+            white-space: nowrap;
+        }
+
+        .pin-copy-btn {
+            border: 1px solid rgba(125, 211, 252, 0.35);
+            border-radius: 8px;
+            padding: 6px 9px;
+            background: rgba(14, 165, 233, 0.14);
+            color: #bae6fd;
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .pin-copy-btn:hover {
+            background: rgba(14, 165, 233, 0.28);
+            color: #fff;
         }
 
         @media (max-width: 900px) {
@@ -2714,10 +2832,6 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 id="admin-dashboard-title" style="color: var(--text-light); font-weight: 800;">Received Enquiries / Admission Forms</h2>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="exportEnquiriesToCSV()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-blue);">📥 Export CSV</button>
-                        <button onclick="fetchEnquiries()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow-red);">Refresh Data</button>
-                    </div>
                 </div>
 
                 <!-- TAB 1: Enquiry Submitted Table -->
@@ -2754,7 +2868,7 @@
                             <button type="button" onclick="createAdmissionPin(false)" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Generate PIN</button>
                             <button type="button" onclick="loadAdmissionPins()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Refresh</button>
                         </div>
-                        <div class="table-responsive">
+                        <div class="table-responsive cbt-table-responsive">
                             <table class="enquiry-table">
                                 <thead>
                                     <tr>
@@ -2790,11 +2904,11 @@
                             <h3 style="color: var(--text-light); margin: 0;">Student Records</h3>
                             <div class="student-data-actions">
                                 <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px; min-width: 0;">
-                                <button type="button" onclick="loadStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Search</button>
-                                <button type="button" onclick="openStudentDataEditor()" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Add</button>
-                                <button type="button" onclick="saveAllStudentDataEdits()" style="background: var(--grad-red); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save All</button>
-                                <button type="button" onclick="exportStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Export</button>
-                                <label class="bulk-import-label" style="display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 50px; background: var(--grad-red); color: #FFFFFF; cursor: pointer; font-weight: 800; text-transform: none; letter-spacing: 0;">
+                                <button type="button" class="student-data-action-btn search" onclick="loadStudentData()">Search</button>
+                                <button type="button" class="student-data-action-btn add" onclick="openStudentDataEditor()">Add</button>
+                                <button type="button" class="student-data-action-btn save" onclick="saveAllStudentDataEdits()">Save All</button>
+                                <button type="button" class="student-data-action-btn export" onclick="exportStudentData()">Export</button>
+                                <label class="bulk-import-label student-data-action-btn import">
                                     Bulk Import CSV
                                     <input type="file" id="studentDataBulkFile" accept=".csv,text/csv" onchange="importStudentDataCsv(event)" style="display: none;">
                                 </label>
@@ -3598,7 +3712,7 @@
             } else if (tabName === 'cbt') {
                 cbtView.classList.add('active');
                 btnCbt.classList.add('active');
-                dashboardTitle.innerText = 'CBT Exam Results';
+                dashboardTitle.innerText = '';
                 loadAdmissionPins();
             } else {
                 studentDataView.classList.add('active');
@@ -4078,7 +4192,12 @@
 
                 tbody.innerHTML = data.pins.map(pin => `
                     <tr>
-                        <td><strong style="letter-spacing: 0.12em;">${escapeHtml(pin.code)}</strong></td>
+                        <td>
+                            <div class="pin-code-wrap">
+                                <strong class="pin-code-value">${escapeHtml(pin.code)}</strong>
+                                <button type="button" class="pin-copy-btn" onclick="copyAdmissionPin('${encodeURIComponent(pin.code)}', this)">Copy</button>
+                            </div>
+                        </td>
                         <td><span class="pin-status pin-status-${pin.status}">${escapeHtml(pin.status)}</span></td>
                         <td>${pin.createdAt ? new Date(pin.createdAt).toLocaleString() : 'N/A'}</td>
                         <td>${pin.usedAt ? new Date(pin.usedAt).toLocaleString() : 'Not used'}</td>
@@ -4086,6 +4205,18 @@
                 `).join('');
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #dc2626;">${escapeHtml(err.message || 'Failed to load PINs.')}</td></tr>`;
+            }
+        }
+
+        async function copyAdmissionPin(encodedCode, button) {
+            const code = decodeURIComponent(encodedCode);
+            try {
+                await navigator.clipboard.writeText(code);
+                const originalText = button.textContent;
+                button.textContent = 'Copied';
+                setTimeout(() => { button.textContent = originalText; }, 1400);
+            } catch (err) {
+                alert('Could not copy the PIN. Please copy it manually.');
             }
         }
 
