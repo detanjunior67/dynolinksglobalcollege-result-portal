@@ -1453,6 +1453,59 @@
             box-sizing: border-box;
         }
 
+        .student-data-manager {
+            max-width: 100%;
+            min-height: min(72vh, 720px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-data-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .enquiry-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            table-layout: fixed;
+        }
+
+        .enquiry-table th,
+        .enquiry-table td {
+            padding: 10px 8px;
+            vertical-align: middle;
+            text-align: left;
+            word-break: break-word;
+        }
+
+        .enquiry-table th:nth-child(1),
+        .enquiry-table td:nth-child(1) {
+            width: 62px;
+        }
+
+        .enquiry-table th:nth-child(5),
+        .enquiry-table td:nth-child(5) {
+            width: 150px;
+        }
+
+        .student-data-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .bulk-import-label {
+            white-space: nowrap;
+        }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -1460,10 +1513,83 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .enquiry-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
+        @media (max-width: 900px) {
+            .student-data-toolbar {
+                align-items: stretch;
+            }
+
+            .student-data-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .student-data-actions > * {
+                flex: 1 1 160px;
+            }
+
+            #studentDataSearch {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .student-data-manager {
+                min-height: 68vh;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .student-data-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .student-data-actions > * {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+            .bulk-import-label {
+                grid-column: 1 / -1;
+            }
+
+            .enquiry-table {
+                min-width: 540px;
+            }
+
+            .enquiry-table th, .enquiry-table td {
+                padding: 8px 6px;
+                font-size: 0.72rem;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .student-data-manager {
+                min-height: min(65vh, 560px);
+            }
+
+            .student-data-toolbar {
+                align-items: stretch;
+            }
+
+            .student-data-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .enquiry-table {
+                min-width: 480px;
+            }
+
+            .enquiry-table th,
+            .enquiry-table td {
+                padding: 7px 5px;
+                font-size: 0.7rem;
+            }
+
+            .student-data-manager img {
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 7px !important;
+            }
         }
 
         .enquiry-table th, .enquiry-table td {
@@ -2408,15 +2534,15 @@
                         <p id="studentDataGateError" style="display: none; color: var(--crest-red-bright); margin-top: 10px; font-weight: 700;"></p>
                     </div>
 
-                    <div id="studentDataManager" class="admin-summary-box" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                            <h3 style="color: var(--text-light);">Student Records</h3>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px;">
-                                <button type="button" onclick="loadStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Search Student</button>
-                                <button type="button" onclick="openStudentDataEditor()" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Add Student</button>
-                                <button type="button" onclick="exportStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Export CSV</button>
-                                <label style="display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 50px; background: var(--grad-red); color: #FFFFFF; cursor: pointer; font-weight: 800; text-transform: none; letter-spacing: 0;">
+                    <div id="studentDataManager" class="admin-summary-box student-data-manager" style="display: none;">
+                        <div class="student-data-toolbar">
+                            <h3 style="color: var(--text-light); margin: 0;">Student Records</h3>
+                            <div class="student-data-actions">
+                                <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px; min-width: 0;">
+                                <button type="button" onclick="loadStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Search</button>
+                                <button type="button" onclick="openStudentDataEditor()" style="background: var(--grad-gold); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Add</button>
+                                <button type="button" onclick="exportStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 800; cursor: pointer;">Export</button>
+                                <label class="bulk-import-label" style="display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 50px; background: var(--grad-red); color: #FFFFFF; cursor: pointer; font-weight: 800; text-transform: none; letter-spacing: 0;">
                                     Bulk Import CSV
                                     <input type="file" id="studentDataBulkFile" accept=".csv,text/csv" onchange="importStudentDataCsv(event)" style="display: none;">
                                 </label>
@@ -3039,9 +3165,81 @@
             }
         }
 
-        let studentDataPassword = '';
+        let studentDataPassword = localStorage.getItem('dgc_student_data_password') || '';
         let editingStudentDataId = '';
         let editingStudentDataPicture = '';
+
+        function compressStudentImageDataUrl(dataUrl, maxDimension = 900, quality = 0.68) {
+            return new Promise((resolve) => {
+                if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+                    resolve(dataUrl || '');
+                    return;
+                }
+
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+                    canvas.width = Math.max(1, Math.round(img.width * scale));
+                    canvas.height = Math.max(1, Math.round(img.height * scale));
+
+                    const context = canvas.getContext('2d');
+                    context.fillStyle = '#ffffff';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            resolve(dataUrl);
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : dataUrl);
+                        reader.readAsDataURL(blob);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        }
+
+        function persistStudentDataPassword(password) {
+            studentDataPassword = password || '';
+            if (password) {
+                localStorage.setItem('dgc_student_data_password', password);
+            } else {
+                localStorage.removeItem('dgc_student_data_password');
+            }
+        }
+
+        async function syncSharedStudentRoster() {
+            if (!studentDataPassword) return;
+            try {
+                const response = await fetch('/api/admin/student-data', {
+                    headers: { 'x-student-data-password': studentDataPassword }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success || !Array.isArray(data.students)) {
+                    throw new Error(data.message || 'Could not load student data.');
+                }
+
+                const roster = data.students.map(student => ({
+                    studentId: String(student.student_id || '').trim().toUpperCase(),
+                    name: String(student.full_name || 'Candidate').trim(),
+                    classKey: String(student.student_class || '').trim(),
+                    picture: String(student.picture || '').trim(),
+                    showResult: student.show_result !== false,
+                    status: 'Authorized'
+                })).filter(item => item.studentId && item.classKey);
+
+                localStorage.setItem('dgc_student_roster', JSON.stringify(roster));
+                localStorage.setItem('dgc_student_roster_synced_at', String(Date.now()));
+                return roster;
+            } catch (err) {
+                console.warn('Shared roster sync failed:', err);
+                return null;
+            }
+        }
 
         function switchAdminTab(tabName) {
             const enquiryView = document.getElementById('adminEnquiryView');
@@ -3081,9 +3279,10 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Access denied.');
-                studentDataPassword = password;
+                persistStudentDataPassword(password);
                 document.getElementById('studentDataGate').style.display = 'none';
                 document.getElementById('studentDataManager').style.display = 'block';
+                await syncSharedStudentRoster();
                 loadStudentData();
             } catch (err) {
                 error.textContent = err.message;
@@ -3138,8 +3337,14 @@
         function previewStudentDataPicture(event) {
             const file = event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = () => { editingStudentDataPicture = reader.result; const preview = document.getElementById('studentDataPicturePreview'); preview.src = reader.result; preview.style.display = 'block'; };
+            reader.onload = async () => {
+                editingStudentDataPicture = await compressStudentImageDataUrl(reader.result, 900, 0.68);
+                const preview = document.getElementById('studentDataPicturePreview');
+                preview.src = editingStudentDataPicture;
+                preview.style.display = 'block';
+            };
             reader.readAsDataURL(file);
         }
 
@@ -3157,6 +3362,7 @@
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');
             closeStudentDataEditor();
+            await syncSharedStudentRoster();
             loadStudentData();
         }
 
@@ -3171,6 +3377,7 @@
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.success) return alert(data.message || 'Could not delete student.');
+            await syncSharedStudentRoster();
             loadStudentData();
         }
 
@@ -3185,7 +3392,28 @@
             const trimmed = String(value || '').trim();
             if (!trimmed) return '';
             if (/^(https?:\/\/|data:|\/)/i.test(trimmed)) return trimmed;
-            return STUDENT_PHOTO_FOLDER + trimmed.replace(/^\.?\/+/, '');
+
+            const cleanFilename = trimmed
+                .replace(/^\.?\/?stud-data\/?/i, '')
+                .replace(/^\.?\/?public\/?/i, '')
+                .replace(/^\.?\/?/, '')
+                .replace(/\\/g, '/');
+
+            if (!cleanFilename) return '';
+            if (/\.(jpg|jpeg|png|webp|gif)$/i.test(cleanFilename)) {
+                return STUDENT_PHOTO_FOLDER + cleanFilename;
+            }
+            return STUDENT_PHOTO_FOLDER + cleanFilename + '.jpg';
+        }
+
+        function deduplicateStudentImportRows(rows) {
+            const deduped = new Map();
+            for (const row of rows) {
+                const studentId = String(row.studentId || '').trim().toUpperCase();
+                if (!studentId) continue;
+                deduped.set(studentId, row);
+            }
+            return Array.from(deduped.values());
         }
 
         function parseStudentDataCsv(text) {
@@ -3238,10 +3466,18 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async () => {
-                const response = await fetch('/api/admin/student-data/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: studentDataPassword, students: parseStudentDataCsv(reader.result) }) });
+                const rows = deduplicateStudentImportRows(parseStudentDataCsv(reader.result));
+                const response = await fetch('/api/admin/student-data/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: studentDataPassword, students: rows })
+                });
                 const data = await response.json().catch(() => ({}));
                 alert(data.success ? `Imported ${data.count} student records.` : (data.message || 'Import failed.'));
-                if (data.success) loadStudentData();
+                if (data.success) {
+                    await syncSharedStudentRoster();
+                    loadStudentData();
+                }
                 event.target.value = '';
             };
             reader.readAsText(file);

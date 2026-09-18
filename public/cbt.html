@@ -1476,6 +1476,18 @@
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
         let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
 
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'dgc_student_roster' || event.key === 'dgc_student_data_password') {
+                const savedRoster = JSON.parse(localStorage.getItem('dgc_student_roster') || 'null');
+                if (Array.isArray(savedRoster) && savedRoster.length) {
+                    studentRoster = savedRoster;
+                    if (typeof renderRosterTable === 'function') renderRosterTable();
+                } else {
+                    void loadStudentRosterFromDatabase();
+                }
+            }
+        });
+
         // Student Exam Session
         let currentCandidate = { name: '', studentId: '', classKey: '' };
         let currentClassConfig = null;
@@ -2082,7 +2094,13 @@
 
             let cAns = 0, cUnans = 0, cMarked = 0;
 
-            qList.forEach((q, idx) => {
+            const orderedPalette = [...qList].map((q, idx) => ({
+                q,
+                idx,
+                number: q.qNumber !== undefined ? Number(q.qNumber) : idx + 1
+            })).sort((a, b) => a.number - b.number);
+
+            orderedPalette.forEach(({ q, idx, number }) => {
                 const key = `${activeSub.id}-${idx}`;
                 const isAns = studentAnswers[key] !== undefined;
                 const isMark = !!markedForReview[key];
@@ -2100,7 +2118,7 @@
 
                 const btn = document.createElement('button');
                 btn.className = `w-9 h-9 rounded-xl text-xs font-bold transition flex items-center justify-center ${bgClass} shadow-sm`;
-                btn.innerText = q.qNumber !== undefined ? q.qNumber : (idx + 1);
+                btn.innerText = number;
                 btn.onclick = () => {
                     activeQuestionIdx = idx;
                     renderQuestion();
@@ -2303,14 +2321,29 @@
                     throw new Error(data.message || 'Student Data Manager unavailable.');
                 }
 
-                studentRoster = data.students.map(student => ({
-                    studentId: String(student.student_id || '').trim().toUpperCase(),
-                    name: String(student.full_name || 'Candidate').trim(),
-                    classKey: normalizeClassKey(student.student_class || '') || String(student.student_class || '').trim(),
-                    status: 'Authorized',
-                    picture: String(student.picture || '').trim(),
-                    showResult: student.show_result !== false
-                })).filter(item => item.studentId && item.classKey);
+                const completedAttemptMap = new Map();
+                (Array.isArray(cbtResults) ? cbtResults : []).forEach(result => {
+                    const studentId = String(result?.studentId || '').trim().toUpperCase();
+                    const classKey = normalizeClassKey(String(result?.classKey || '')) || String(result?.classKey || '').trim();
+                    if (!studentId || !classKey) return;
+                    completedAttemptMap.set(`${studentId}|${classKey}`, 'Completed/Attempted');
+                });
+
+                studentRoster = data.students.map(student => {
+                    const studentId = String(student.student_id || '').trim().toUpperCase();
+                    const classKey = normalizeClassKey(student.student_class || '') || String(student.student_class || '').trim();
+                    const existing = studentRoster.find(item => item.studentId === studentId && item.classKey === classKey);
+                    const status = completedAttemptMap.get(`${studentId}|${classKey}`) || existing?.status || 'Authorized';
+
+                    return {
+                        studentId,
+                        name: String(student.full_name || 'Candidate').trim(),
+                        classKey,
+                        status,
+                        picture: String(student.picture || '').trim(),
+                        showResult: student.show_result !== false
+                    };
+                }).filter(item => item.studentId && item.classKey);
 
                 localStorage.setItem('dgc_student_roster', JSON.stringify(studentRoster));
                 if (document.getElementById('rosterClassFilterSelect')) {

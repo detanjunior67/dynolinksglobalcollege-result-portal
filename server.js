@@ -5,6 +5,7 @@ try {
 } catch (_) {}
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -679,21 +680,75 @@ const publicStudent = (student) => ({
     show_result: student.show_result !== false
 });
 
+const compressStudentDataUrl = async (value = '') => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || !trimmed.startsWith('data:image')) return trimmed;
+
+    try {
+        const matches = trimmed.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+        if (!matches) return trimmed;
+
+        const buffer = Buffer.from(matches[2], 'base64');
+        const compressed = await sharp(buffer)
+            .resize({ width: 900, height: 900, fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 68, mozjpeg: true })
+            .toBuffer();
+
+        return `data:image/jpeg;base64,${compressed.toString('base64')}`;
+    } catch (error) {
+        console.warn('Student picture compression failed:', error.message);
+        return trimmed;
+    }
+};
+
 const normalizeStudentData = (item = {}) => ({
-    student_id: String(item.student_id || item.studentId || '').trim(),
+    student_id: String(item.student_id || item.studentId || '').trim().toUpperCase(),
     full_name: String(item.full_name || item.fullName || '').trim(),
     student_class: String(item.student_class || item.studentClass || item.class || '').trim(),
     picture: String(item.picture || '').trim(),
     show_result: item.show_result !== undefined ? Boolean(item.show_result) : (item.result_visible !== undefined ? Boolean(item.result_visible) : true)
 });
 
+const compressAllStoredStudentPictures = async () => {
+    const students = await Student.find({ picture: { $regex: '^data:image' } }).lean();
+    let updated = 0;
+
+    for (const student of students) {
+        const compressedPicture = await compressStudentDataUrl(student.picture);
+        if (compressedPicture !== student.picture) {
+            await Student.updateOne({ _id: student._id }, { $set: { picture: compressedPicture } });
+            updated += 1;
+        }
+    }
+
+    return { updated, total: students.length };
+};
+
 // Student Data Manager API. The password is required for every write and search request.
 app.post('/api/admin/student-data/login', requireStudentDataPassword, (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/api/admin/student-data/cleanup-pictures', requireStudentDataPassword, async (req, res) => {
+    try {
+        if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, message: 'Database is not connected right now. Please try again.' });
+        }
+
+        const result = await compressAllStoredStudentPictures();
+        res.json({ success: true, updated: result.updated, total: result.total, message: `Compressed ${result.updated} student photo records.` });
+    } catch (err) {
+        console.error('Cleanup student pictures error:', err);
+        res.status(500).json({ success: false, message: 'Could not compress stored student photos.' });
+    }
+});
+
 app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) => {
     try {
+        if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, message: 'Database is not connected right now. Please try again.' });
+        }
+
         const search = String(req.query.search || '').trim();
         const filter = search ? {
             $or: [
@@ -702,18 +757,25 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 { student_class: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
             ]
         } : {};
-        const students = await Student.find(filter, 'student_id full_name student_class picture show_result').sort({ full_name: 1 }).lean();
-        const studentSummaries = students.map(student => ({
-            _id: student._id,
-            student_id: student.student_id,
-            full_name: student.full_name,
-            student_class: student.student_class,
-            has_picture: Boolean(student.picture),
-            picture: student.picture || '',
-            show_result: student.show_result !== false
-        }));
+        const students = await Student.find(filter)
+            .select('student_id full_name student_class picture show_result')
+            .lean();
+
+        const studentSummaries = students
+            .map(student => ({
+                _id: student._id,
+                student_id: student.student_id,
+                full_name: student.full_name,
+                student_class: student.student_class,
+                has_picture: Boolean(student.picture),
+                picture: student.picture || '',
+                show_result: student.show_result !== false
+            }))
+            .sort((a, b) => String(a.full_name || '').localeCompare(String(b.full_name || '')) || String(a.student_id || '').localeCompare(String(b.student_id || '')));
+
         res.json({ success: true, students: studentSummaries });
     } catch (err) {
+        console.error('Load student data error:', err);
         res.status(500).json({ success: false, message: 'Could not load student data.' });
     }
 });
@@ -743,11 +805,19 @@ app.post('/api/admin/student-data', requireStudentDataPassword, async (req, res)
 app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req, res) => {
     try {
         const items = Array.isArray(req.body.students) ? req.body.students : [];
-        const validItems = items.map(normalizeStudentData).filter(item => item.student_id && item.full_name && item.student_class);
+        const deduped = new Map();
+        for (const item of items) {
+            const student = normalizeStudentData(item);
+            if (!student.student_id || !student.full_name || !student.student_class) continue;
+            deduped.set(student.student_id, student);
+        }
+
+        const validItems = Array.from(deduped.values());
         if (!validItems.length) return res.status(400).json({ success: false, message: 'No valid student rows were supplied.' });
+
         for (const student of validItems) {
             await Student.findOneAndUpdate(
-                buildStudentQuery(student.student_id),
+                { student_id: student.student_id },
                 {
                     $set: {
                         ...student,
@@ -758,6 +828,20 @@ app.post('/api/admin/student-data/bulk', requireStudentDataPassword, async (req,
                 { upsert: true, new: true, runValidators: true }
             );
         }
+
+        const duplicateGroups = await Student.aggregate([
+            { $group: { _id: '$student_id', ids: { $push: '$_id' }, count: { $sum: 1 } } },
+            { $match: { count: { $gt: 1 } } }
+        ]);
+
+        for (const group of duplicateGroups) {
+            const keepId = group.ids[group.ids.length - 1];
+            const removeIds = group.ids.filter(id => id.toString() !== keepId.toString());
+            if (removeIds.length) {
+                await Student.deleteMany({ _id: { $in: removeIds } });
+            }
+        }
+
         res.json({ success: true, count: validItems.length });
     } catch (err) {
         console.error('Bulk import student data error:', err.message);

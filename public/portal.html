@@ -778,6 +778,18 @@
                         <button class="btn btn-danger btn-sm" onclick="logoutAdmin()">Logout Panel</button>
                     </div>
 
+                    <div class="admin-summary-box" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                            <h4 style="margin: 0; color: var(--text-light);">Student Data Sync</h4>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="syncSharedStudentRoster()">Refresh Shared Roster</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <input type="password" id="portalStudentDataPassword" placeholder="Student data password" value="" style="height: 38px; min-width: 200px;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="savePortalStudentDataPassword()">Save Password</button>
+                        </div>
+                        <div id="portalRosterSyncStatus" style="margin-top: 10px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Last synced: never</div>
+                    </div>
+
                     <div class="admin-summary-box">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
@@ -1065,6 +1077,68 @@
         };
 
         let isEditingMode = false;
+        let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
+
+        function persistStudentDataPassword(password) {
+            studentDataManagerPassword = password || 'studata';
+            if (password) {
+                localStorage.setItem('dgc_student_data_password', password);
+            } else {
+                localStorage.removeItem('dgc_student_data_password');
+            }
+            const portalInput = document.getElementById('portalStudentDataPassword');
+            if (portalInput) portalInput.value = password || '';
+        }
+
+        function updatePortalRosterSyncStatus(text, isSuccess = true) {
+            const status = document.getElementById('portalRosterSyncStatus');
+            if (!status) return;
+            status.textContent = text;
+            status.style.color = isSuccess ? 'var(--gold-accent)' : '#fca5a5';
+        }
+
+        async function syncSharedStudentRoster() {
+            const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
+            try {
+                const response = await fetch('/api/admin/student-data', {
+                    headers: { 'x-student-data-password': password }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success || !Array.isArray(data.students)) {
+                    throw new Error(data.message || 'Could not load student data.');
+                }
+
+                const roster = data.students.map(student => ({
+                    studentId: String(student.student_id || '').trim().toUpperCase(),
+                    name: String(student.full_name || 'Candidate').trim(),
+                    classKey: String(student.student_class || '').trim(),
+                    picture: String(student.picture || '').trim(),
+                    showResult: student.show_result !== false,
+                    status: 'Authorized'
+                })).filter(item => item.studentId && item.classKey);
+
+                localStorage.setItem('dgc_student_roster', JSON.stringify(roster));
+                const syncedAt = new Date();
+                localStorage.setItem('dgc_student_roster_synced_at', syncedAt.toISOString());
+                updatePortalRosterSyncStatus(`Last synced: ${syncedAt.toLocaleString()}`);
+                return roster;
+            } catch (err) {
+                console.warn('Portal student roster sync failed:', err);
+                const lastSync = localStorage.getItem('dgc_student_roster_synced_at');
+                updatePortalRosterSyncStatus(lastSync ? `Last synced: ${new Date(lastSync).toLocaleString()} (refresh failed)` : 'Last synced: refresh failed', false);
+                return null;
+            }
+        }
+
+        function savePortalStudentDataPassword() {
+            const password = document.getElementById('portalStudentDataPassword').value.trim();
+            persistStudentDataPassword(password);
+            if (password) {
+                syncSharedStudentRoster();
+            } else {
+                updatePortalRosterSyncStatus('Last synced: password cleared', false);
+            }
+        }
 
         function toggleBulkUploadSection() {
             const section = document.getElementById('bulkUploadSection');
@@ -1424,7 +1498,12 @@
                 if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
                 document.getElementById('adminAuthForm').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
+                persistStudentDataPassword(localStorage.getItem('dgc_student_data_password') || 'studata');
+                if (document.getElementById('portalStudentDataPassword')) {
+                    document.getElementById('portalStudentDataPassword').value = studentDataManagerPassword;
+                }
                 build20Boxes();
+                await syncSharedStudentRoster();
                 fetchAdminStudentList();
                 if (data.emailSent === false) alert('Logged in, but the admin login notification could not be sent.');
             } catch (err) {
