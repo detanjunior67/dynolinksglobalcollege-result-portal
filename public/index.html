@@ -3010,7 +3010,24 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch((error) => {
+                navigator.serviceWorker.register(`/sw.js?cache=${Date.now()}`).then((registration) => {
+                    registration.addEventListener('updatefound', () => {
+                        const installingWorker = registration.installing;
+                        if (!installingWorker) return;
+
+                        installingWorker.addEventListener('statechange', () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                if (confirm('A new version is ready. Refresh now to update the app?')) {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+
+                    if (registration.waiting) {
+                        window.location.reload();
+                    }
+                }).catch((error) => {
                     console.warn('Service worker registration failed:', error);
                 });
             });
