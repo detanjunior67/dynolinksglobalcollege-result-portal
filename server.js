@@ -509,8 +509,10 @@ const StudentSchema = new mongoose.Schema({
     full_name: { type: String, required: true },
     picture: { type: String, default: '' },
     show_result: { type: Boolean, default: true },
+    status: { type: String, enum: ['Authorized', 'Suspended', 'Completed/Attempted'], default: 'Authorized' },
     email: { type: String, default: '' },
     student_class: { type: String, required: true },
+    department: { type: String, default: '' },
     session: { type: String, default: '' },
     term: { type: String, default: '' },
     pin_code: { type: String, default: '' },
@@ -676,8 +678,10 @@ const publicStudent = (student) => ({
     student_id: student.student_id,
     full_name: student.full_name,
     student_class: student.student_class,
+    department: student.department || '',
     picture: student.picture || '',
-    show_result: student.show_result !== false
+    show_result: student.show_result !== false,
+    status: student.status || 'Authorized'
 });
 
 const compressStudentDataUrl = async (value = '') => {
@@ -721,10 +725,21 @@ const normalizeStudentPictureValue = (value = '') => {
     return `/stud-data/${hasExtension ? normalizedName : `${normalizedName}.jpg`}`;
 };
 
+const normalizeStudentDepartmentValue = (value = '') => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return '';
+    const normalized = trimmed.toLowerCase();
+    if (normalized === 'science' || normalized === 'sci') return 'Science';
+    if (normalized === 'art' || normalized === 'arts') return 'Arts';
+    if (normalized === 'commercial' || normalized === 'comm') return 'Commercial';
+    return trimmed;
+};
+
 const normalizeStudentData = (item = {}) => ({
     student_id: String(item.student_id || item.studentId || '').trim().toUpperCase(),
     full_name: String(item.full_name || item.fullName || '').trim(),
     student_class: String(item.student_class || item.studentClass || item.class || '').trim(),
+    department: normalizeStudentDepartmentValue(item.department || item.dept || item.student_department || item.sssTrack || ''),
     picture: normalizeStudentPictureValue(item.picture || ''),
     show_result: item.show_result !== undefined ? Boolean(item.show_result) : (item.result_visible !== undefined ? Boolean(item.result_visible) : true)
 });
@@ -778,7 +793,7 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
             ]
         } : {};
         const students = await Student.find(filter)
-            .select('student_id full_name student_class picture show_result')
+            .select('student_id full_name student_class department picture show_result status')
             .lean();
 
         const studentSummaries = students
@@ -787,9 +802,11 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 student_id: student.student_id,
                 full_name: student.full_name,
                 student_class: student.student_class,
+                department: student.department || '',
                 has_picture: Boolean(student.picture),
                 picture: student.picture || '',
-                show_result: student.show_result !== false
+                show_result: student.show_result !== false,
+                status: student.status || 'Authorized'
             }))
             .sort((a, b) => String(a.full_name || '').localeCompare(String(b.full_name || '')) || String(a.student_id || '').localeCompare(String(b.student_id || '')));
 
@@ -908,7 +925,7 @@ app.get('/api/admin/student/:studentId', async (req, res) => {
 // Admin Save/Update Result Endpoint
 app.post('/api/admin/add-full-result', async (req, res) => {
     try {
-        const { studentId, fullName, email, studentClass, session, term, pin, subjects } = req.body;
+        const { studentId, fullName, email, studentClass, department, session, term, pin, subjects } = req.body;
 
         if (!studentId || !fullName || !studentClass || !pin || !subjects || subjects.length === 0) {
             return res.status(400).json({ success: false, message: 'Please provide all required student details and scores.' });
@@ -931,6 +948,7 @@ app.post('/api/admin/add-full-result', async (req, res) => {
                 full_name: fullName.trim(),
                 email: studentEmail,
                 student_class: studentClass,
+                department: String(department || '').trim(),
                 session: session,
                 term: term,
                 pin_code: cleanPin,
@@ -990,6 +1008,7 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
                 const cleanId = item.studentId ? String(item.studentId).trim() : (item.student_id ? String(item.student_id).trim() : '');
                 const cleanPin = item.pin ? String(item.pin).trim() : (item.pin_code ? String(item.pin_code).trim() : '');
                 const fullName = item.fullName || item.full_name || '';
+                const department = item.department || item.dept || item.student_department || item.sssTrack || '';
 
                 if (!cleanId || !fullName) continue;
 
@@ -1001,6 +1020,7 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
                         student_id: cleanId,
                         full_name: String(fullName).trim(),
                         student_class: String(item.studentClass || item.student_class || '').trim(),
+                        department: String(department).trim(),
                         session: String(item.session || '').trim(),
                         term: String(item.term || '').trim(),
                         pin_code: cleanPin,
@@ -1033,7 +1053,7 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
 // Admin PUT Update Endpoint
 app.put('/api/admin/update-student', async (req, res) => {
     try {
-        const { studentId, fullName, email, studentClass, session, term, pin, subjects } = req.body;
+        const { studentId, fullName, email, studentClass, department, session, term, pin, subjects } = req.body;
 
         if (!studentId) {
             return res.status(400).json({ success: false, message: 'Student ID is required for update.' });
@@ -1045,6 +1065,7 @@ app.put('/api/admin/update-student', async (req, res) => {
         if (fullName) updateData.full_name = fullName.trim();
         if (email !== undefined) updateData.email = email.trim();
         if (studentClass) updateData.student_class = studentClass;
+        if (department !== undefined) updateData.department = String(department).trim();
         if (session) updateData.session = session;
         if (term) updateData.term = term;
         if (pin) updateData.pin_code = String(pin).trim();
@@ -1074,10 +1095,35 @@ app.put('/api/admin/update-student', async (req, res) => {
 // Admin List Endpoint
 app.get('/api/admin/student-status', async (req, res) => {
     try {
-        const students = await Student.find({}, 'student_id full_name email student_class pin_code usage_count max_usage results session term').sort({ createdAt: -1 });
+        const students = await Student.find({}, 'student_id full_name email student_class department pin_code usage_count max_usage results session term status').sort({ createdAt: -1 });
         res.json({ success: true, students });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Error fetching student list.' });
+    }
+});
+
+app.post('/api/admin/student-status', async (req, res) => {
+    try {
+        const { studentId, status, password } = req.body || {};
+        const requestPassword = password || req.headers['x-student-data-password'];
+        if (requestPassword && requestPassword !== STUDENT_DATA_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'Invalid student data password.' });
+        }
+        if (!studentId) return res.status(400).json({ success: false, message: 'Student ID is required.' });
+        const validStatuses = ['Authorized', 'Suspended', 'Completed/Attempted'];
+        const nextStatus = String(status || '').trim();
+        if (!validStatuses.includes(nextStatus)) {
+            return res.status(400).json({ success: false, message: 'Invalid student status value.' });
+        }
+        const updated = await Student.findOneAndUpdate(
+            buildStudentQuery(studentId),
+            { $set: { status: nextStatus } },
+            { upsert: true, new: true, runValidators: true }
+        );
+        res.json({ success: true, studentId: updated?.student_id || studentId, status: updated?.status || nextStatus });
+    } catch (err) {
+        console.error('Update student status error:', err);
+        res.status(500).json({ success: false, message: 'Failed to update student status.' });
     }
 });
 
@@ -2038,8 +2084,17 @@ app.get('/api/cbt-results', async (req, res) => {
 // POST save completed CBT test submission
 app.post('/api/cbt-results', async (req, res) => {
     try {
+        const studentId = String(req.body?.studentId || '').trim();
         const cbtResult = new CbtResult(req.body);
         const saved = await cbtResult.save();
+
+        if (studentId) {
+            await Student.findOneAndUpdate(
+                buildStudentQuery(studentId),
+                { $set: { status: 'Completed/Attempted' } },
+                { upsert: true, new: true, runValidators: true }
+            );
+        }
 
         // Send submission alert email to admin with candidate photo and exact phone model
         try {

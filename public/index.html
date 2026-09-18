@@ -2735,7 +2735,7 @@
                             </div>
                         </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
-                            CSV columns: <strong>Student ID, Full Name, Class, Picture Data</strong>. For the picture column, just type the image's file name (e.g. <code>john-doe.jpg</code>) &mdash; the photo itself must already be saved in the server's <code>public/stud-data</code> folder. Full URLs also work if you have one.
+                            CSV columns: <strong>Student ID, Full Name, Class, Department, Picture Data</strong>. For the picture column, just type the image's file name (e.g. <code>john-doe.jpg</code>) &mdash; the photo itself must already be saved in the server's <code>public/stud-data</code> folder. Full URLs also work if you have one.
                         </p>
                         <div id="studentDataEditor" class="student-data-editor-panel" style="display: none; margin-bottom: 16px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
@@ -2746,6 +2746,15 @@
                                 <div class="form-group"><label for="studentDataFullName">Full Name</label><input id="studentDataFullName" type="text" required></div>
                                 <div class="form-group"><label for="studentDataId">Student ID</label><input id="studentDataId" type="text" required></div>
                                 <div class="form-group"><label for="studentDataClass">Class</label><input id="studentDataClass" type="text" placeholder="e.g. JSS1" required></div>
+                                <div class="form-group">
+                                    <label for="studentDataDepartment">Department</label>
+                                    <select id="studentDataDepartment">
+                                        <option value="">-- Select Department --</option>
+                                        <option value="Science">Science</option>
+                                        <option value="Arts">Arts</option>
+                                        <option value="Commercial">Commercial</option>
+                                    </select>
+                                </div>
                                 <div class="form-group"><label for="studentDataPicture">Picture</label><input id="studentDataPicture" type="file" accept="image/*" onchange="previewStudentDataPicture(event)"></div>
                             </div>
 
@@ -3483,6 +3492,7 @@
                     studentId: String(student.student_id || '').trim().toUpperCase(),
                     name: String(student.full_name || 'Candidate').trim(),
                     classKey: String(student.student_class || '').trim(),
+                    department: String(student.department || '').trim(),
                     picture: String(student.picture || '').trim(),
                     showResult: student.show_result !== false,
                     status: 'Authorized'
@@ -3562,8 +3572,9 @@
                 const safePicture = String(student.picture || '').trim();
                 const fullName = String(student.full_name || '').trim();
                 const studentClass = String(student.student_class || '').trim();
+                const studentDepartment = String(student.department || '').trim();
                 return `
-                <tr data-student-id="${escapeHtml(studentId)}" data-full-name="${escapeHtml(fullName)}" data-student-class="${escapeHtml(studentClass)}">
+                <tr data-student-id="${escapeHtml(studentId)}" data-full-name="${escapeHtml(fullName)}" data-student-class="${escapeHtml(studentClass)}" data-department="${escapeHtml(studentDepartment)}">
                     <td>
                         <div class="student-row-photo-editor">
                             <img class="student-inline-image" src="${escapeHtml(safePicture || '')}" alt="" onerror="this.style.display='none'; this.parentElement.querySelector('.student-row-edit-toggle').style.top='50%'; this.parentElement.querySelector('.student-row-edit-toggle').style.transform='translate(-50%, -50%)';" style="${safePicture ? '' : 'display:none;'}">
@@ -3574,7 +3585,7 @@
                             </div>
                         </div>
                     </td>
-                    <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td>
+                    <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td><td>${escapeHtml(studentDepartment)}</td>
                     <td>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                             <button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button>
@@ -3582,7 +3593,7 @@
                         </div>
                     </td>
                 </tr>`;
-            }).join('') : '<tr><td colspan="5">No student records found.</td></tr>';
+            }).join('') : '<tr><td colspan="6">No student records found.</td></tr>';
 
             bindStudentRowEditHandlers();
         }
@@ -3679,12 +3690,14 @@
                 const studentId = String(edit.studentId || '').trim();
                 const fullName = row ? row.dataset.fullName || '' : '';
                 const studentClass = row ? row.dataset.studentClass || '' : '';
+                const department = row ? row.dataset.department || '' : '';
                 const payload = {
                     password: studentDataPassword,
                     originalStudentId: studentId,
                     fullName,
                     studentId,
                     studentClass,
+                    department,
                     picture: edit.picture || '',
                     show_result: true
                 };
@@ -3800,6 +3813,7 @@
             document.getElementById('studentDataFullName').value = student?.full_name || '';
             document.getElementById('studentDataId').value = student?.student_id || '';
             document.getElementById('studentDataClass').value = student?.student_class || '';
+            document.getElementById('studentDataDepartment').value = student?.department || '';
             document.getElementById('studentDataPicture').value = '';
             const preview = document.getElementById('studentDataPicturePreview');
             const dropText = document.getElementById('studentPictureDropContent');
@@ -3819,6 +3833,7 @@
                 fullName: document.getElementById('studentDataFullName').value.trim(), 
                 studentId: document.getElementById('studentDataId').value.trim(), 
                 studentClass: document.getElementById('studentDataClass').value.trim(), 
+                department: document.getElementById('studentDataDepartment').value.trim(),
                 picture: editingStudentDataPicture,
                 show_result: true
             };
@@ -3852,6 +3867,16 @@
         // Turns a bare filename (e.g. "john-doe.jpg") typed into the CSV's Picture column
         // into the full path the browser needs to actually load it. Values that already look
         // like a URL, a data URI, or an absolute path are left untouched.
+        function normalizeStudentDepartmentValue(value) {
+            const trimmed = String(value || '').trim();
+            if (!trimmed) return '';
+            const normalized = trimmed.toLowerCase();
+            if (normalized === 'science' || normalized === 'sci') return 'Science';
+            if (normalized === 'art' || normalized === 'arts') return 'Arts';
+            if (normalized === 'commercial' || normalized === 'comm') return 'Commercial';
+            return trimmed;
+        }
+
         function normalizeStudentPicturePath(value) {
             const trimmed = String(value || '').trim();
             if (!trimmed) return '';
@@ -3907,9 +3932,20 @@
                 } else { value += character; }
             }
             if (value || row.length) { row.push(value.trim()); rows.push(row); }
-            return rows.slice(1).filter(record => record.length >= 3).map(record => ({
-                studentId: record[0], fullName: record[1], studentClass: record[2], picture: normalizeStudentPicturePath(record[3])
-            }));
+            return rows.slice(1).filter(record => record.length >= 3).map(record => {
+                const studentId = String(record[0] || '').trim();
+                const fullName = String(record[1] || '').trim();
+                const studentClass = String(record[2] || '').trim();
+                const department = normalizeStudentDepartmentValue(record[3] || '');
+                const picture = normalizeStudentPicturePath(record.length >= 5 ? (record[4] || '') : (record[3] || ''));
+                return {
+                    studentId,
+                    fullName,
+                    studentClass,
+                    department,
+                    picture
+                };
+            });
         }
 
         async function exportStudentData() {

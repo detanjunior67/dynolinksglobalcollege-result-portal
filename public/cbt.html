@@ -646,6 +646,18 @@
                             <!-- Dynamic class options loaded from JS state -->
                         </select>
                     </div>
+                    <div id="studentDepartmentField" class="sm:col-span-2 hidden">
+                        <label
+                            class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Department
+                            *</label>
+                        <select id="studentDepartmentSelect" onchange="handleClassChange()"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">-- Select Department --</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
                     <div id="candidateProfileCard"
                         class="sm:col-span-2 flex items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700/60 dark:to-gray-800/60 rounded-2xl p-4 border border-blue-100 dark:border-gray-700 shadow-sm transition-all">
                         <div class="candidate-photo-frame w-16 h-16 sm:w-20 sm:h-20 shadow-md">
@@ -762,17 +774,17 @@
         <section id="viewExamPortal" class="hidden flex-grow flex flex-col space-y-4">
             <!-- Top Control Bar: Subject Navigation, Candidate Badge & Active Timer -->
             <div
-                class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                class="bg-white dark:bg-gray-800 rounded-2xl p-2.5 sm:p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-4">
                 <!-- Subject Pills -->
                 <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0" id="sectionTabs">
                     <!-- Dynamic Pills -->
                 </div>
 
                 <!-- Right Side: Candidate Photo Badge & Timer Box -->
-                <div class="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
                     <!-- Candidate Photo Badge in Exam -->
                     <div
-                        class="flex items-center gap-2.5 bg-blue-50/70 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl border border-blue-100 dark:border-gray-600">
+                        class="flex items-center gap-2 bg-blue-50/70 dark:bg-gray-700/50 px-2.5 py-1 rounded-lg border border-blue-100 dark:border-gray-600">
                         <div class="candidate-photo-frame w-9 h-9 shrink-0">
                             <img id="examCandidatePhoto" src="" alt="Candidate" class="candidate-photo-img">
                         </div>
@@ -786,12 +798,11 @@
 
                     <!-- Timer Box -->
                     <div id="timerContainer"
-                        class="flex items-center space-x-3 shrink-0 bg-red-50 dark:bg-red-900/30 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 transition-colors">
-                        <i class="fa-solid fa-clock text-red-600 text-lg animate-pulse" id="timerIcon"></i>
-                        <span class="text-xs uppercase font-bold text-red-600 dark:text-red-400" id="timerLabel">Time
-                            Left:</span>
+                        class="flex items-center gap-1.5 shrink-0 bg-red-50 dark:bg-red-900/30 px-2.5 py-1.5 rounded-lg border border-red-200 dark:border-red-800 transition-colors self-center -mt-1 sm:-mt-0">
+                        <i class="fa-solid fa-clock text-red-600 text-sm sm:text-lg animate-pulse" id="timerIcon"></i>
+                        <span class="sr-only" id="timerLabel">Time Left</span>
                         <span id="examTimer"
-                            class="font-mono text-xl font-black text-red-600 dark:text-red-400">00:00</span>
+                            class="font-mono text-lg sm:text-2xl font-black text-red-600 dark:text-red-400 leading-none">00:00</span>
                     </div>
                 </div>
             </div>
@@ -984,7 +995,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Select Class to
                                 Edit</label>
@@ -998,6 +1009,16 @@
                                 Name</label>
                             <input type="text" id="adminClassLabelInput"
                                 class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-semibold">
+                        </div>
+                        <div id="adminDepartmentField" class="hidden">
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Department</label>
+                            <select id="adminDepartmentSelect" onchange="loadAdminClassConfig()"
+                                class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- Select Department --</option>
+                                <option value="Science">Science</option>
+                                <option value="Arts">Arts</option>
+                                <option value="Commercial">Commercial</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Timer Execution
@@ -1373,60 +1394,127 @@
         // ========================================================
         // DEFAULT COLLEGE CURRICULUM & QUESTION BANK STATE (6 CLASSES)
         // ========================================================
+        const JSS_SUBJECTS = [
+            "Maths", "English", "Basic Science", "Basic Technology", "Creative Arts",
+            "Home Economics", "Business Studies", "Religious Studies", "Social Studies", "Agricultural Science",
+            "Nigerian Language", "French", "Physical and Health Education", "Civic Education", "Information Technology",
+            "History", "Discovery"
+        ];
+
+        const SSS_COMMON_SUBJECTS = [
+            "Maths", "English", "Economics", "Civic Education", "Marketing", "Agricultural Science", "Discovery"
+        ];
+
+        const SSS_DEPARTMENT_SUBJECTS = {
+            Science: [
+                "Maths", "English", "Chemistry", "Physics", "Biology",
+                "Agricultural Science", "Marketing", "Civic Education", "Economics", "Discovery"
+            ],
+            Arts: [
+                "Maths", "English", "Literature in English", "Biology", "Economics",
+                "Religious Studies", "Agric", "Government", "Discovery", "Civic"
+            ],
+            Commercial: [
+                "Maths", "English", "Commerce", "Accounting", "Agric",
+                "Civic", "Economics", "Lit in English", "Marketing", "Discovery"
+            ]
+        };
+
+        function normalizeDepartmentName(value) {
+            const cleaned = String(value || '').trim();
+            if (!cleaned) return '';
+            const normalized = cleaned.toLowerCase();
+            if (normalized === 'science' || normalized === 'sci') return 'Science';
+            if (normalized === 'art' || normalized === 'arts') return 'Arts';
+            if (normalized === 'commercial' || normalized === 'comm') return 'Commercial';
+            return cleaned;
+        }
+
+        function getDepartmentSubjectList(classKey = '', department = '') {
+            const normalizedClass = normalizeClassKey(classKey);
+            const dept = normalizeDepartmentName(department);
+            if (normalizedClass && /^JSS/i.test(normalizedClass)) return JSS_SUBJECTS;
+            if (normalizedClass && /^SSS/i.test(normalizedClass)) {
+                if (dept && SSS_DEPARTMENT_SUBJECTS[dept]) return SSS_DEPARTMENT_SUBJECTS[dept];
+                return [...new Set([...SSS_COMMON_SUBJECTS, ...SSS_DEPARTMENT_SUBJECTS.Science])];
+            }
+            return [];
+        }
+
+        function buildClassSubjectDefaults(classKey = '', department = '') {
+            const normalizedClass = normalizeClassKey(classKey);
+            const subjectNames = getDepartmentSubjectList(normalizedClass || classKey, department);
+            if (!subjectNames.length) return [];
+            return subjectNames.map((subjectName, index) => ({
+                id: `${(normalizedClass || classKey || 'class').toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+                name: subjectName,
+                code: `${(normalizedClass || classKey || 'CLS').replace(/[^A-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'CLS'}${index + 1}`,
+                timerMins: normalizedClass && /^SSS/i.test(normalizedClass) ? 6 : 5
+            }));
+        }
+
+        function getQuestionReadySubjects(classKey = '', subjects = []) {
+            const bank = (questionBank[classKey] && typeof questionBank[classKey] === 'object') ? questionBank[classKey] : {};
+            return subjects.filter(subject => {
+                const qList = Array.isArray(bank[subject.id]) ? bank[subject.id] : [];
+                return qList.length > 0;
+            });
+        }
+
+        let classConfigs = {};
+
+        function ensureClassConfiguredSubjects(classKey = '', department = '') {
+            const normalizedClass = normalizeClassKey(classKey);
+            if (!normalizedClass || !classConfigs || !classConfigs[normalizedClass]) return;
+            const selectedDepartment = normalizeDepartmentName(department || classConfigs[normalizedClass].department || '');
+            const generatedSubjects = buildClassSubjectDefaults(normalizedClass, selectedDepartment);
+            const shouldReplace = !classConfigs[normalizedClass].subjects || !classConfigs[normalizedClass].subjects.length ||
+                classConfigs[normalizedClass].subjects.some(subject => /General Studies|General Science/i.test(subject.name || '')) ||
+                classConfigs[normalizedClass].subjects.length !== generatedSubjects.length;
+
+            if (generatedSubjects.length && shouldReplace) {
+                classConfigs[normalizedClass].subjects = generatedSubjects;
+            }
+            if (normalizedClass.startsWith('SSS')) {
+                classConfigs[normalizedClass].department = selectedDepartment || classConfigs[normalizedClass].department || 'Science';
+            } else {
+                delete classConfigs[normalizedClass].department;
+            }
+        }
+
         const defaultClassConfigurations = {
             'JSS1': {
                 label: 'Junior Secondary School 1',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG101', timerMins: 5 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH101', timerMins: 5 },
-                    { id: 'gk', name: 'General Studies', code: 'GNS101', timerMins: 5 }
-                ]
+                subjects: buildClassSubjectDefaults('JSS1')
             },
             'JSS2': {
                 label: 'Junior Secondary School 2',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG102', timerMins: 5 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH102', timerMins: 5 },
-                    { id: 'gk', name: 'General Studies', code: 'GNS102', timerMins: 5 }
-                ]
+                subjects: buildClassSubjectDefaults('JSS2')
             },
             'JSS3': {
                 label: 'Junior Secondary School 3',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG103', timerMins: 5 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH103', timerMins: 5 },
-                    { id: 'gk', name: 'General Studies', code: 'GNS103', timerMins: 5 }
-                ]
+                subjects: buildClassSubjectDefaults('JSS3')
             },
             'SSS1': {
                 label: 'Senior Secondary School 1',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG201', timerMins: 6 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH201', timerMins: 6 },
-                    { id: 'sci', name: 'General Science', code: 'SCI201', timerMins: 6 }
-                ]
+                department: 'Science',
+                subjects: buildClassSubjectDefaults('SSS1', 'Science')
             },
             'SSS2': {
                 label: 'Senior Secondary School 2',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG202', timerMins: 6 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH202', timerMins: 6 },
-                    { id: 'sci', name: 'General Science', code: 'SCI202', timerMins: 6 }
-                ]
+                department: 'Science',
+                subjects: buildClassSubjectDefaults('SSS2', 'Science')
             },
             'SSS3': {
                 label: 'Senior Secondary School 3',
                 timerMode: 'subject',
-                subjects: [
-                    { id: 'eng', name: 'English Language', code: 'ENG203', timerMins: 6 },
-                    { id: 'math', name: 'Mathematics', code: 'MTH203', timerMins: 6 },
-                    { id: 'sci', name: 'General Science', code: 'SCI203', timerMins: 6 }
-                ]
+                department: 'Science',
+                subjects: buildClassSubjectDefaults('SSS3', 'Science')
             }
         };
 
@@ -1470,7 +1558,7 @@
         };
 
         // State Initialization
-        let classConfigs = JSON.parse(localStorage.getItem('dgc_class_configs')) || defaultClassConfigurations;
+        classConfigs = JSON.parse(localStorage.getItem('dgc_class_configs')) || defaultClassConfigurations;
         let studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
         let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
@@ -1605,11 +1693,28 @@
         function handleClassChange() {
             const classKey = document.getElementById('studentClassSelect').value;
             const previewText = document.getElementById('examSubjectPreviewText');
+            const departmentSelect = document.getElementById('studentDepartmentSelect');
+            const departmentField = document.getElementById('studentDepartmentField');
 
+            const needsDepartment = classKey && classKey.startsWith('SSS');
+            if (departmentField) {
+                departmentField.classList.toggle('hidden', !needsDepartment);
+            }
+            if (departmentSelect) {
+                departmentSelect.disabled = !needsDepartment;
+                if (!needsDepartment) departmentSelect.value = '';
+            }
+
+            const selectedDepartment = normalizeDepartmentName(departmentSelect ? departmentSelect.value : '');
+            let subjectNames = [];
             if (classKey && classConfigs[classKey]) {
                 const cfg = classConfigs[classKey];
-                const subNames = cfg.subjects.map(s => `${s.name} (${s.timerMins}m)`).join(', ');
-                previewText.innerText = `Class: ${cfg.label} | Configured Subjects: [ ${subNames} ]`;
+                if (classKey.startsWith('SSS') && selectedDepartment) {
+                    subjectNames = getDepartmentSubjectList(classKey, selectedDepartment).map((name, index) => `${name} (${Math.max(4, 6 + (index % 3))}m)`);
+                } else {
+                    subjectNames = cfg.subjects.map(s => `${s.name} (${s.timerMins}m)`);
+                }
+                previewText.innerText = `Class: ${cfg.label}${selectedDepartment ? ` (${selectedDepartment})` : ''} | Configured Subjects: [ ${subjectNames.join(', ')} ]`;
             } else {
                 previewText.innerText = 'Select your class level to view applicable subjects and duration breakdown.';
             }
@@ -1744,6 +1849,7 @@
             const name = document.getElementById('studentFullName').value.trim();
             const studentId = document.getElementById('studentIdInput').value.trim().toUpperCase();
             let classKey = document.getElementById('studentClassSelect').value;
+            const selectedDepartment = normalizeDepartmentName(document.getElementById('studentDepartmentSelect')?.value || '');
 
             let savedProfile = null;
             try {
@@ -1756,6 +1862,11 @@
             if (!name) return showCustomAlert('Validation Error', 'Please enter candidate full name.');
             if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
             if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
+            if (classKey.startsWith('SSS') && !selectedDepartment && !normalizeDepartmentName(savedProfile?.department || '')) {
+                return showCustomAlert('Validation Error', 'Please select the student department for this SSS class before continuing.');
+            }
+
+            const effectiveDepartment = normalizeDepartmentName(selectedDepartment || savedProfile?.department || '');
 
             const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId) && (r.classKey === classKey || normalizeClassKey(r.classKey) === classKey)) || (savedProfile ? {
                 studentId: savedProfile.student_id,
@@ -1765,6 +1876,10 @@
                 status: 'Authorized'
             } : null);
 
+            if (rosterMatch && rosterMatch.status !== 'Authorized' && rosterMatch.status !== 'Completed/Attempted' && rosterMatch.status !== 'Suspended') {
+                rosterMatch.status = 'Authorized';
+            }
+
             if (!rosterMatch) {
                 return showCustomAlert('Authorization Error', `Student ID "${studentId}" is not registered or authorized for ${classConfigs[classKey].label}. Please verify your ID or contact your administrator.`);
             }
@@ -1773,9 +1888,16 @@
                 return showCustomAlert('Access Suspended', `Student ID "${studentId}" has been suspended for this Assignmment session. Please see your invigilator.`);
             }
 
-            const priorResult = cbtResults.find(res => res.studentId && res.studentId.toUpperCase() === studentId && res.classKey === classKey);
-            if (priorResult || rosterMatch.status === 'Completed/Attempted') {
+            const rosterStatus = String(rosterMatch?.status || 'Authorized').trim();
+            if (rosterStatus === 'Suspended') {
+                return showCustomAlert('Access Suspended', `Student ID "${studentId}" has been suspended for this Assignmment session. Please see your invigilator.`);
+            }
+            if (rosterStatus === 'Completed/Attempted') {
                 return showCustomAlert('Assignment Already Submitted', `Student ID "${studentId}" has already completed and submitted the assignment for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
+            }
+
+            if (!rosterMatch) {
+                return showCustomAlert('Authorization Error', `Student ID "${studentId}" is not registered or authorized for ${classConfigs[classKey].label}. Please verify your ID or contact your administrator.`);
             }
 
             const candidatePicture = savedProfile?.picture || rosterMatch?.picture || currentStudentPicture || '';
@@ -1783,9 +1905,30 @@
                 name: rosterMatch.name || name,
                 studentId: studentId,
                 classKey: classKey,
+                department: effectiveDepartment,
                 picture: candidatePicture
             };
-            currentClassConfig = classConfigs[classKey];
+
+            const departmentSubjects = getDepartmentSubjectList(classKey, effectiveDepartment);
+            const exactConfiguredSubjects = departmentSubjects.length
+                ? departmentSubjects.map((subjectName, index) => ({
+                    id: `${classKey.toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+                    name: subjectName,
+                    code: `${classKey}_${index + 1}`,
+                    timerMins: 5
+                }))
+                : classConfigs[classKey].subjects;
+            const questionReadySubjects = getQuestionReadySubjects(classKey, exactConfiguredSubjects);
+
+            if (!questionReadySubjects.length) {
+                return showCustomAlert('No Questions Available', `No subject in ${classConfigs[classKey].label}${effectiveDepartment ? ` (${effectiveDepartment})` : ''} currently has questions configured. Please contact the administrator.`);
+            }
+
+            currentClassConfig = {
+                ...classConfigs[classKey],
+                label: classConfigs[classKey].label + (effectiveDepartment ? ` (${effectiveDepartment})` : ''),
+                subjects: questionReadySubjects
+            };
             setStudentProfileCardVisibility(true);
 
             // Update Instructions View with Candidate Identity & Photo
@@ -1893,6 +2036,13 @@
             const examId = document.getElementById('examCandidateId');
             if (examId) examId.innerText = currentCandidate.studentId;
 
+            const questionReadySubjects = getQuestionReadySubjects(currentCandidate.classKey, currentClassConfig.subjects);
+            if (!questionReadySubjects.length) {
+                if (window.hideDatabaseLoader) window.hideDatabaseLoader();
+                return showCustomAlert('No Questions Available', `This class/department currently has no question bank entries for any subject. Please contact the administrator.`);
+            }
+
+            currentClassConfig.subjects = questionReadySubjects;
             currentClassConfig.subjects.forEach(sub => {
                 const sourceQuestions = (questionBank[currentCandidate.classKey] && questionBank[currentCandidate.classKey][sub.id]) || [];
                 examQuestionBank[sub.id] = shuffleQuestions(sourceQuestions);
@@ -1967,20 +2117,21 @@
         function updateTimerDisplay() {
             let secsRemaining = 0;
             const timerBox = document.getElementById('timerContainer');
+            const timerLabel = document.getElementById('timerLabel');
 
             if (currentClassConfig.timerMode === 'subject') {
                 const activeSub = currentClassConfig.subjects[activeSubjectIdx];
                 secsRemaining = sectionTimers[activeSub.id] || 0;
-                document.getElementById('timerLabel').innerText = `${activeSub.name} Time:`;
+                if (timerLabel) timerLabel.innerText = `${activeSub.name} Time`;
             } else {
                 secsRemaining = totalExamTimer;
-                document.getElementById('timerLabel').innerText = `Total Time Left:`;
+                if (timerLabel) timerLabel.innerText = 'Total Time Left';
             }
 
             if (secsRemaining <= 300) {
-                timerBox.className = 'flex items-center space-x-3 shrink-0 bg-red-100 dark:bg-red-900/50 px-4 py-2 rounded-xl border border-red-300 dark:border-red-700 animate-pulse';
+                timerBox.className = 'flex items-center gap-2 shrink-0 bg-red-100 dark:bg-red-900/50 px-3 py-2 rounded-xl border border-red-300 dark:border-red-700 animate-pulse';
             } else {
-                timerBox.className = 'flex items-center space-x-3 shrink-0 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800';
+                timerBox.className = 'flex items-center gap-2 shrink-0 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-xl border border-blue-200 dark:border-blue-800';
             }
 
             const mins = Math.floor(secsRemaining / 60);
@@ -1991,6 +2142,15 @@
         function renderSubjectTabs() {
             const container = document.getElementById('sectionTabs');
             container.innerHTML = '';
+            const visibleSubjects = (currentClassConfig?.subjects || []).filter(sub => {
+                const qList = (questionBank[currentCandidate.classKey] && questionBank[currentCandidate.classKey][sub.id]) || [];
+                return qList.length > 0;
+            });
+
+            if (visibleSubjects.length !== (currentClassConfig?.subjects || []).length) {
+                currentClassConfig.subjects = visibleSubjects;
+            }
+
             currentClassConfig.subjects.forEach((sub, idx) => {
                 const btn = document.createElement('button');
                 btn.className = `px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${idx === activeSubjectIdx
@@ -2020,8 +2180,8 @@
             const activeSub = currentClassConfig.subjects[activeSubjectIdx];
 
             if (qList.length === 0) {
-                document.getElementById('currentQNumText').innerText = `No Questions Configured`;
-                document.getElementById('questionText').innerText = `There are no questions configured for ${activeSub.name} yet. Please notify your admin.`;
+                document.getElementById('currentQNumText').innerText = `No Questions Available`;
+                document.getElementById('questionText').innerText = 'This subject has no questions available right now. Please contact your administrator.';
                 document.getElementById('optionsContainer').innerHTML = '';
                 renderPalette();
                 return;
@@ -2199,6 +2359,20 @@
 
             savePersistentData();
 
+            try {
+                const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
+                await fetch('/api/admin/student-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-student-data-password': password
+                    },
+                    body: JSON.stringify({ studentId: currentCandidate.studentId, status: 'Completed/Attempted', password })
+                });
+            } catch (err) {
+                console.warn('Could not sync exam completion to server status:', err);
+            }
+
             if (!options.silent && window.showDatabaseLoader) {
                 window.showDatabaseLoader('Connecting to Database...', 'Securing & Logging Examination Submission...');
             }
@@ -2333,12 +2507,16 @@
                     const studentId = String(student.student_id || '').trim().toUpperCase();
                     const classKey = normalizeClassKey(student.student_class || '') || String(student.student_class || '').trim();
                     const existing = studentRoster.find(item => item.studentId === studentId && item.classKey === classKey);
-                    const status = completedAttemptMap.get(`${studentId}|${classKey}`) || existing?.status || 'Authorized';
+                    const explicitStatus = String(student.status || existing?.status || '').trim();
+                    const status = ['Authorized', 'Suspended', 'Completed/Attempted'].includes(explicitStatus)
+                        ? explicitStatus
+                        : completedAttemptMap.get(`${studentId}|${classKey}`) || existing?.status || 'Authorized';
 
                     return {
                         studentId,
                         name: String(student.full_name || 'Candidate').trim(),
                         classKey,
+                        department: normalizeDepartmentName(String(student.department || '').trim()),
                         status,
                         picture: String(student.picture || '').trim(),
                         showResult: student.show_result !== false
@@ -2424,16 +2602,39 @@
             });
         }
 
-        function toggleRosterStatus(studentId) {
+        async function toggleRosterStatus(studentId) {
             const item = studentRoster.find(r => r.studentId === studentId);
-            if (item) {
-                if (item.status === 'Authorized') item.status = 'Suspended';
-                else if (item.status === 'Suspended') item.status = 'Completed/Attempted';
-                else item.status = 'Authorized';
-                savePersistentData();
-                renderRosterTable();
-                showToast(`Status updated for ${studentId}`);
+            if (!item) return;
+
+            const nextStatus = item.status === 'Authorized'
+                ? 'Suspended'
+                : item.status === 'Suspended'
+                    ? 'Completed/Attempted'
+                    : 'Authorized';
+
+            item.status = nextStatus;
+            savePersistentData();
+
+            try {
+                const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
+                const response = await fetch('/api/admin/student-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-student-data-password': password
+                    },
+                    body: JSON.stringify({ studentId, status: nextStatus, password })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Server status update failed');
+                }
+            } catch (err) {
+                console.warn('Could not sync roster status to server:', err);
             }
+
+            renderRosterTable();
+            showToast(`Status updated for ${studentId}`);
         }
 
         function deleteRosterItem(studentId) {
@@ -2459,12 +2660,22 @@
                     </div>
                     <div>
                         <label class="block font-bold mb-1">Assigned Class Level *</label>
-                        <select id="addRosterClass" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                        <select id="addRosterClass" onchange="toggleRosterDepartmentField()" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
                             ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div id="rosterDepartmentField" class="hidden">
+                        <label class="block font-bold mb-1">Department *</label>
+                        <select id="addRosterDepartment" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="">-- Select Department --</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
                         </select>
                     </div>
                 </div>
             `;
+            toggleRosterDepartmentField();
             document.getElementById('modalActions').innerHTML = `
                 <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
                 <button onclick="saveSingleRosterStudent()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Add to Roster</button>
@@ -2473,12 +2684,23 @@
             document.getElementById('appModal').classList.add('flex');
         }
 
+        function toggleRosterDepartmentField() {
+            const classKey = document.getElementById('addRosterClass')?.value || '';
+            const deptField = document.getElementById('rosterDepartmentField');
+            if (deptField) {
+                const shouldShow = classKey.startsWith('SSS');
+                deptField.classList.toggle('hidden', !shouldShow);
+            }
+        }
+
         function saveSingleRosterStudent() {
             const studentId = document.getElementById('addRosterId').value.trim().toUpperCase();
             const name = document.getElementById('addRosterName').value.trim();
             const classKey = document.getElementById('addRosterClass').value;
+            const department = normalizeDepartmentName(document.getElementById('addRosterDepartment')?.value || '');
 
             if (!studentId) return showToast('Please enter a valid Student ID.', 'error');
+            if (classKey.startsWith('SSS') && !department) return showToast('Please select the student department for this SSS class.', 'error');
 
             const existing = studentRoster.find(r => r.studentId.toUpperCase() === studentId && r.classKey === classKey);
             if (existing) return showToast(`Student ID ${studentId} is already authorized for this class!`, 'error');
@@ -2487,6 +2709,7 @@
                 studentId: studentId,
                 name: name || 'Authorized Candidate',
                 classKey: classKey,
+                department: department,
                 status: 'Authorized'
             });
 
@@ -2504,8 +2727,17 @@
                 <div class="space-y-3 text-xs">
                     <div>
                         <label class="block font-bold mb-1">Target Class Level *</label>
-                        <select id="bulkClassSelect" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                        <select id="bulkClassSelect" onchange="toggleBulkRosterDepartmentField()" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
                             ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div id="bulkRosterDepartmentField" class="hidden">
+                        <label class="block font-bold mb-1">Department *</label>
+                        <select id="bulkRosterDepartment" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="">-- Select Department --</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
                         </select>
                     </div>
                     <div>
@@ -2516,9 +2748,10 @@
                         <label class="block font-bold mb-1">Or paste Student IDs (Comma or Newline Separated)</label>
                         <textarea id="bulkIdsInput" rows="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-mono" placeholder="STU-2026-001&#10;STU-2026-002&#10;STU-2026-003"></textarea>
                     </div>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">CSV columns can be: Student ID, Full Name, Class or Student ID, Full Name, Class, Status.</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400">For SSS, select the department before importing. CSV columns can be: Student ID, Full Name, Class, Department, Status.</p>
                 </div>
             `;
+            toggleBulkRosterDepartmentField();
             document.getElementById('modalActions').innerHTML = `
                 <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
                 <button onclick="processBulkRosterImport()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow">Import IDs</button>
@@ -2587,21 +2820,33 @@
             const startIndex = header.some(cell => cell === 'studentid' || cell === 'id') ? 1 : 0;
 
             return rows.slice(startIndex).filter(record => record.some(cell => String(cell).trim())).map(record => {
-                const values = record.slice(0, 4).map(cell => String(cell).trim());
+                const values = record.slice(0, 5).map(cell => String(cell).trim());
                 const studentId = values[0] || '';
                 const fullName = values[1] || 'Candidate ' + studentId;
                 const classValue = values[2] || '';
-                const status = values[3] || 'Authorized';
+                const departmentValue = values[3] || '';
+                const status = values[4] || 'Authorized';
                 const normalizedClass = normalizeClassKey(classValue) || document.getElementById('bulkClassSelect')?.value || '';
                 const safeId = studentId.trim().toUpperCase();
+                const normalizedDept = normalizeDepartmentName(departmentValue || document.getElementById('bulkRosterDepartment')?.value || '');
                 if (!safeId || !normalizedClass) return null;
                 return {
                     studentId: safeId,
                     name: fullName,
                     classKey: normalizedClass,
+                    department: normalizedDept,
                     status: status === 'Suspended' ? 'Suspended' : status === 'Completed/Attempted' ? 'Completed/Attempted' : 'Authorized'
                 };
             }).filter(Boolean);
+        }
+
+        function toggleBulkRosterDepartmentField() {
+            const classKey = document.getElementById('bulkClassSelect')?.value || '';
+            const deptField = document.getElementById('bulkRosterDepartmentField');
+            if (deptField) {
+                const shouldShow = classKey.startsWith('SSS');
+                deptField.classList.toggle('hidden', !shouldShow);
+            }
         }
 
         function processBulkRosterCsvFile() {
@@ -2624,6 +2869,7 @@
                             studentId: record.studentId,
                             name: record.name,
                             classKey: record.classKey,
+                            department: record.department || '',
                             status: record.status
                         });
                         addedCount++;
@@ -2640,7 +2886,9 @@
         function processBulkRosterImport() {
             const classKey = document.getElementById('bulkClassSelect').value;
             const rawText = document.getElementById('bulkIdsInput').value;
+            const department = normalizeDepartmentName(document.getElementById('bulkRosterDepartment')?.value || '');
 
+            if (classKey.startsWith('SSS') && !department) return showToast('Please select a department for this SSS roster import.', 'error');
             if (!rawText.trim()) return showToast('Please paste at least one Student ID.', 'error');
 
             const ids = rawText.split(/[\n,]+/).map(i => i.trim().toUpperCase()).filter(i => i.length > 0);
@@ -2653,6 +2901,7 @@
                         studentId: id,
                         name: 'Candidate ' + id,
                         classKey: classKey,
+                        department: department,
                         status: 'Authorized'
                     });
                     addedCount++;
@@ -2689,6 +2938,27 @@
             if (classKey && select.value !== classKey) select.value = classKey;
             const cfg = classConfigs[classKey];
             if (!cfg) return;
+
+            const deptField = document.getElementById('adminDepartmentField');
+            const deptSelect = document.getElementById('adminDepartmentSelect');
+            const needsDepartment = classKey && classKey.startsWith('SSS');
+            if (deptField) {
+                deptField.classList.toggle('hidden', !needsDepartment);
+            }
+            if (deptSelect) {
+                const chosenDepartment = deptSelect.value || cfg.department || '';
+                const selectedDepartment = normalizeDepartmentName(chosenDepartment);
+                deptSelect.disabled = !needsDepartment;
+                deptSelect.value = needsDepartment ? (selectedDepartment || 'Science') : '';
+                if (needsDepartment) cfg.department = selectedDepartment || deptSelect.value || 'Science';
+                else delete cfg.department;
+            }
+
+            if (classKey.startsWith('SSS')) {
+                ensureClassConfiguredSubjects(classKey, deptSelect ? deptSelect.value : cfg.department || 'Science');
+            } else if (classKey.startsWith('JSS')) {
+                ensureClassConfiguredSubjects(classKey, '');
+            }
 
             const labelInput = document.getElementById('adminClassLabelInput');
             const timerSelect = document.getElementById('adminTimerModeSelect');
@@ -2791,11 +3061,17 @@
 
             if (!key || !label) return showToast('Please enter both key and label.', 'error');
 
+            const normalizedKey = normalizeClassKey(key);
+            const defaultSubjects = buildClassSubjectDefaults(normalizedKey || key, normalizedKey && normalizedKey.startsWith('SSS') ? 'Science' : '');
             classConfigs[key] = {
                 label: label,
                 timerMode: 'subject',
-                subjects: [{ id: 'eng', name: 'English Language', code: 'ENG101', timerMins: 5 }]
+                subjects: defaultSubjects.length ? defaultSubjects : [{ id: 'eng', name: 'English Language', code: 'ENG101', timerMins: 5 }]
             };
+
+            if (normalizedKey && normalizedKey.startsWith('SSS')) {
+                classConfigs[key].department = 'Science';
+            }
 
             questionBank[key] = { 'eng': [] };
 
@@ -2811,11 +3087,19 @@
         function saveClassConfigState() {
             const classKey = document.getElementById('adminActiveClassSelect').value;
             if (classConfigs[classKey]) {
+                const selectedDepartment = normalizeDepartmentName(document.getElementById('adminDepartmentSelect')?.value || classConfigs[classKey].department || '');
                 classConfigs[classKey].label = document.getElementById('adminClassLabelInput').value;
                 classConfigs[classKey].timerMode = document.getElementById('adminTimerModeSelect').value;
+                if (classKey.startsWith('SSS')) {
+                    classConfigs[classKey].department = selectedDepartment || 'Science';
+                    ensureClassConfiguredSubjects(classKey, classConfigs[classKey].department);
+                } else {
+                    delete classConfigs[classKey].department;
+                }
                 savePersistentData();
                 populateStudentClassDropdown();
                 showToast('Class configuration saved successfully!');
+                loadAdminClassConfig();
             }
         }
 

@@ -1112,6 +1112,7 @@
                     studentId: String(student.student_id || '').trim().toUpperCase(),
                     name: String(student.full_name || 'Candidate').trim(),
                     classKey: String(student.student_class || '').trim(),
+                    department: String(student.department || '').trim(),
                     picture: String(student.picture || '').trim(),
                     showResult: student.show_result !== false,
                     status: 'Authorized'
@@ -1448,6 +1449,8 @@
                     const classSelect = document.getElementById('admClassSelect');
                     const rawClass = data.student.student_class || data.student.class || '';
                     const baseClass = rawClass.split(' ')[0];
+                    const deptSelect = document.getElementById('admDepartmentSelect');
+                    const deptFromData = String(data.student.department || data.student.dept || data.student.student_department || '').trim();
 
                     if (Array.from(classSelect.options).some(o => o.value === baseClass)) {
                         classSelect.value = baseClass;
@@ -1456,6 +1459,10 @@
                         classSelect.value = 'Custom';
                         handleClassChange();
                         document.getElementById('admCustomClass').value = rawClass;
+                    }
+
+                    if (deptSelect && deptFromData) {
+                        deptSelect.value = deptFromData;
                     }
 
                     build20Boxes(data.student.results || data.results || []);
@@ -1678,6 +1685,7 @@
                         studentId,
                         fullName,
                         studentClass,
+                        department,
                         session,
                         term,
                         pin,
