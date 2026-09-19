@@ -3266,10 +3266,15 @@
 
         document.getElementById('cbtAccessForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const password = document.getElementById('cbtAccessPassword').value;
+            const password = document.getElementById('cbtAccessPassword').value.trim().toLowerCase();
             const error = document.getElementById('cbtPasswordError');
             if (password === 'cbtaccess') {
                 window.location.href = 'cbt.html';
+            } else if (password === 'checkme') {
+                window.location.href = 'teacher.html';
+            } else if (password === 'admincheck') {
+                sessionStorage.setItem('dgc_teacher_admin_password', password);
+                window.location.href = 'teacher.html?admin=1';
             } else {
                 error.classList.remove('is-visible');
                 void error.offsetWidth;

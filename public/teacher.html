@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Check-in | Dynolinks Global College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #10243a;
+            --muted: #64748b;
+            --paper: #f7f8f4;
+            --panel: #ffffff;
+            --teal: #0f766e;
+            --teal-dark: #115e59;
+            --coral: #f97360;
+            --line: #dbe5e1;
+            --shadow: 0 24px 70px rgba(15, 57, 63, 0.14);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0 0 auto;
+            height: 48vh;
+            z-index: -1;
+            background: linear-gradient(135deg, #dff3ed 0%, #f7f8f4 68%);
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 0 100%);
+        }
+
+        .shell { width: min(1080px, calc(100% - 36px)); margin: 0 auto; padding: 28px 0 60px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 72px; }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 700; }
+        .brand-mark { display: block; width: 42px; height: 42px; border-radius: 13px; object-fit: cover; background: white; border: 1px solid var(--line); }
+        .brand small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; margin-top: 2px; }
+        .back-link, button { font: inherit; cursor: pointer; }
+        .back-link { color: var(--teal-dark); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+        .intro { max-width: 720px; margin-bottom: 34px; animation: rise 0.6s ease both; }
+        .eyebrow { color: var(--coral); font-weight: 700; font-size: 0.77rem; letter-spacing: 0.14em; text-transform: uppercase; }
+        h1, h2 { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.04em; }
+        h1 { font-size: clamp(2.4rem, 7vw, 5.2rem); line-height: 0.98; margin: 14px 0 18px; max-width: 700px; }
+        .intro p { color: var(--muted); font-size: 1.08rem; line-height: 1.7; max-width: 570px; }
+
+        .workspace { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 22px; align-items: start; }
+        .panel { background: rgba(255,255,255,0.9); border: 1px solid rgba(219,229,225,0.95); border-radius: 24px; box-shadow: var(--shadow); padding: clamp(24px, 5vw, 44px); }
+        .panel h2 { margin: 0 0 10px; font-size: clamp(1.55rem, 4vw, 2.2rem); }
+        .panel-copy { color: var(--muted); line-height: 1.6; margin: 0 0 28px; }
+        label { display: block; font-size: 0.83rem; font-weight: 700; margin-bottom: 8px; }
+        input { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; color: var(--ink); background: #fbfdfb; font: inherit; outline: none; }
+        input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.12); }
+        .primary, .outline { width: 100%; border-radius: 12px; padding: 14px 18px; margin-top: 16px; font-weight: 700; transition: transform .2s, background .2s; }
+        .primary { border: 0; color: white; background: var(--teal); }
+        .primary:hover { background: var(--teal-dark); transform: translateY(-2px); }
+        .outline { border: 1px solid var(--line); color: var(--teal-dark); background: transparent; }
+        .outline:hover { border-color: var(--teal); background: #eef8f4; }
+        .helper { color: var(--muted); font-size: 0.84rem; margin: 16px 0 0; }
+        .status { min-height: 22px; color: #b42318; font-size: 0.84rem; font-weight: 600; margin: 10px 0 0; }
+        .account { display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 16px; background: #edf8f3; margin: 24px 0; }
+        .avatar { display: grid; place-items: center; flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; color: white; background: var(--coral); font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+        .account strong { display: block; font-size: 1.05rem; }
+        .account span { color: var(--muted); font-size: 0.82rem; }
+
+        .side-panel { padding: 28px; background: var(--ink); color: white; box-shadow: 0 24px 60px rgba(16,36,58,0.22); }
+        .side-panel h2 { font-size: 1.55rem; }
+        .side-panel p { color: #b6c6d3; line-height: 1.65; font-size: 0.9rem; }
+        .admin-button { border: 1px solid rgba(255,255,255,0.23); border-radius: 11px; padding: 12px 14px; color: white; background: rgba(255,255,255,0.08); font-weight: 700; width: 100%; margin-top: 16px; }
+        .admin-button:hover { background: rgba(255,255,255,0.16); }
+
+        .admin-view { display: none; margin-top: 22px; }
+        .admin-view.is-visible { display: block; animation: rise .35s ease both; }
+        .admin-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .admin-heading h2 { margin: 0; font-size: 1.35rem; }
+        .count { color: var(--teal-dark); background: #dff3ed; border-radius: 99px; padding: 5px 10px; font-size: 0.78rem; font-weight: 700; }
+        .availability-settings { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; padding: 16px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fcfa; }
+        .availability-settings label { margin: 0; }
+        .availability-settings input { width: auto; min-width: 150px; padding: 10px 12px; }
+        .availability-settings button { border: 0; border-radius: 10px; padding: 11px 15px; color: white; background: var(--teal); font-weight: 700; }
+        .availability-settings button:hover { background: var(--teal-dark); }
+        .setting-status { color: var(--teal-dark); font-size: 0.8rem; font-weight: 600; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+        .teacher-name { border: 0; padding: 0; color: var(--teal-dark); background: transparent; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(15,118,110,0.3); text-underline-offset: 3px; }
+        .teacher-name:hover { color: var(--coral); }
+        .login-detail { display: flex; justify-content: space-between; gap: 18px; padding: 7px 0; color: var(--muted); font-size: 0.84rem; }
+        .login-detail a { color: var(--teal-dark); font-weight: 700; }
+        .empty { color: var(--muted); padding: 18px 10px; }
+        .privacy { color: var(--muted); font-size: 0.78rem; margin: 16px 0 0; }
+        @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 760px) {
+            .shell { width: min(100% - 24px, 620px); padding-top: 18px; }
+            .topbar { margin-bottom: 54px; }
+            .brand { font-size: 0.9rem; }
+            .workspace { grid-template-columns: 1fr; }
+            h1 { font-size: clamp(2.7rem, 14vw, 4.1rem); }
+            .panel { border-radius: 19px; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <nav class="topbar" aria-label="Teacher portal navigation">
+            <a class="brand" href="index.html">
+                <img class="brand-mark" src="logo.jpg" alt="Dynolinks Global College logo">
+                <span>Dynolinks Global College<small>Teacher check-in</small></span>
+            </a>
+            <a class="back-link" href="index.html">Back to home</a>
+        </nav>
+
+        <section class="intro">
+            <div class="eyebrow">Staff access</div>
+            <h1>Good teaching starts with being present.</h1>
+            <p>Check in once and return to this page whenever you need it. Your name is remembered on this device for quick access.</p>
+        </section>
+
+        <section class="workspace">
+            <div>
+                <div class="panel" id="signInPanel">
+                    <h2 id="panelTitle">Welcome, teacher.</h2>
+                    <p class="panel-copy" id="panelCopy">Enter your full name the first time you sign in. We will remember it on this browser.</p>
+                    <form id="teacherForm">
+                        <div id="nameField">
+                            <label for="teacherName">Full name</label>
+                            <input id="teacherName" type="text" placeholder="e.g. Amina Yusuf" autocomplete="name" required>
+                        </div>
+                        <button class="primary" type="submit" id="signInButton">Sign in</button>
+                    </form>
+                    <div class="status" id="formStatus" role="status"></div>
+                    <p class="helper">Testing mode: sign-in records are stored only in this browser.</p>
+                </div>
+
+                <div class="panel admin-view" id="adminView">
+                    <div class="admin-heading">
+                        <h2>Teacher sign-ins</h2>
+                        <span class="count" id="loginCount">0 records</span>
+                    </div>
+                    <div class="availability-settings">
+                        <div>
+                            <label for="availabilityTime">Button appears (Nigeria time)</label>
+                            <input id="availabilityTime" type="time" value="08:00">
+                        </div>
+                        <div>
+                            <label for="disappearanceTime">Button disappears (Nigeria time)</label>
+                            <input id="disappearanceTime" type="time" value="17:00">
+                        </div>
+                        <button type="button" id="saveAvailabilityButton">Save times</button>
+                        <span class="setting-status" id="settingStatus" role="status"></span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Teacher</th><th>Last sign-in</th></tr></thead>
+                            <tbody id="loginTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="privacy">This is a local test ledger. It will not be visible on other devices until it is connected to the server.</p>
+                </div>
+            </div>
+
+            <aside class="panel side-panel">
+                <div class="eyebrow">Administrator</div>
+                <h2>Review attendance</h2>
+                <p>Open the local sign-in list to see which teachers have checked in on this browser.</p>
+                <p class="privacy">Administrator access is opened from the CBT button with the admin password.</p>
+            </aside>
+        </section>
+    </main>
+
+    <script>
+        const teacherNameKey = 'dgc_teacher_name';
+        const teacherForm = document.getElementById('teacherForm');
+        const teacherName = document.getElementById('teacherName');
+        const nameField = document.getElementById('nameField');
+        const panelTitle = document.getElementById('panelTitle');
+        const panelCopy = document.getElementById('panelCopy');
+        const signInButton = document.getElementById('signInButton');
+        const formStatus = document.getElementById('formStatus');
+        const adminView = document.getElementById('adminView');
+        const loginTableBody = document.getElementById('loginTableBody');
+        const loginCount = document.getElementById('loginCount');
+        const availabilityTime = document.getElementById('availabilityTime');
+        const disappearanceTime = document.getElementById('disappearanceTime');
+        const settingStatus = document.getElementById('settingStatus');
+        let availabilitySetting = '08:00';
+        let disappearanceSetting = '17:00';
+        let serverLoginRecords = [];
+        const adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
+
+        function getAvailabilityTime() {
+            return availabilitySetting;
+        }
+
+        function getDisappearanceTime() {
+            return disappearanceSetting;
+        }
+
+        async function loadTeacherConfig() {
+            const response = await fetch('/api/teacher/config');
+            if (!response.ok) throw new Error('Could not load teacher settings');
+            const data = await response.json();
+            availabilitySetting = data.appearTime || availabilitySetting;
+            disappearanceSetting = data.disappearTime || disappearanceSetting;
+        }
+
+        function timeToMinutes(value) {
+            const [hour, minute] = value.split(':').map(Number);
+            return hour * 60 + minute;
+        }
+
+        function formatAvailabilityTime() {
+            const [hour, minute] = getAvailabilityTime().split(':').map(Number);
+            const normalizedHour = hour % 12 || 12;
+            return `${normalizedHour}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        function getNigeriaAttendancePeriod(date = new Date()) {
+            const parts = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false,
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            }).formatToParts(date).reduce((result, part) => {
+                result[part.type] = part.value;
+                return result;
+            }, {});
+            const currentMinutes = (Number(parts.hour) % 24) * 60 + Number(parts.minute);
+            const availabilityMinutes = timeToMinutes(getAvailabilityTime());
+            if (currentMinutes >= availabilityMinutes) return `${parts.year}-${parts.month}-${parts.day}`;
+            const previousDay = new Date(date.getTime() - 86400000);
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos', year: 'numeric', month: '2-digit', day: '2-digit' }).format(previousDay);
+        }
+
+        function isCheckInAvailable(date = new Date()) {
+            const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false, minute: 'numeric' }).formatToParts(date).reduce((result, part) => {
+                result[part.type] = part.value;
+                return result;
+            }, {});
+            const currentMinutes = (Number(parts.hour) % 24) * 60 + Number(parts.minute);
+            const appearsAt = timeToMinutes(getAvailabilityTime());
+            const disappearsAt = timeToMinutes(getDisappearanceTime());
+            if (appearsAt === disappearsAt) return true;
+            if (appearsAt < disappearsAt) return currentMinutes >= appearsAt && currentMinutes < disappearsAt;
+            return currentMinutes >= appearsAt || currentMinutes < disappearsAt;
+        }
+
+        function formatDate(value) {
+            return new Date(value).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Lagos' });
+        }
+
+        async function renderAdminLog() {
+            const response = await fetch(`/api/teacher/logins?period=${encodeURIComponent(getNigeriaAttendancePeriod())}`, {
+                headers: { 'x-teacher-admin-password': adminPassword }
+            });
+            if (!response.ok) throw new Error('Could not load teacher sign-ins');
+            const data = await response.json();
+            const records = data.logins || [];
+            serverLoginRecords = records;
+            const teachers = [...new Set(records.map(record => record.name))];
+            loginCount.textContent = `${teachers.length} teacher${teachers.length === 1 ? '' : 's'}`;
+            loginTableBody.innerHTML = teachers.length ? teachers.map((name, index) => {
+                const teacherRecords = records.filter(record => record.name === name);
+                const details = teacherRecords.map(record => `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${record.location?.mapUrl ? `<a href="${record.location.mapUrl}" target="_blank" rel="noopener">${escapeHtml(record.location.label)}</a>` : escapeHtml(record.location?.label || 'Location unavailable')}${record.location?.accuracy ? ` <small>(accuracy: ${Math.round(record.location.accuracy)}m)</small>` : ''}</span></div>`).join('');
+                return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}</td></tr>`;
+            }).join('') : '<tr><td class="empty" colspan="2">No teacher sign-ins yet.</td></tr>';
+            loginTableBody.querySelectorAll('[data-teacher-row]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const details = document.getElementById(`teacher-details-${button.dataset.teacherRow}`);
+                    details.hidden = !details.hidden;
+                });
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+        }
+
+        function showReturningTeacher(name) {
+            const firstName = name.trim().split(/\s+/)[0];
+            nameField.style.display = 'none';
+            panelTitle.textContent = `Welcome back, ${firstName}.`;
+            panelCopy.textContent = 'You are signed in on this device. Select the button below to record another check-in.';
+            signInButton.textContent = 'Check in';
+            signInButton.hidden = false;
+            teacherName.required = false;
+        }
+
+        function showCheckedInTeacher(name) {
+            const firstName = name.trim().split(/\s+/)[0];
+            nameField.style.display = 'none';
+            panelTitle.textContent = `You are checked in, ${firstName}.`;
+            panelCopy.textContent = `Your check-in has been recorded. The button will return at ${formatAvailabilityTime()} Nigerian time.`;
+            signInButton.hidden = true;
+            teacherName.required = false;
+        }
+
+        function showUnavailableTeacher(name) {
+            const firstName = name.trim().split(/\s+/)[0];
+            nameField.style.display = 'none';
+            panelTitle.textContent = `Welcome back, ${firstName}.`;
+            panelCopy.textContent = `Check-in is closed. The button is available from ${formatAvailabilityTime()} until ${formatDisappearanceTime()} Nigerian time.`;
+            signInButton.hidden = true;
+            teacherName.required = false;
+        }
+
+        function showUnavailableGuest() {
+            panelCopy.textContent = `Check-in is closed. The button is available from ${formatAvailabilityTime()} until ${formatDisappearanceTime()} Nigerian time.`;
+            signInButton.hidden = true;
+        }
+
+        function showAvailableGuest() {
+            panelTitle.textContent = 'Welcome, teacher.';
+            panelCopy.textContent = 'Enter your full name the first time you sign in. We will remember it on this browser.';
+            signInButton.hidden = false;
+            teacherName.required = true;
+        }
+
+        function formatDisappearanceTime() {
+            const [hour, minute] = getDisappearanceTime().split(':').map(Number);
+            const normalizedHour = hour % 12 || 12;
+            return `${normalizedHour}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        async function describeLocation(latitude, longitude) {
+            const fallback = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=18&addressdetails=1`, {
+                    headers: { Accept: 'application/json' }
+                });
+                if (!response.ok) return fallback;
+                const data = await response.json();
+                return data.display_name || fallback;
+            } catch (_) {
+                return fallback;
+            }
+        }
+
+        async function getApproximateLocation() {
+            try {
+                const response = await fetch('https://ipapi.co/json/', { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error('IP location request failed');
+                const data = await response.json();
+                if (!Number.isFinite(Number(data.latitude)) || !Number.isFinite(Number(data.longitude))) throw new Error('IP location unavailable');
+                const latitude = Number(data.latitude);
+                const longitude = Number(data.longitude);
+                const place = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
+                return {
+                    label: `Approximate: ${place || 'network location'}`,
+                    latitude,
+                    longitude,
+                    accuracy: null,
+                    approximate: true,
+                    mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}`
+                };
+            } catch (_) {
+                return { label: 'Location unavailable' };
+            }
+        }
+
+        async function getLocation() {
+            if (!navigator.geolocation) return getApproximateLocation();
+            return new Promise(resolve => {
+                if (!navigator.geolocation) {
+                    getApproximateLocation().then(resolve);
+                    return;
+                }
+                const savePosition = async position => {
+                    const { latitude, longitude } = position.coords;
+                    const accuracy = position.coords.accuracy;
+                    if (!Number.isFinite(accuracy) || accuracy > 1000) {
+                        getApproximateLocation().then(approximateLocation => resolve({ ...approximateLocation, browserAccuracy: accuracy }));
+                        return;
+                    }
+                    const label = await describeLocation(latitude, longitude);
+                    resolve({ label, latitude, longitude, accuracy, approximate: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` });
+                };
+                const useFallback = () => navigator.geolocation.getCurrentPosition(savePosition, () => getApproximateLocation().then(resolve), { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
+                navigator.geolocation.getCurrentPosition(savePosition, useFallback, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+            });
+        }
+
+        teacherForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (!isCheckInAvailable()) return;
+            const storedName = localStorage.getItem(teacherNameKey);
+            const name = (storedName || teacherName.value).trim().replace(/\s+/g, ' ');
+            if (name.length < 3) {
+                formStatus.textContent = 'Please enter your full name.';
+                return;
+            }
+
+            localStorage.setItem(teacherNameKey, name);
+            signInButton.disabled = true;
+            signInButton.textContent = 'Getting location...';
+            const location = await getLocation();
+            const response = await fetch('/api/teacher/logins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, location })
+            });
+            if (!response.ok) {
+                signInButton.disabled = false;
+                signInButton.textContent = 'Check in';
+                formStatus.textContent = 'Could not save your check-in. Please try again.';
+                return;
+            }
+            const savedLocation = location;
+            formStatus.textContent = savedLocation.mapUrl ? `Signed in at ${formatDate(new Date())}${savedLocation.approximate ? ' with an approximate network location.' : '.'}` : 'Signed in, but location was unavailable. Allow device location to record it correctly.';
+            showCheckedInTeacher(name);
+            if (adminView.classList.contains('is-visible')) renderAdminLog().catch(() => {});
+        });
+
+        function openAdminView() {
+            availabilityTime.value = getAvailabilityTime();
+            disappearanceTime.value = getDisappearanceTime();
+            adminView.classList.add('is-visible');
+            renderAdminLog().catch(() => {});
+            adminView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        document.getElementById('saveAvailabilityButton').addEventListener('click', async () => {
+            if (!availabilityTime.value || !disappearanceTime.value) return;
+            const response = await fetch('/api/teacher/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-teacher-admin-password': adminPassword },
+                body: JSON.stringify({ appearTime: availabilityTime.value, disappearTime: disappearanceTime.value })
+            });
+            if (!response.ok) {
+                settingStatus.textContent = 'Could not save settings.';
+                return;
+            }
+            availabilitySetting = availabilityTime.value;
+            disappearanceSetting = disappearanceTime.value;
+            settingStatus.textContent = `Saved: ${formatAvailabilityTime()} to ${formatDisappearanceTime()} Nigeria time.`;
+            renderAdminLog().catch(() => {});
+            const savedName = localStorage.getItem(teacherNameKey);
+            if (savedName && !serverLoginRecords.some(record => record.name === savedName && record.period === getNigeriaAttendancePeriod())) {
+                if (isCheckInAvailable()) showReturningTeacher(savedName);
+                else showUnavailableTeacher(savedName);
+            } else if (!savedName && !isCheckInAvailable()) {
+                showUnavailableGuest();
+            } else if (!savedName) {
+                showAvailableGuest();
+            }
+        });
+
+        async function initializeTeacherPage() {
+            try { await loadTeacherConfig(); } catch (_) { formStatus.textContent = 'Could not load server settings.'; }
+            const savedName = localStorage.getItem(teacherNameKey);
+            availabilityTime.value = getAvailabilityTime();
+            disappearanceTime.value = getDisappearanceTime();
+            if (savedName) {
+                const statusResponse = await fetch(`/api/teacher/status?name=${encodeURIComponent(savedName)}`);
+                const status = statusResponse.ok ? await statusResponse.json() : { checkedIn: false };
+                if (status.checkedIn) showCheckedInTeacher(savedName);
+                else if (isCheckInAvailable()) showReturningTeacher(savedName);
+                else showUnavailableTeacher(savedName);
+            } else if (!isCheckInAvailable()) {
+                showUnavailableGuest();
+            }
+            if (new URLSearchParams(window.location.search).get('admin') === '1' && adminPassword === 'admincheck') openAdminView();
+        }
+        initializeTeacherPage();
+    </script>
+</body>
+</html>

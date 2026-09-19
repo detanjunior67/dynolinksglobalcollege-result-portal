@@ -629,6 +629,124 @@ const CbtConfigSchema = new mongoose.Schema({
 
 const CbtConfig = mongoose.model('CbtConfig', CbtConfigSchema);
 
+const TeacherSettingsSchema = new mongoose.Schema({
+    key: { type: String, unique: true, default: 'default' },
+    appearTime: { type: String, default: '08:00', match: /^([01]\d|2[0-3]):[0-5]\d$/ },
+    disappearTime: { type: String, default: '17:00', match: /^([01]\d|2[0-3]):[0-5]\d$/ }
+}, { timestamps: true });
+
+const TeacherSettings = mongoose.model('TeacherSettings', TeacherSettingsSchema);
+
+const TeacherLoginSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    period: { type: String, required: true },
+    loggedInAt: { type: Date, default: Date.now },
+    location: { type: mongoose.Schema.Types.Mixed, default: {} }
+}, { timestamps: true });
+
+TeacherLoginSchema.index({ period: 1, name: 1, loggedInAt: -1 });
+const TeacherLogin = mongoose.model('TeacherLogin', TeacherLoginSchema);
+const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
+
+function requireTeacherAdmin(req, res, next) {
+    const password = req.headers['x-teacher-admin-password'] || req.body?.password;
+    if (password !== TEACHER_ADMIN_PASSWORD) {
+        return res.status(401).json({ success: false, message: 'Invalid teacher admin password.' });
+    }
+    next();
+}
+
+async function getTeacherSettings() {
+    return TeacherSettings.findOneAndUpdate(
+        { key: 'default' },
+        { $setOnInsert: { key: 'default', appearTime: '08:00', disappearTime: '17:00' } },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).lean();
+}
+
+function getNigeriaDateParts(date = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Lagos', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: 'numeric', minute: 'numeric', hour12: false
+    }).formatToParts(date).reduce((result, part) => {
+        result[part.type] = part.value;
+        return result;
+    }, {});
+}
+
+function getTeacherPeriod(date, appearTime) {
+    const parts = getNigeriaDateParts(date);
+    const [hour, minute] = appearTime.split(':').map(Number);
+    const currentMinutes = (Number(parts.hour) % 24) * 60 + Number(parts.minute);
+    const appearMinutes = hour * 60 + minute;
+    if (currentMinutes >= appearMinutes) return `${parts.year}-${parts.month}-${parts.day}`;
+    const previousDate = new Date(date.getTime() - 86400000);
+    const previous = getNigeriaDateParts(previousDate);
+    return `${previous.year}-${previous.month}-${previous.day}`;
+}
+
+app.get('/api/teacher/config', async (req, res) => {
+    try {
+        const settings = await getTeacherSettings();
+        res.json({ success: true, appearTime: settings.appearTime, disappearTime: settings.disappearTime });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not load teacher settings.' });
+    }
+});
+
+app.get('/api/teacher/logins', requireTeacherAdmin, async (req, res) => {
+    try {
+        const settings = await getTeacherSettings();
+        const period = req.query.period || getTeacherPeriod(new Date(), settings.appearTime);
+        const logins = await TeacherLogin.find({ period }).sort({ loggedInAt: -1 }).lean();
+        res.json({ success: true, period, logins });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not load teacher sign-ins.' });
+    }
+});
+
+app.get('/api/teacher/status', async (req, res) => {
+    try {
+        const name = String(req.query.name || '').trim();
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const login = name ? await TeacherLogin.findOne({ name, period }).sort({ loggedInAt: -1 }).lean() : null;
+        res.json({ success: true, checkedIn: Boolean(login), period });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not load teacher status.' });
+    }
+});
+
+app.post('/api/teacher/logins', async (req, res) => {
+    try {
+        const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A full teacher name is required.' });
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const login = await TeacherLogin.create({ name, period, loggedInAt: new Date(), location: req.body?.location || {} });
+        res.status(201).json({ success: true, login });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not save teacher sign-in.' });
+    }
+});
+
+app.put('/api/teacher/config', requireTeacherAdmin, async (req, res) => {
+    try {
+        const { appearTime, disappearTime } = req.body || {};
+        const validTime = value => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+        if (!validTime(appearTime) || !validTime(disappearTime)) {
+            return res.status(400).json({ success: false, message: 'Both times must use HH:MM format.' });
+        }
+        const settings = await TeacherSettings.findOneAndUpdate(
+            { key: 'default' }, { $set: { appearTime, disappearTime } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).lean();
+        res.json({ success: true, appearTime: settings.appearTime, disappearTime: settings.disappearTime });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Could not save teacher settings.' });
+    }
+});
+
 // High-speed In-Memory Caches
 const questionCache = new Map();
 const studentLookupCache = new Map();
