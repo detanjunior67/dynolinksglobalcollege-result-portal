@@ -657,6 +657,9 @@ function requireTeacherAdmin(req, res, next) {
 }
 
 async function getTeacherSettings() {
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+        throw new Error('Teacher settings database is not connected. Check MONGO_URI and the MongoDB deployment.');
+    }
     return TeacherSettings.findOneAndUpdate(
         { key: 'default' },
         { $setOnInsert: { key: 'default', appearTime: '08:00', disappearTime: '17:00' } },
@@ -690,17 +693,19 @@ app.get('/api/teacher/config', async (req, res) => {
         const settings = await getTeacherSettings();
         res.json({ success: true, appearTime: settings.appearTime, disappearTime: settings.disappearTime });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Could not load teacher settings.' });
+        console.error('Load teacher settings error:', err.message);
+        res.status(503).json({ success: false, message: err.message || 'Could not load teacher settings.' });
     }
 });
 
 app.get('/api/teacher/logins', requireTeacherAdmin, async (req, res) => {
     try {
         const settings = await getTeacherSettings();
-        const period = req.query.period || getTeacherPeriod(new Date(), settings.appearTime);
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
         const logins = await TeacherLogin.find({ period }).sort({ loggedInAt: -1 }).lean();
         res.json({ success: true, period, logins });
     } catch (err) {
+        console.error('Load teacher sign-ins error:', err.message);
         res.status(500).json({ success: false, message: 'Could not load teacher sign-ins.' });
     }
 });
@@ -713,6 +718,7 @@ app.get('/api/teacher/status', async (req, res) => {
         const login = name ? await TeacherLogin.findOne({ name, period }).sort({ loggedInAt: -1 }).lean() : null;
         res.json({ success: true, checkedIn: Boolean(login), period });
     } catch (err) {
+        console.error('Load teacher status error:', err.message);
         res.status(500).json({ success: false, message: 'Could not load teacher status.' });
     }
 });
@@ -726,7 +732,31 @@ app.post('/api/teacher/logins', async (req, res) => {
         const login = await TeacherLogin.create({ name, period, loggedInAt: new Date(), location: req.body?.location || {} });
         res.status(201).json({ success: true, login });
     } catch (err) {
+        console.error('Save teacher sign-in error:', err.message);
         res.status(500).json({ success: false, message: 'Could not save teacher sign-in.' });
+    }
+});
+
+app.delete('/api/teacher/logins/:id', requireTeacherAdmin, async (req, res) => {
+    try {
+        const deleted = await TeacherLogin.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Teacher sign-in record not found.' });
+        res.json({ success: true, message: 'Teacher sign-in record deleted.' });
+    } catch (err) {
+        console.error('Delete teacher sign-in error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not delete teacher sign-in record.' });
+    }
+});
+
+app.delete('/api/teacher/teachers/:name', requireTeacherAdmin, async (req, res) => {
+    try {
+        const name = decodeURIComponent(req.params.name || '').trim();
+        if (!name) return res.status(400).json({ success: false, message: 'Teacher name is required.' });
+        const result = await TeacherLogin.deleteMany({ name });
+        res.json({ success: true, deleted: result.deletedCount, message: 'Teacher attendance data deleted.' });
+    } catch (err) {
+        console.error('Delete teacher attendance data error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not delete teacher attendance data.' });
     }
 });
 
@@ -743,6 +773,7 @@ app.put('/api/teacher/config', requireTeacherAdmin, async (req, res) => {
         ).lean();
         res.json({ success: true, appearTime: settings.appearTime, disappearTime: settings.disappearTime });
     } catch (err) {
+        console.error('Save teacher settings error:', err.message);
         res.status(500).json({ success: false, message: 'Could not save teacher settings.' });
     }
 });

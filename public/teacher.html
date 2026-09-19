@@ -95,8 +95,21 @@
         th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
         .teacher-name { border: 0; padding: 0; color: var(--teal-dark); background: transparent; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(15,118,110,0.3); text-underline-offset: 3px; }
         .teacher-name:hover { color: var(--coral); }
+        .delete-teacher { margin-left: 8px; }
         .login-detail { display: flex; justify-content: space-between; gap: 18px; padding: 7px 0; color: var(--muted); font-size: 0.84rem; }
         .login-detail a { color: var(--teal-dark); font-weight: 700; }
+        .delete-login { border: 0; border-radius: 7px; padding: 4px 8px; color: #b42318; background: #fff0ee; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+        .delete-login:hover { background: #ffd8d2; }
+        .password-dialog { display: none; position: fixed; inset: 0; z-index: 20; align-items: center; justify-content: center; padding: 20px; background: rgba(8, 24, 39, 0.62); }
+        .password-dialog.is-visible { display: flex; }
+        .password-card { width: min(100%, 390px); padding: 26px; border-radius: 18px; background: white; box-shadow: 0 24px 70px rgba(8, 24, 39, 0.28); }
+        .password-card h2 { margin: 0 0 8px; font-size: 1.45rem; }
+        .password-card p { color: var(--muted); margin: 0 0 18px; font-size: 0.88rem; }
+        .password-actions { display: flex; gap: 10px; margin-top: 14px; }
+        .password-actions button { flex: 1; border: 0; border-radius: 10px; padding: 12px; font-weight: 700; cursor: pointer; }
+        .password-cancel { color: var(--muted); background: #eef2f1; }
+        .password-confirm { color: white; background: var(--teal); }
+        .password-error { min-height: 20px; margin-top: 8px; color: #b42318; font-size: 0.8rem; font-weight: 700; }
         .empty { color: var(--muted); padding: 18px 10px; }
         .privacy { color: var(--muted); font-size: 0.78rem; margin: 16px 0 0; }
         @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
@@ -139,7 +152,6 @@
                         <button class="primary" type="submit" id="signInButton">Sign in</button>
                     </form>
                     <div class="status" id="formStatus" role="status"></div>
-                    <p class="helper">Testing mode: sign-in records are stored only in this browser.</p>
                 </div>
 
                 <div class="panel admin-view" id="adminView">
@@ -165,18 +177,32 @@
                             <tbody id="loginTableBody"></tbody>
                         </table>
                     </div>
-                    <p class="privacy">This is a local test ledger. It will not be visible on other devices until it is connected to the server.</p>
+                    <p class="privacy">Sign-in history is stored securely and organized by the active Nigeria attendance period.</p>
                 </div>
             </div>
 
             <aside class="panel side-panel">
-                <div class="eyebrow">Administrator</div>
-                <h2>Review attendance</h2>
-                <p>Open the local sign-in list to see which teachers have checked in on this browser.</p>
-                <p class="privacy">Administrator access is opened from the CBT button with the admin password.</p>
+                <div class="eyebrow">Staff access</div>
+                <h2>Ready for the day?</h2>
+                <p>Sign in during the available hours. Your attendance time is recorded securely for the active school day.</p>
+                <p class="privacy">Please use your own device and make sure your name is entered correctly before checking in.</p>
             </aside>
         </section>
     </main>
+
+    <div class="password-dialog" id="deletePasswordDialog" role="dialog" aria-modal="true" aria-labelledby="deletePasswordTitle">
+        <form class="password-card" id="deletePasswordForm">
+            <h2 id="deletePasswordTitle">Confirm administrator access</h2>
+            <p>Enter the administrator password to delete this attendance data.</p>
+            <label for="deleteAdminPassword">Admin password</label>
+            <input id="deleteAdminPassword" type="password" autocomplete="current-password" required>
+            <div class="password-error" id="deletePasswordError" role="alert"></div>
+            <div class="password-actions">
+                <button class="password-cancel" type="button" id="cancelDeletePassword">Cancel</button>
+                <button class="password-confirm" type="submit">Confirm delete</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         const teacherNameKey = 'dgc_teacher_name';
@@ -196,7 +222,40 @@
         let availabilitySetting = '08:00';
         let disappearanceSetting = '17:00';
         let serverLoginRecords = [];
-        const adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
+        let adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
+        const deletePasswordDialog = document.getElementById('deletePasswordDialog');
+        const deletePasswordForm = document.getElementById('deletePasswordForm');
+        const deleteAdminPassword = document.getElementById('deleteAdminPassword');
+        const deletePasswordError = document.getElementById('deletePasswordError');
+        let deletePasswordResolver = null;
+
+        function requestDeletePassword() {
+            return new Promise(resolve => {
+                deletePasswordResolver = resolve;
+                deleteAdminPassword.value = '';
+                deletePasswordError.textContent = '';
+                deletePasswordDialog.classList.add('is-visible');
+                setTimeout(() => deleteAdminPassword.focus(), 0);
+            });
+        }
+
+        deletePasswordForm.addEventListener('submit', event => {
+            event.preventDefault();
+            const password = deleteAdminPassword.value.trim();
+            if (!password) {
+                deletePasswordError.textContent = 'Enter the administrator password.';
+                return;
+            }
+            deletePasswordDialog.classList.remove('is-visible');
+            deletePasswordResolver?.(password);
+            deletePasswordResolver = null;
+        });
+
+        document.getElementById('cancelDeletePassword').addEventListener('click', () => {
+            deletePasswordDialog.classList.remove('is-visible');
+            deletePasswordResolver?.(null);
+            deletePasswordResolver = null;
+        });
 
         function getAvailabilityTime() {
             return availabilitySetting;
@@ -207,8 +266,12 @@
         }
 
         async function loadTeacherConfig() {
-            const response = await fetch('/api/teacher/config');
-            if (!response.ok) throw new Error('Could not load teacher settings');
+            const response = await fetch('/api/teacher/config', { cache: 'no-store' });
+            if (!response.ok) {
+                let message = `Server returned ${response.status}.`;
+                try { message = (await response.json()).message || message; } catch (_) {}
+                throw new Error(message);
+            }
             const data = await response.json();
             availabilitySetting = data.appearTime || availabilitySetting;
             disappearanceSetting = data.disappearTime || disappearanceSetting;
@@ -258,10 +321,14 @@
         }
 
         async function renderAdminLog() {
-            const response = await fetch(`/api/teacher/logins?period=${encodeURIComponent(getNigeriaAttendancePeriod())}`, {
+            const response = await fetch('/api/teacher/logins', {
                 headers: { 'x-teacher-admin-password': adminPassword }
             });
-            if (!response.ok) throw new Error('Could not load teacher sign-ins');
+            if (!response.ok) {
+                let message = `Server returned ${response.status}.`;
+                try { message = (await response.json()).message || message; } catch (_) {}
+                throw new Error(message);
+            }
             const data = await response.json();
             const records = data.logins || [];
             serverLoginRecords = records;
@@ -269,14 +336,67 @@
             loginCount.textContent = `${teachers.length} teacher${teachers.length === 1 ? '' : 's'}`;
             loginTableBody.innerHTML = teachers.length ? teachers.map((name, index) => {
                 const teacherRecords = records.filter(record => record.name === name);
-                const details = teacherRecords.map(record => `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${record.location?.mapUrl ? `<a href="${record.location.mapUrl}" target="_blank" rel="noopener">${escapeHtml(record.location.label)}</a>` : escapeHtml(record.location?.label || 'Location unavailable')}${record.location?.accuracy ? ` <small>(accuracy: ${Math.round(record.location.accuracy)}m)</small>` : ''}</span></div>`).join('');
-                return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}</td></tr>`;
+                    const details = teacherRecords.map(record => {
+                    const location = record.location || {};
+                    const coordinates = Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))
+                        ? ` <small>(${Number(location.latitude).toFixed(6)}, ${Number(location.longitude).toFixed(6)})</small>`
+                        : '';
+                    const accuracy = location.accuracy ? ` <small>(accuracy: ${Math.round(location.accuracy)}m)</small>` : '';
+                    const place = location.mapUrl ? `<a href="${location.mapUrl}" target="_blank" rel="noopener">${escapeHtml(location.label)}</a>` : escapeHtml(location.label || 'Location unavailable');
+                    return `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${place}${coordinates}${accuracy} <button class="delete-login" type="button" data-login-id="${escapeHtml(record._id)}">Delete</button></span></div>`;
+                }).join('');
+                return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button><button class="delete-login delete-teacher" type="button" data-teacher-name="${encodeURIComponent(name)}">Delete teacher</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}</td></tr>`;
             }).join('') : '<tr><td class="empty" colspan="2">No teacher sign-ins yet.</td></tr>';
             loginTableBody.querySelectorAll('[data-teacher-row]').forEach(button => {
                 button.addEventListener('click', () => {
                     const details = document.getElementById(`teacher-details-${button.dataset.teacherRow}`);
                     details.hidden = !details.hidden;
                 });
+            });
+            loginTableBody.querySelectorAll('[data-login-id]').forEach(button => {
+                button.addEventListener('click', () => deleteTeacherLogin(button.dataset.loginId));
+            });
+            loginTableBody.querySelectorAll('[data-teacher-name]').forEach(button => {
+                button.addEventListener('click', () => deleteTeacher(button.dataset.teacherName));
+            });
+        }
+
+        async function deleteTeacher(encodedName) {
+            const name = decodeURIComponent(encodedName);
+            if (!window.confirm(`Delete all attendance data for ${name}?`)) return;
+            const password = await requestDeletePassword();
+            if (!password) return;
+            const response = await fetch(`/api/teacher/teachers/${encodeURIComponent(name)}`, {
+                method: 'DELETE',
+                headers: { 'x-teacher-admin-password': password }
+            });
+            if (!response.ok) {
+                let message = 'Could not delete teacher attendance data.';
+                try { message = (await response.json()).message || message; } catch (_) {}
+                window.alert(message);
+                return;
+            }
+            renderAdminLog().catch(error => {
+                loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
+            });
+        }
+
+        async function deleteTeacherLogin(loginId) {
+            if (!window.confirm('Delete this teacher sign-in record permanently?')) return;
+            const password = await requestDeletePassword();
+            if (!password) return;
+            const response = await fetch(`/api/teacher/logins/${encodeURIComponent(loginId)}`, {
+                method: 'DELETE',
+                headers: { 'x-teacher-admin-password': password }
+            });
+            if (!response.ok) {
+                let message = 'Could not delete the sign-in record.';
+                try { message = (await response.json()).message || message; } catch (_) {}
+                window.alert(message);
+                return;
+            }
+            renderAdminLog().catch(error => {
+                loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
             });
         }
 
@@ -330,60 +450,23 @@
             return `${normalizedHour}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
         }
 
-        async function describeLocation(latitude, longitude) {
-            const fallback = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=18&addressdetails=1`, {
-                    headers: { Accept: 'application/json' }
-                });
-                if (!response.ok) return fallback;
-                const data = await response.json();
-                return data.display_name || fallback;
-            } catch (_) {
-                return fallback;
-            }
-        }
-
-        async function getApproximateLocation() {
-            try {
-                const response = await fetch('https://ipapi.co/json/', { headers: { Accept: 'application/json' } });
-                if (!response.ok) throw new Error('IP location request failed');
-                const data = await response.json();
-                if (!Number.isFinite(Number(data.latitude)) || !Number.isFinite(Number(data.longitude))) throw new Error('IP location unavailable');
-                const latitude = Number(data.latitude);
-                const longitude = Number(data.longitude);
-                const place = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
-                return {
-                    label: `Approximate: ${place || 'network location'}`,
-                    latitude,
-                    longitude,
-                    accuracy: null,
-                    approximate: true,
-                    mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}`
-                };
-            } catch (_) {
-                return { label: 'Location unavailable' };
-            }
-        }
-
         async function getLocation() {
-            if (!navigator.geolocation) return getApproximateLocation();
+            if (!navigator.geolocation) return { label: 'Device location unavailable' };
             return new Promise(resolve => {
                 if (!navigator.geolocation) {
-                    getApproximateLocation().then(resolve);
+                    resolve({ label: 'Device location unavailable' });
                     return;
                 }
                 const savePosition = async position => {
                     const { latitude, longitude } = position.coords;
                     const accuracy = position.coords.accuracy;
                     if (!Number.isFinite(accuracy) || accuracy > 1000) {
-                        getApproximateLocation().then(approximateLocation => resolve({ ...approximateLocation, browserAccuracy: accuracy }));
+                        resolve({ label: 'Device location accuracy is too low', accuracy });
                         return;
                     }
-                    const label = await describeLocation(latitude, longitude);
-                    resolve({ label, latitude, longitude, accuracy, approximate: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` });
+                    resolve({ label: 'Device location', latitude, longitude, accuracy, approximate: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` });
                 };
-                const useFallback = () => navigator.geolocation.getCurrentPosition(savePosition, () => getApproximateLocation().then(resolve), { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
+                const useFallback = () => navigator.geolocation.getCurrentPosition(savePosition, () => resolve({ label: 'Device location unavailable' }), { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
                 navigator.geolocation.getCurrentPosition(savePosition, useFallback, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
             });
         }
@@ -400,7 +483,7 @@
 
             localStorage.setItem(teacherNameKey, name);
             signInButton.disabled = true;
-            signInButton.textContent = 'Getting location...';
+            signInButton.textContent = 'Saving attendance...';
             const location = await getLocation();
             const response = await fetch('/api/teacher/logins', {
                 method: 'POST',
@@ -413,17 +496,27 @@
                 formStatus.textContent = 'Could not save your check-in. Please try again.';
                 return;
             }
-            const savedLocation = location;
-            formStatus.textContent = savedLocation.mapUrl ? `Signed in at ${formatDate(new Date())}${savedLocation.approximate ? ' with an approximate network location.' : '.'}` : 'Signed in, but location was unavailable. Allow device location to record it correctly.';
+            formStatus.textContent = `Signed in at ${formatDate(new Date())}.`;
             showCheckedInTeacher(name);
             if (adminView.classList.contains('is-visible')) renderAdminLog().catch(() => {});
         });
 
         function openAdminView() {
+            if (adminPassword !== 'admincheck') {
+                const enteredPassword = window.prompt('Enter the teacher admin password:');
+                if (enteredPassword !== 'admincheck') {
+                    window.alert('Invalid teacher admin password.');
+                    return;
+                }
+                adminPassword = enteredPassword;
+                sessionStorage.setItem('dgc_teacher_admin_password', adminPassword);
+            }
             availabilityTime.value = getAvailabilityTime();
             disappearanceTime.value = getDisappearanceTime();
             adminView.classList.add('is-visible');
-            renderAdminLog().catch(() => {});
+            renderAdminLog().catch(error => {
+                loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
+            });
             adminView.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -454,7 +547,11 @@
         });
 
         async function initializeTeacherPage() {
-            try { await loadTeacherConfig(); } catch (_) { formStatus.textContent = 'Could not load server settings.'; }
+            try {
+                await loadTeacherConfig();
+            } catch (error) {
+                formStatus.textContent = `Using default schedule. ${error.message}`;
+            }
             const savedName = localStorage.getItem(teacherNameKey);
             availabilityTime.value = getAvailabilityTime();
             disappearanceTime.value = getDisappearanceTime();
@@ -467,7 +564,7 @@
             } else if (!isCheckInAvailable()) {
                 showUnavailableGuest();
             }
-            if (new URLSearchParams(window.location.search).get('admin') === '1' && adminPassword === 'admincheck') openAdminView();
+            if (new URLSearchParams(window.location.search).get('admin') === '1') openAdminView();
         }
         initializeTeacherPage();
     </script>
