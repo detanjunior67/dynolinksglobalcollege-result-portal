@@ -33,6 +33,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="dgc-loader.css">
     <script src="device-detector.js"></script>
     <style>
@@ -1388,7 +1389,8 @@
         async function apiFetchCbtResults() {
             const response = await fetch(`${API_BASE_URL}/cbt-results`);
             if (!response.ok) throw new Error('MongoDB could not load CBT results.');
-            return response.json();
+            const results = await response.json();
+            return results.map(result => ({ ...result, id: result.id || result._id }));
         }
 
         async function apiFetchCbtConfig() {
@@ -2326,14 +2328,11 @@
             );
         }
 
-        async function finalizeExamSubmission(options = {}) {
-            if (examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
-            examSubmissionStarted = true;
-            if (examTimerInterval) clearInterval(examTimerInterval);
-
+        function buildCbtResultRecord() {
             let subjectBreakdown = {};
             let totalAchieved = 0;
             let totalPossible = 0;
+            const questionDetails = [];
 
             currentClassConfig.subjects.forEach(sub => {
                 const qList = examQuestionBank[sub.id] || [];
@@ -2341,11 +2340,21 @@
                 let subPossible = 0;
 
                 qList.forEach((q, idx) => {
-                    const points = q.points || 1;
+                    const points = Number(q.points) || 1;
+                    const selectedIndex = studentAnswers[`${sub.id}-${idx}`];
+                    const isCorrect = selectedIndex === q.correctIndex;
                     subPossible += points;
-                    if (studentAnswers[`${sub.id}-${idx}`] === q.correctIndex) {
-                        subScore += points;
-                    }
+                    if (isCorrect) subScore += points;
+                    questionDetails.push({
+                        subject: sub.name,
+                        number: idx + 1,
+                        text: q.text,
+                        options: Array.isArray(q.options) ? q.options : [],
+                        selectedIndex: Number.isInteger(selectedIndex) ? selectedIndex : null,
+                        correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : null,
+                        points,
+                        awardedPoints: isCorrect ? points : 0
+                    });
                 });
 
                 subjectBreakdown[sub.name] = { score: subScore, max: subPossible };
@@ -2360,22 +2369,28 @@
             else if (percent >= 50) grade = 'C (Pass)';
             else if (percent >= 40) grade = 'D (Pass)';
 
-            const timestamp = new Date().toLocaleString();
-
-            const record = {
+            return {
                 id: 'res-' + Date.now(),
                 studentId: currentCandidate.studentId,
                 studentName: currentCandidate.name,
                 classKey: currentCandidate.classKey,
                 classLevel: currentClassConfig.label,
                 picture: currentCandidate.picture || '',
-                subjectBreakdown: subjectBreakdown,
+                subjectBreakdown,
+                questionDetails,
                 totalPoints: totalAchieved,
                 maxPoints: totalPossible,
                 percentage: percent,
-                grade: grade,
-                timestamp: timestamp
+                grade,
+                timestamp: new Date().toLocaleString()
             };
+        }
+
+        async function finalizeExamSubmission(options = {}) {
+            if (examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
+            examSubmissionStarted = true;
+            if (examTimerInterval) clearInterval(examTimerInterval);
+            const record = buildCbtResultRecord();
 
             cbtResults.unshift(record);
 
@@ -2421,8 +2436,19 @@
         }
 
         window.addEventListener('pagehide', () => {
-            if (document.getElementById('viewExamPortal')?.classList.contains('hidden')) return;
-            void finalizeExamSubmission({ silent: true, keepalive: true });
+            if (document.getElementById('viewExamPortal')?.classList.contains('hidden') || examSubmissionStarted) return;
+            examSubmissionStarted = true;
+            if (examTimerInterval) clearInterval(examTimerInterval);
+            const record = buildCbtResultRecord();
+            cbtResults.unshift(record);
+            savePersistentData();
+            const payload = JSON.stringify(record);
+            const beaconSent = navigator.sendBeacon
+                ? navigator.sendBeacon(`${API_BASE_URL}/cbt-results`, new Blob([payload], { type: 'application/json' }))
+                : false;
+            if (!beaconSent) {
+                void fetch(`${API_BASE_URL}/cbt-results`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
+            }
         });
 
         // ========================================================
@@ -3451,67 +3477,20 @@
             }
 
             if (!generatedBoxes.length) {
-                generatedBoxes = generateAiQuestionsData(classKey, subName, topic, numQs);
-                showToast('Online search was limited. Filled boxes with generated topic questions.', 'error');
-            } else {
-                showToast(`Filled ${generatedBoxes.length} question boxes from online search for "${topic}".`);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'pointer-events-none');
+                    btn.innerHTML = 'Generate &amp; Fill Boxes';
+                }
+                if (status) status.innerText = 'No verified questions were returned. Check the AI provider configuration and try again.';
+                return showToast('AI did not return verified questions. No placeholder questions were created.', 'error');
             }
+            showToast(`Filled ${generatedBoxes.length} question boxes from AI providers for "${topic}".`);
 
             currentWorkspaceClass = classKey;
             currentWorkspaceSubId = subId;
             closeModal();
             renderQuestionWorkspace(classKey, subId, generatedBoxes);
-        }
-
-        // SMART AI QUESTION GENERATOR LOGIC
-        function generateAiQuestionsData(classKey, subjectName, topic, count) {
-            let list = [];
-            const topicLower = topic.toLowerCase();
-
-            for (let i = 1; i <= count; i++) {
-                let qStem = '';
-                let opts = [];
-                let cIdx = 0;
-
-                if (topicLower.includes('equation') || topicLower.includes('algebra') || topicLower.includes('math')) {
-                    const a = i + 2;
-                    const b = i * 3;
-                    const ans = a * b;
-                    qStem = `[${topic}] Question ${i}: Evaluate the equation ${a}x = ${ans}. What is the value of x?`;
-                    opts = [`x = ${b}`, `x = ${b + 2}`, `x = ${b - 1}`, `x = ${b * 2}`];
-                    cIdx = 0;
-                } else if (topicLower.includes('photosynthesis') || topicLower.includes('plant') || topicLower.includes('biology')) {
-                    qStem = `[${topic}] Question ${i}: Which of the following is essential for plant photosynthesis?`;
-                    opts = ['Chlorophyll and Sunlight', 'Carbon Monoxide only', 'Nitrogen Gas only', 'Argon Gas'];
-                    cIdx = 0;
-                } else if (topicLower.includes('verb') || topicLower.includes('noun') || topicLower.includes('grammar') || topicLower.includes('english')) {
-                    qStem = `[${topic}] Question ${i}: Identify the grammatical structure in the topic sentence regarding "${topic}".`;
-                    opts = ['Subject + Action Verb', 'Adverbial Phrase only', 'Prepositional Passive', 'Interjection'];
-                    cIdx = 0;
-                } else {
-                    qStem = `[${topic}] Question ${i}: What is a fundamental core concept regarding "${topic}" in ${subjectName}?`;
-                    opts = [
-                        `Key principle governing ${topic}`,
-                        `Secondary non-essential factor of ${topic}`,
-                        `Unrelated concept from general science`,
-                        `An invalid premise regarding ${topic}`
-                    ];
-                    cIdx = 0;
-                }
-
-                list.push({
-                    id: 'q-ai-' + Date.now() + '-' + i,
-                    qNumber: i,
-                    text: qStem,
-                    options: opts,
-                    correctIndex: cIdx,
-                    points: 1,
-                    customTime: 60,
-                    isAiAutofilled: true
-                });
-            }
-
-            return list;
         }
 
         // RENDER WORKSPACE WITH N QUESTION BOXES
@@ -3956,8 +3935,8 @@
                         </button>
                     </td>
                     <td class="p-4">
-                        <button onclick="saveCbtResultAsPicture('${res.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm">
-                            <i class="fa-solid fa-image mr-1"></i> Save Picture
+                        <button onclick="saveCbtResultAsPdf('${res.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm">
+                            <i class="fa-solid fa-file-pdf mr-1"></i> Save PDF
                         </button>
                     </td>
                 `;
@@ -3965,7 +3944,7 @@
             });
         }
 
-        async function saveCbtResultAsPicture(resultId) {
+        async function saveCbtResultAsPictureLegacy(resultId) {
             const result = cbtResults.find(item => item.id === resultId);
             if (!result) return showToast('Result record not found.', 'error');
             if (typeof html2canvas !== 'function') return showToast('Picture export is unavailable. Check your connection and try again.', 'error');
@@ -4041,6 +4020,82 @@
                     window.hideDatabaseLoader();
                 }
             }
+        }
+
+        function saveCbtResultAsPdf(resultId) {
+            const result = cbtResults.find(item => item.id === resultId);
+            const jsPdf = window.jspdf && window.jspdf.jsPDF;
+            if (!result) return showToast('Result record not found.', 'error');
+            if (!jsPdf) return showToast('PDF export is unavailable. Check your connection and try again.', 'error');
+
+            const doc = new jsPdf({ unit: 'mm', format: 'a4' });
+            const margin = 16;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const maxWidth = pageWidth - (margin * 2);
+            let y = margin;
+
+            const addPageIfNeeded = (height = 8) => {
+                if (y + height > pageHeight - margin) {
+                    doc.addPage();
+                    y = margin;
+                    return true;
+                }
+                return false;
+            };
+            const addText = (text, size = 10, style = 'normal', color = [30, 41, 59], gap = 5) => {
+                doc.setFont('helvetica', style);
+                doc.setFontSize(size);
+                doc.setTextColor(...color);
+                const lines = doc.splitTextToSize(String(text ?? ''), maxWidth);
+                addPageIfNeeded(lines.length * 4 + gap);
+                doc.text(lines, margin, y);
+                y += lines.length * 4 + gap;
+            };
+
+            doc.setFillColor(29, 78, 216);
+            doc.rect(0, 0, pageWidth, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            doc.text('Dynolinks Global College', margin, 13);
+            doc.setFontSize(11);
+            doc.text('CBT Examination Result', margin, 21);
+            y = 40;
+
+            addText(result.studentName, 16, 'bold', [15, 23, 42], 6);
+            addText(`Student ID: ${result.studentId} | Class: ${result.classLevel}`, 10, 'normal', [37, 99, 235], 5);
+            addText(`Submitted: ${result.timestamp}`, 9, 'normal', [100, 116, 139], 8);
+            addText(`Score: ${result.totalPoints} / ${result.maxPoints}   |   Percentage: ${result.percentage}%   |   Grade: ${result.grade}`, 11, 'bold', [22, 101, 52], 10);
+
+            addText('Subject Breakdown', 12, 'bold', [15, 23, 42], 5);
+            Object.entries(result.subjectBreakdown || {}).forEach(([subject, score]) => {
+                addText(`${subject}: ${score.score} / ${score.max}`, 10, 'normal', [51, 65, 85], 4);
+            });
+
+            addText('Question And Answer Record', 13, 'bold', [15, 23, 42], 8);
+            const details = Array.isArray(result.questionDetails) ? result.questionDetails : [];
+            if (!details.length) {
+                addText('Question-level details were not available for this older result record.', 10, 'normal', [127, 29, 29], 6);
+            }
+            details.forEach((question, index) => {
+                addPageIfNeeded(22);
+                doc.setDrawColor(203, 213, 225);
+                doc.line(margin, y - 2, pageWidth - margin, y - 2);
+                addText(`${index + 1}. [${question.subject}] ${question.text}`, 10, 'bold', [15, 23, 42], 4);
+                (question.options || []).forEach((option, optionIndex) => {
+                    const isPicked = question.selectedIndex === optionIndex;
+                    const isCorrect = question.correctIndex === optionIndex;
+                    const marker = isPicked ? 'PICKED' : isCorrect ? 'CORRECT' : '';
+                    addText(`${String.fromCharCode(65 + optionIndex)}. ${option}${marker ? ` - ${marker}` : ''}`, 9, isPicked || isCorrect ? 'bold' : 'normal', isPicked ? [37, 99, 235] : isCorrect ? [22, 101, 52] : [71, 85, 105], 2);
+                });
+                const picked = Number.isInteger(question.selectedIndex) ? question.options?.[question.selectedIndex] : 'No answer';
+                const correct = Number.isInteger(question.correctIndex) ? question.options?.[question.correctIndex] : 'Unavailable';
+                addText(`Student answer: ${picked || 'No answer'} | Correct answer: ${correct || 'Unavailable'} | Awarded: ${question.awardedPoints || 0}/${question.points || 1}`, 9, 'bold', question.selectedIndex === question.correctIndex ? [22, 101, 52] : [127, 29, 29], 6);
+            });
+
+            doc.save(`Dynolinks_CBT_Result_${String(result.studentId).replace(/[^a-z0-9_-]/gi, '_')}.pdf`);
+            showToast('Result PDF saved successfully!');
         }
 
         function escapeResultPictureText(value) {

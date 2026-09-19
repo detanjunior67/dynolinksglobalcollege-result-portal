@@ -608,12 +608,15 @@ const Question = mongoose.model('Question', QuestionSchema);
 const CbtResultSchema = new mongoose.Schema({
     studentId: { type: String, required: true },
     studentName: { type: String, required: true },
+    classKey: { type: String, default: '' },
     classLevel: { type: String, required: true },
+    picture: { type: String, default: '' },
     totalPoints: { type: Number, default: 0 },
     maxPoints: { type: Number, default: 0 },
     percentage: { type: Number, default: 0 },
     grade: { type: String, default: 'F' },
     subjectBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} },
+    questionDetails: { type: mongoose.Schema.Types.Mixed, default: [] },
     timestamp: { type: String, default: () => new Date().toLocaleString() }
 }, { timestamps: true });
 
@@ -2044,7 +2047,7 @@ async function fetchChatGptQuestions(params) {
 async function fetchGeminiQuestions(params) {
     const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) return [];
-    const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const response = await withTimeout(fetch(url, {
         method: 'POST',
@@ -2106,9 +2109,8 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
         const aiParams = { classLabel: label, subjectName: subject, topic: focus, count };
 
         const aiSettled = await Promise.allSettled([
-            fetchChatGptQuestions(aiParams),
-            fetchGeminiQuestions(aiParams),
-            fetchOpenRouterQuestions(aiParams)
+            fetchOpenRouterQuestions(aiParams),
+            fetchGeminiQuestions(aiParams)
         ]);
 
         const aiQuestions = [];
@@ -2120,7 +2122,7 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
             }
         });
 
-        let questions = rankOnlineQuestions(aiQuestions, focus, count);
+        const questions = rankOnlineQuestions(aiQuestions, focus, count);
         if (questions.length >= count) {
             return res.json({
                 source: 'ai',
@@ -2128,31 +2130,7 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
                 questions
             });
         }
-
-        const onlineSettled = await Promise.allSettled([
-            fetchTriviaApiQuestions(subject, focus, count),
-            fetchOpenTdbQuestions(subject, count),
-            fetchWikipediaQuestions(focus, subject, label, count)
-        ]);
-
-        onlineSettled.forEach((result) => {
-            if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-                aiQuestions.push(...result.value);
-            } else if (result.status === 'rejected') {
-                console.warn('Online question source failed:', result.reason && result.reason.message);
-            }
-        });
-
-        questions = rankOnlineQuestions(aiQuestions, focus, count);
-        if (!questions.length) {
-            return res.status(502).json({ error: 'No questions were generated. Configure an AI key such as OPENAI_API_KEY, GOOGLE_AI_API_KEY, or OPENROUTER_API_KEY, then try again.' });
-        }
-
-        res.json({
-            source: process.env.OPENAI_API_KEY || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY ? 'ai-and-online' : 'online',
-            topic: focus,
-            questions
-        });
+        return res.status(502).json({ error: 'AI providers returned too few valid questions. Check the OpenRouter/Google API keys and try again.' });
     } catch (err) {
         console.error('AI question generation error:', err);
         res.status(500).json({ error: 'Failed to search and generate questions online.' });
