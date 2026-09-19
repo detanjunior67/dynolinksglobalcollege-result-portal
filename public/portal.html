@@ -647,6 +647,81 @@
                 font-size: 10px !important;
             }
         }
+
+        /* Modern result portal refresh */
+        :root {
+            --navy-dark: #113f46;
+            --navy-primary: #0f766e;
+            --navy-surface: #14b8a6;
+            --navy-card: rgba(255, 255, 255, 0.94);
+            --gold-accent: #d18a19;
+            --gold-hover: #b45309;
+            --text-light: #163b3d;
+            --text-muted: #647a7d;
+            --border-glass: #d9e7e4;
+            --shadow-glass: 0 24px 70px rgba(17, 63, 70, 0.12);
+        }
+
+        body {
+            background: #f4f8f7;
+            color: var(--text-light);
+            padding: 24px 18px 70px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle at 6% 8%, rgba(20,184,166,.14), transparent 24%), radial-gradient(circle at 94% 12%, rgba(245,158,11,.13), transparent 20%);
+        }
+
+        .home-nav-bar,
+        .hero-header,
+        .main-container { max-width: 1120px; }
+
+        .home-nav-bar { margin-bottom: 34px; }
+        .brand-logo { color: #163b3d; font-size: 1rem; }
+        .brand-logo img { width: 42px; height: 42px; border-radius: 11px; }
+        .btn-back-home { color: #0f766e; background: #fff; border-color: #c8dcda; border-radius: 999px; padding: 10px 16px; }
+        .btn-back-home:hover { color: #b45309; border-color: #d18a19; background: #fffaf0; }
+
+        .hero-header { text-align: left; display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+        .hero-header h1 { background: none; -webkit-text-fill-color: initial; color: #163b3d; font-size: clamp(2rem, 5vw, 3.7rem); margin-bottom: 5px; }
+        .hero-header p { color: #647a7d; }
+
+        .main-container { background: rgba(255,255,255,.72); border: 1px solid #d9e7e4; border-radius: 28px; box-shadow: var(--shadow-glass); padding: 10px; backdrop-filter: blur(18px); }
+        .tab-navigation { gap: 6px; padding: 6px; background: #edf6f4; border-radius: 16px; border: 1px solid #d9e7e4; }
+        .tab-btn { color: #5b7173; border-radius: 11px; padding: 12px 18px; }
+        .tab-btn.active { color: #fff; background: #0f766e; box-shadow: 0 8px 16px rgba(15,118,110,.18); }
+        .card-body { padding: clamp(20px, 4vw, 42px); }
+        .section-title { color: #163b3d; font-size: 1.7rem; }
+        .form-group label { color: #496467; }
+        input, select, textarea { color: #163b3d; background: #fbfdfc; border-color: #c8dcda; border-radius: 13px; }
+        input:focus, select:focus, textarea:focus { border-color: #0f766e; box-shadow: 0 0 0 4px rgba(15,118,110,.1); }
+        .btn-primary { background: #0f766e; box-shadow: 0 10px 20px rgba(15,118,110,.16); }
+        .btn-primary:hover { background: #115e59; }
+        .result-card, #result-card { background: #fff; border: 1px solid #d9e7e4; border-radius: 22px; box-shadow: 0 16px 34px rgba(17,63,70,.08); }
+        .student-details { background: #f0f8f6; border: 1px solid #d1e9e4; border-radius: 16px; }
+        .result-table { border: 1px solid #d9e7e4; border-radius: 14px; overflow: hidden; }
+        .result-table th { color: #486669; background: #edf6f4; }
+        .result-table td { color: #294e50; border-color: #e3eeeb; }
+        .admin-summary-box, .admin-form { background: #fff !important; color: #163b3d !important; border-color: #d9e7e4 !important; box-shadow: 0 10px 24px rgba(17,63,70,.05); }
+        .admin-summary-box h4, .admin-form h4, .admin-form h5 { color: #163b3d !important; }
+        .admin-summary-box .result-table { background: #fff !important; }
+        .admin-summary-box .result-table tbody tr,
+        .admin-summary-box .result-table tbody tr:nth-child(even) { background: #fff !important; }
+        .admin-summary-box .result-table td { color: #294e50 !important; background: #fff !important; }
+        .admin-summary-box input, .admin-summary-box select,
+        .admin-form input, .admin-form select, .admin-form textarea { background: #fbfdfc !important; color: #163b3d !important; border-color: #c8dcda !important; }
+
+        @media (max-width: 700px) {
+            .hero-header { display: block; }
+            .hero-header h1 { font-size: 2rem; }
+            .home-nav-bar { margin-bottom: 26px; }
+            .card-body { padding: 18px 12px; }
+        }
     </style>
 </head>
 
@@ -783,11 +858,7 @@
                             <h4 style="margin: 0; color: var(--text-light);">Student Data Sync</h4>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="syncSharedStudentRoster()">Refresh Shared Roster</button>
                         </div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                            <input type="password" id="portalStudentDataPassword" placeholder="Student data password" value="" style="height: 38px; min-width: 200px;">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="savePortalStudentDataPassword()">Save Password</button>
-                        </div>
-                        <div id="portalRosterSyncStatus" style="margin-top: 10px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Last synced: never</div>
+                        <div id="portalRosterSyncStatus" style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Last synced: never</div>
                     </div>
 
                     <div class="admin-summary-box">

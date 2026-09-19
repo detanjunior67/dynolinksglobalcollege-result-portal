@@ -649,6 +649,18 @@ const TeacherLoginSchema = new mongoose.Schema({
 
 TeacherLoginSchema.index({ period: 1, name: 1, loggedInAt: -1 });
 const TeacherLogin = mongoose.model('TeacherLogin', TeacherLoginSchema);
+
+const TeacherClassSessionSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    className: { type: String, required: true, trim: true },
+    classStartTime: { type: String, required: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
+    period: { type: String, required: true },
+    submittedAt: { type: Date, default: Date.now },
+    location: { type: mongoose.Schema.Types.Mixed, default: {} }
+}, { timestamps: true });
+
+TeacherClassSessionSchema.index({ period: 1, name: 1, submittedAt: -1 });
+const TeacherClassSession = mongoose.model('TeacherClassSession', TeacherClassSessionSchema);
 const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
 
 function requireTeacherAdmin(req, res, next) {
@@ -737,6 +749,47 @@ app.post('/api/teacher/logins', async (req, res) => {
     } catch (err) {
         console.error('Save teacher sign-in error:', err.message);
         res.status(500).json({ success: false, message: 'Could not save teacher sign-in.' });
+    }
+});
+
+app.post('/api/teacher/class-sessions', async (req, res) => {
+    try {
+        const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+        const className = String(req.body?.className || '').trim();
+        const classStartTime = String(req.body?.classStartTime || '').trim();
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!className) return res.status(400).json({ success: false, message: 'Please select a class.' });
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(classStartTime)) return res.status(400).json({ success: false, message: 'Please provide a valid class start time.' });
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const session = await TeacherClassSession.create({ name, className, classStartTime, period, submittedAt: new Date(), location: req.body?.location || {} });
+        res.status(201).json({ success: true, session });
+    } catch (err) {
+        console.error('Save teacher class session error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save class start.' });
+    }
+});
+
+app.get('/api/teacher/class-sessions', requireTeacherAdmin, async (req, res) => {
+    try {
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const sessions = await TeacherClassSession.find({ period }).sort({ submittedAt: -1 }).lean();
+        res.json({ success: true, period, sessions });
+    } catch (err) {
+        console.error('Load teacher class sessions error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load class starts.' });
+    }
+});
+
+app.delete('/api/teacher/class-sessions/:id', requireTeacherAdmin, async (req, res) => {
+    try {
+        const deleted = await TeacherClassSession.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Class start record not found.' });
+        res.json({ success: true, message: 'Class start record deleted.' });
+    } catch (err) {
+        console.error('Delete teacher class session error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not delete class start record.' });
     }
 });
 
@@ -2095,45 +2148,28 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
     try {
         const { classLabel, subjectName, topic, topics } = req.body || {};
         const count = Math.min(20, Math.max(1, parseInt(req.body && req.body.count, 10) || 5));
-
         const topicList = Array.isArray(topics)
             ? topics.map(item => String(item).trim()).filter(Boolean)
             : String(topic || '').split(',').map(item => item.trim()).filter(Boolean);
-        if (!topicList.length) {
-            return res.status(400).json({ error: 'Topic is required to search related questions online.' });
-        }
+        if (!topicList.length) return res.status(400).json({ error: 'Topic is required.' });
 
-        const label = classLabel || 'Secondary School';
-        const subject = subjectName || 'General Studies';
-        const focus = topicList.join(', ');
-        const aiParams = { classLabel: label, subjectName: subject, topic: focus, count };
-
-        const aiSettled = await Promise.allSettled([
+        const aiParams = {
+            classLabel: classLabel || 'Secondary School',
+            subjectName: subjectName || 'General Studies',
+            topic: topicList.join(', '),
+            count
+        };
+        const settled = await Promise.allSettled([
             fetchOpenRouterQuestions(aiParams),
             fetchGeminiQuestions(aiParams)
         ]);
-
-        const aiQuestions = [];
-        aiSettled.forEach((result) => {
-            if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-                aiQuestions.push(...result.value);
-            } else if (result.status === 'rejected') {
-                console.warn('AI question provider failed:', result.reason && result.reason.message);
-            }
-        });
-
-        const questions = rankOnlineQuestions(aiQuestions, focus, count);
-        if (questions.length >= count) {
-            return res.json({
-                source: 'ai',
-                topic: focus,
-                questions
-            });
-        }
-        return res.status(502).json({ error: 'AI providers returned too few valid questions. Check the OpenRouter/Google API keys and try again.' });
+        const generated = settled.flatMap(result => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []);
+        const questions = rankOnlineQuestions(generated, aiParams.topic, count);
+        if (questions.length < count) return res.status(502).json({ error: 'AI providers returned too few valid questions.' });
+        res.json({ source: 'ai', topic: aiParams.topic, questions });
     } catch (err) {
         console.error('AI question generation error:', err);
-        res.status(500).json({ error: 'Failed to search and generate questions online.' });
+        res.status(500).json({ error: 'Failed to generate verified questions.' });
     }
 });
 
@@ -2433,5 +2469,46 @@ app.post('/api/questions/bulk', async (req, res) => {
     } catch (err) {
         console.error('Error bulk saving questions:', err);
         res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/teacher/class-sessions', async (req, res) => {
+    try {
+        const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+        const className = String(req.body?.className || '').trim();
+        const classStartTime = String(req.body?.classStartTime || '').trim();
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!className) return res.status(400).json({ success: false, message: 'Please select a class.' });
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(classStartTime)) return res.status(400).json({ success: false, message: 'Please provide a valid class start time.' });
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const session = await TeacherClassSession.create({ name, className, classStartTime, period, submittedAt: new Date(), location: req.body?.location || {} });
+        res.status(201).json({ success: true, session });
+    } catch (err) {
+        console.error('Save teacher class session error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save class start.' });
+    }
+});
+
+app.get('/api/teacher/class-sessions', requireTeacherAdmin, async (req, res) => {
+    try {
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const sessions = await TeacherClassSession.find({ period }).sort({ submittedAt: -1 }).lean();
+        res.json({ success: true, period, sessions });
+    } catch (err) {
+        console.error('Load teacher class sessions error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load class starts.' });
+    }
+});
+
+app.delete('/api/teacher/class-sessions/:id', requireTeacherAdmin, async (req, res) => {
+    try {
+        const deleted = await TeacherClassSession.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Class start record not found.' });
+        res.json({ success: true, message: 'Class start record deleted.' });
+    } catch (err) {
+        console.error('Delete teacher class session error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not delete class start record.' });
     }
 });

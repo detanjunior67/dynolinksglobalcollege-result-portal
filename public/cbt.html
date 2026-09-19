@@ -133,6 +133,134 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
         }
 
+        /* Light examination workspace */
+        body {
+            background: #f4f8f7 !important;
+            color: #173b3c;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 8% 4%, rgba(20,184,166,.11), transparent 26%), radial-gradient(circle at 94% 12%, rgba(245,158,11,.12), transparent 22%);
+            z-index: -1;
+        }
+
+        header {
+            background: rgba(255,255,255,.9) !important;
+            border-color: #d9e7e4 !important;
+            box-shadow: 0 10px 28px rgba(23,59,60,.08) !important;
+        }
+
+        header .text-gray-900,
+        header .dark\:text-white { color: #173b3c !important; }
+
+        .mobile-secondary-nav,
+        #portalToggleBtn {
+            border-color: #c8dcda !important;
+            color: #26595a !important;
+            background: #ffffff !important;
+        }
+
+        .mobile-secondary-nav:hover,
+        #portalToggleBtn:hover { background: #edf7f5 !important; }
+
+        #viewDashboard > div:first-child {
+            background: linear-gradient(118deg, #0f4c4c 0%, #137b78 58%, #d18a19 100%) !important;
+            border: 1px solid rgba(255,255,255,.32);
+            box-shadow: 0 18px 36px rgba(15,76,76,.2) !important;
+        }
+
+        #viewDashboard > div:first-child h1 { letter-spacing: -.03em; }
+
+        #viewDashboard > div:nth-child(2),
+        #viewInstructions > div,
+        #viewSubmissionSuccess > div,
+        #viewExamPortal > div,
+        #viewAdminPortal > div:not(:first-child) {
+            background: rgba(255,255,255,.94) !important;
+            border-color: #d9e7e4 !important;
+            box-shadow: 0 12px 30px rgba(23,59,60,.06) !important;
+        }
+
+        #viewDashboard > div:nth-child(2) h2,
+        #viewInstructions h2,
+        #viewExamPortal h3,
+        #viewSubmissionSuccess h2,
+        #viewAdminPortal h2,
+        #viewAdminPortal h3,
+        #viewAdminPortal h4 { color: #173b3c !important; }
+
+        #viewDashboard input,
+        #viewDashboard select,
+        #viewAdminPortal input,
+        #viewAdminPortal select,
+        #viewAdminPortal textarea {
+            background: #ffffff !important;
+            border-color: #c8dcda !important;
+            color: #173b3c !important;
+        }
+
+        #examSubjectPreview {
+            background: #edf8f6 !important;
+            border-color: #b9dfd8 !important;
+            color: #205b5b !important;
+        }
+
+        #candidateProfileCard,
+        .candidate-card-highlight {
+            background: linear-gradient(135deg, #effaf8, #f7fbfa) !important;
+            border-color: #b9dfd8 !important;
+        }
+
+        #viewDashboard button[onclick="prepareStudentExam()"],
+        #viewInstructions button[onclick="startExamNow()"] {
+            background: #0284c7 !important;
+            box-shadow: 0 10px 22px rgba(15,118,110,.2) !important;
+        }
+
+        #viewDashboard button[onclick="prepareStudentExam()"]:hover,
+        #viewInstructions button[onclick="startExamNow()"]:hover { background: #0369a1 !important; }
+
+        @media (max-width: 640px) {
+            header { padding: .7rem .9rem !important; }
+            #viewDashboard > div:first-child { border-radius: 1.1rem !important; }
+        }
+
+        header {
+            border-radius: 0 0 18px 18px;
+            padding: .7rem clamp(1rem, 3vw, 2.5rem) !important;
+        }
+
+        header .bg-indigo-600 { background: #0284c7 !important; }
+        header .text-gray-500 { color: #647a7d !important; }
+        .header-controls { gap: .65rem !important; }
+        #viewDashboard { padding-top: .45rem; }
+        #viewDashboard > div:first-child { border-radius: 1.4rem !important; padding: clamp(1.5rem, 5vw, 3.3rem) !important; }
+        #viewDashboard > div:first-child h1 { max-width: 780px; font-size: clamp(2.2rem, 5vw, 4.35rem); }
+        #viewDashboard > div:nth-child(2) { border-radius: 1.35rem !important; }
+        #viewDashboard > div:nth-child(2) > div:first-child { border-color: #d9e7e4 !important; }
+        #viewDashboard > div:nth-child(2) label { color: #496467 !important; }
+        #viewDashboard > div:nth-child(2) input::placeholder { color: #8ba1a2; }
+
+        @media (min-width: 900px) {
+            #viewDashboard > div:nth-child(2) { max-width: 920px; }
+        }
+
+        /* Sky-blue status palette */
+        .bg-green-100, .bg-green-500, .bg-green-600,
+        .bg-emerald-100, .bg-emerald-600,
+        .border-green-500 { background-color: #e0f2fe !important; }
+
+        .bg-green-500, .bg-green-600, .bg-emerald-600 { background-color: #0284c7 !important; }
+        .hover\:bg-green-700:hover, .hover\:bg-emerald-700:hover { background-color: #0369a1 !important; }
+        .text-green-600, .text-green-700, .text-emerald-600, .text-emerald-700 { color: #0369a1 !important; }
+        .text-green-400, .text-green-300, .text-emerald-400, .text-emerald-300 { color: #38bdf8 !important; }
+        .border-green-500 { border-color: #0284c7 !important; }
+        .bg-green-100 .fa-check, .bg-emerald-100 .fa-check { color: #0369a1 !important; }
+
         /* Candidate Photo & Identification Card Styles */
         .candidate-photo-frame {
             position: relative;
@@ -564,13 +692,6 @@
                     class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
                     <i class="fa-solid fa-lock text-amber-500"></i>
                     <span id="portalToggleText">🔒 Admin Only</span>
-                </button>
-
-                <!-- Dark Mode Toggle -->
-                <button onclick="toggleDarkMode()"
-                    class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                    title="Toggle Light/Dark Theme">
-                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
                 </button>
 
                 <!-- Profile Badge -->
@@ -1685,14 +1806,6 @@
             setTimeout(() => {
                 toast.remove();
             }, 3000);
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const icon = document.getElementById('themeIcon');
-            icon.className = document.documentElement.classList.contains('dark')
-                ? 'fa-solid fa-sun text-lg text-amber-400'
-                : 'fa-solid fa-moon text-lg text-gray-600';
         }
 
         function showView(viewId) {

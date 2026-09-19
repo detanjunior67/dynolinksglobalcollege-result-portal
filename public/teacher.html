@@ -122,6 +122,72 @@
             h1 { font-size: clamp(2.7rem, 14vw, 4.1rem); }
             .panel { border-radius: 19px; padding: 24px; }
         }
+
+        /* Modern staff workspace refresh */
+        :root {
+            --ink: #163b3d;
+            --muted: #647a7d;
+            --paper: #f4f8f7;
+            --panel: rgba(255,255,255,.93);
+            --teal: #0f766e;
+            --teal-dark: #115e59;
+            --coral: #d18a19;
+            --line: #d9e7e4;
+            --shadow: 0 22px 60px rgba(17,63,70,.11);
+        }
+
+        body { background: #f4f8f7; }
+        body::before { background: linear-gradient(135deg, #dff3ed 0%, #f4f8f7 68%); }
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .45;
+            background-image: linear-gradient(rgba(15,118,110,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(15,118,110,.035) 1px, transparent 1px);
+            background-size: 34px 34px;
+        }
+
+        .shell { width: min(1180px, calc(100% - 40px)); padding-top: 24px; }
+        .topbar { padding: 11px 14px; margin-bottom: 78px; border: 1px solid rgba(217,231,228,.9); border-radius: 18px; background: rgba(255,255,255,.72); box-shadow: 0 10px 28px rgba(17,63,70,.06); backdrop-filter: blur(16px); }
+        .brand { color: #163b3d; }
+        .brand-mark { width: 46px; height: 46px; border-radius: 12px; }
+        .back-link { padding: 9px 14px; border: 1px solid #c8dcda; border-radius: 999px; background: #fff; color: #0f766e; }
+        .back-link:hover { background: #edf7f5; }
+
+        .intro { max-width: 820px; }
+        .eyebrow { color: #b45309; }
+        h1 { color: #163b3d; font-size: clamp(2.7rem, 7vw, 5.9rem); }
+        .intro p { color: #647a7d; }
+        .workspace { grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 26px; }
+        .workspace > div { display: grid; gap: 24px; align-content: start; }
+        .panel { border-color: #d9e7e4; background: rgba(255,255,255,.94); box-shadow: var(--shadow); }
+        .panel h2 { color: #163b3d; }
+        .primary { background: #0f766e; }
+        .primary:hover { background: #115e59; }
+        .side-panel { background: linear-gradient(155deg, #163b3d, #0f766e 72%, #d18a19); }
+        .side-panel h2 { color: #ffffff; }
+        .account { background: #edf8f3; border: 1px solid #d1e9e4; }
+        .availability-settings { background: #f5faf9; }
+        .admin-view { border-top: 4px solid #d18a19; }
+        .class-session-panel { margin-top: 22px; border-top: 4px solid #0284c7; }
+        .class-session-panel h2 { font-size: 1.35rem; }
+        .class-session-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .class-session-submit { margin-top: 14px; }
+        .class-session-status { min-height: 20px; margin-top: 10px; color: #0f766e; font-size: .82rem; font-weight: 700; }
+        .session-count { color: #0369a1; background: #e0f2fe; }
+        body.admin-mode .class-session-panel,
+        body.admin-mode .side-panel { display: none !important; }
+        body.admin-mode .workspace { grid-template-columns: 1fr; }
+        .admin-view { background: transparent; border: 0; box-shadow: none; padding: 0; }
+        .admin-section-card { padding: clamp(20px, 3vw, 32px); border: 1px solid #d9e7e4; border-radius: 22px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(17,63,70,.08); }
+        .admin-section-card + .admin-section-card { margin-top: 24px; }
+        @media (max-width: 560px) { .class-session-grid { grid-template-columns: 1fr; } }
+
+        @media (max-width: 760px) {
+            .shell { width: min(100% - 24px, 620px); }
+            .topbar { margin-bottom: 56px; }
+        }
     </style>
 </head>
 <body>
@@ -155,30 +221,74 @@
                     <div class="status" id="formStatus" role="status"></div>
                 </div>
 
+                <div class="panel class-session-panel" id="classSessionPanel">
+                    <h2>Start a class</h2>
+                    <p class="panel-copy">Choose the class you are about to teach. </p>
+                    <form id="classSessionForm">
+                        <div class="class-session-grid">
+                            <div>
+                                <label for="classSessionTeacher">Teacher</label>
+                                <input id="classSessionTeacher" type="text" readonly placeholder="Sign in first">
+                            </div>
+                            <div>
+                                <label for="classSessionClass">Class</label>
+                                <select id="classSessionClass" required>
+                                    <option value="">Select class</option>
+                                    <option>JSS 1</option>
+                                    <option>JSS 2</option>
+                                    <option>JSS 3</option>
+                                    <option>SS 1</option>
+                                    <option>SS 2</option>
+                                    <option>SS 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label for="classStartTime" style="margin-top: 14px;">Class start time</label>
+                        <input id="classStartTime" type="time" required>
+                        <button class="primary class-session-submit" type="submit">Check in to teach class</button>
+                        <div class="class-session-status" id="classSessionStatus" role="status"></div>
+                    </form>
+                </div>
+
                 <div class="panel admin-view" id="adminView">
-                    <div class="admin-heading">
-                        <h2>Teacher sign-ins</h2>
-                        <span class="count" id="loginCount">0 records</span>
-                    </div>
-                    <div class="availability-settings">
-                        <div>
-                            <label for="availabilityTime">Button appears (Nigeria time)</label>
-                            <input id="availabilityTime" type="time" value="08:00">
+                    <div class="admin-section-card">
+                        <div class="admin-heading">
+                            <h2>Teacher sign-ins</h2>
+                            <span class="count" id="loginCount">0 records</span>
                         </div>
-                        <div>
-                            <label for="disappearanceTime">Button disappears (Nigeria time)</label>
-                            <input id="disappearanceTime" type="time" value="17:00">
+                        <div class="availability-settings">
+                            <div>
+                                <label for="availabilityTime">Button appears (Nigeria time)</label>
+                                <input id="availabilityTime" type="time" value="08:00">
+                            </div>
+                            <div>
+                                <label for="disappearanceTime">Button disappears (Nigeria time)</label>
+                                <input id="disappearanceTime" type="time" value="17:00">
+                            </div>
+                            <button type="button" id="saveAvailabilityButton">Save times</button>
+                            <span class="setting-status" id="settingStatus" role="status"></span>
                         </div>
-                        <button type="button" id="saveAvailabilityButton">Save times</button>
-                        <span class="setting-status" id="settingStatus" role="status"></span>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Teacher</th><th>Last sign-in</th></tr></thead>
+                                <tbody id="loginTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead><tr><th>Teacher</th><th>Last sign-in</th></tr></thead>
-                            <tbody id="loginTableBody"></tbody>
-                        </table>
+
+                    <div class="admin-section-card">
+                        <div class="admin-heading">
+                            <h2>Class starts</h2>
+                            <span class="count session-count" id="sessionCount">0 records</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Teacher</th><th>Class</th><th>Class time</th><th>Submitted at</th><th>Action</th></tr></thead>
+                                <tbody id="classSessionTableBody"></tbody>
+                            </table>
+                        </div>
+                        <p class="privacy">Class start records are organized by the active Nigeria attendance period.</p>
                     </div>
-                    <p class="privacy">Sign-in history is stored securely and organized by the active Nigeria attendance period.</p>
                 </div>
             </div>
 
@@ -214,6 +324,11 @@
         const panelCopy = document.getElementById('panelCopy');
         const signInButton = document.getElementById('signInButton');
         const formStatus = document.getElementById('formStatus');
+        const classSessionForm = document.getElementById('classSessionForm');
+        const classSessionTeacher = document.getElementById('classSessionTeacher');
+        const classSessionStatus = document.getElementById('classSessionStatus');
+        const classSessionTableBody = document.getElementById('classSessionTableBody');
+        const sessionCount = document.getElementById('sessionCount');
         const adminView = document.getElementById('adminView');
         const loginTableBody = document.getElementById('loginTableBody');
         const loginCount = document.getElementById('loginCount');
@@ -360,6 +475,48 @@
             loginTableBody.querySelectorAll('[data-teacher-name]').forEach(button => {
                 button.addEventListener('click', () => deleteTeacher(button.dataset.teacherName));
             });
+            await renderClassSessions();
+        }
+
+        async function renderClassSessions() {
+            const response = await fetch('/api/teacher/class-sessions', {
+                headers: { 'x-teacher-admin-password': adminPassword }
+            });
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok) throw new Error(`Could not load class starts (${response.status}).`);
+            if (!contentType.includes('application/json')) {
+                throw new Error('The server returned a page instead of class-session data. Redeploy the updated server.');
+            }
+            const data = await response.json();
+            const sessions = data.sessions || [];
+            sessionCount.textContent = `${sessions.length} record${sessions.length === 1 ? '' : 's'}`;
+            classSessionTableBody.innerHTML = sessions.length ? sessions.map(session => `
+                <tr>
+                    <td>${escapeHtml(session.name)}</td>
+                    <td>${escapeHtml(session.className)}</td>
+                    <td>${escapeHtml(session.classStartTime)}</td>
+                    <td>${formatDate(session.submittedAt)}</td>
+                    <td><button class="delete-login" type="button" data-session-id="${escapeHtml(session._id)}">Delete</button></td>
+                </tr>
+            `).join('') : '<tr><td class="empty" colspan="5">No class starts recorded yet.</td></tr>';
+            classSessionTableBody.querySelectorAll('[data-session-id]').forEach(button => {
+                button.addEventListener('click', () => deleteClassSession(button.dataset.sessionId));
+            });
+        }
+
+        async function deleteClassSession(sessionId) {
+            if (!window.confirm('Delete this class start record permanently?')) return;
+            const password = await requestDeletePassword();
+            if (!password) return;
+            const response = await fetch(`/api/teacher/class-sessions/${encodeURIComponent(sessionId)}`, {
+                method: 'DELETE',
+                headers: { 'x-teacher-admin-password': password }
+            });
+            if (!response.ok) {
+                window.alert('Could not delete the class start record.');
+                return;
+            }
+            renderClassSessions().catch(() => {});
         }
 
         async function deleteTeacher(encodedName) {
@@ -413,6 +570,7 @@
             signInButton.textContent = 'Check in';
             signInButton.hidden = false;
             teacherName.required = false;
+            classSessionTeacher.value = name;
         }
 
         function showCheckedInTeacher(name) {
@@ -422,6 +580,7 @@
             panelCopy.textContent = `Your check-in has been recorded. The button will return at ${formatAvailabilityTime()} Nigerian time.`;
             signInButton.hidden = true;
             teacherName.required = false;
+            classSessionTeacher.value = name;
         }
 
         function showUnavailableTeacher(name) {
@@ -431,6 +590,7 @@
             panelCopy.textContent = `Check-in is closed. The button is available from ${formatAvailabilityTime()} until ${formatDisappearanceTime()} Nigerian time.`;
             signInButton.hidden = true;
             teacherName.required = false;
+            classSessionTeacher.value = name;
         }
 
         function showUnavailableGuest() {
@@ -502,6 +662,36 @@
             if (adminView.classList.contains('is-visible')) renderAdminLog().catch(() => {});
         });
 
+        classSessionForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const name = localStorage.getItem(teacherNameKey) || '';
+            const className = document.getElementById('classSessionClass').value;
+            const classStartTime = document.getElementById('classStartTime').value;
+            if (!name) {
+                classSessionStatus.textContent = 'Sign in as a teacher first.';
+                return;
+            }
+            if (!className || !classStartTime) {
+                classSessionStatus.textContent = 'Select a class and class start time.';
+                return;
+            }
+            classSessionStatus.textContent = 'Saving class start...';
+            const location = await getLocation();
+            const response = await fetch('/api/teacher/class-sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, className, classStartTime, location })
+            });
+            if (!response.ok) {
+                classSessionStatus.textContent = 'Could not save the class start. Please try again.';
+                return;
+            }
+            classSessionStatus.textContent = `Class start recorded at ${formatDate(new Date())}.`;
+            classSessionForm.reset();
+            classSessionTeacher.value = name;
+            if (adminView.classList.contains('is-visible')) renderClassSessions().catch(() => {});
+        });
+
         function openAdminView() {
             if (adminPassword !== 'admincheck') {
                 const enteredPassword = window.prompt('Enter the teacher admin password:');
@@ -514,6 +704,7 @@
             }
             availabilityTime.value = getAvailabilityTime();
             disappearanceTime.value = getDisappearanceTime();
+            document.body.classList.add('admin-mode');
             adminView.classList.add('is-visible');
             renderAdminLog().catch(error => {
                 loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
@@ -537,6 +728,7 @@
             settingStatus.textContent = `Saved: ${formatAvailabilityTime()} to ${formatDisappearanceTime()} Nigeria time.`;
             renderAdminLog().catch(() => {});
             const savedName = localStorage.getItem(teacherNameKey);
+            classSessionTeacher.value = savedName || '';
             if (savedName && !serverLoginRecords.some(record => record.name === savedName && record.period === getNigeriaAttendancePeriod())) {
                 if (isCheckInAvailable()) showReturningTeacher(savedName);
                 else showUnavailableTeacher(savedName);

@@ -283,7 +283,6 @@
         }
 
         header nav a,
-        .theme-switch-wrapper,
         .menu-toggle {
             filter: drop-shadow(0 1px 3px rgba(2, 8, 23, 0.2));
         }
@@ -307,78 +306,6 @@
             font-weight: 700;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-        }
-
-        /* Theme Toggle Switch Styles */
-        .theme-switch-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-        }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 30px;
-            border: 1px solid var(--border-dark);
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 24px;
-            width: 24px;
-            left: 3px;
-            bottom: 2px;
-            background: white;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        input:checked + .slider {
-            background: var(--grad-primary);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(29px);
-        }
-
-        .theme-icon {
-            position: absolute;
-            top: 50%;
-            left: 9px;
-            width: 12px;
-            height: 12px;
-            color: #0f172a;
-            transform: translateY(-50%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .theme-icon-sun {
-            left: auto;
-            right: 9px;
-            color: #fef3c7;
         }
 
         .menu-toggle {
@@ -1854,6 +1781,74 @@
                 align-items: stretch;
             }
 
+        
+        header {
+            gap: 22px;
+            padding: 10px clamp(16px, 4vw, 52px);
+            background: rgba(248, 250, 252, 0.82);
+            border-color: rgba(14, 116, 144, 0.14);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09), inset 0 -1px 0 rgba(255,255,255,.9);
+        }
+        
+        header::before {
+            background: linear-gradient(90deg, rgba(56,189,248,.16), transparent 42%, rgba(244,114,182,.13));
+        }
+        
+        .logo-container {
+            gap: 11px;
+            padding: 4px 14px 4px 4px;
+            background: rgba(255,255,255,.58);
+            border-color: rgba(14,116,144,.11);
+        }
+        
+        .logo-img { height: 52px; border-radius: 10px; }
+        .logo-text { color: #0f172a; font-size: 1.08rem; }
+        .logo-motto { color: #e11d48; font-size: .68rem; letter-spacing: 1px; }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-left: auto;
+        }
+        
+        .header-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f766e;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        .header-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 5px rgba(16,185,129,.13);
+        }
+        
+        nav { gap: 14px; }
+        nav a:not(.btn-portal):not(.admin-link):not(.cbt-btn) { color: #334155; font-size: .86rem; }
+        .btn-portal, .admin-link, .cbt-btn { padding: 10px 17px; font-size: .82rem; }
+        
+        @media (max-width: 1050px) {
+            .header-status { display: none; }
+            nav { gap: 9px; }
+            .btn-portal, .admin-link, .cbt-btn { padding-left: 12px; padding-right: 12px; }
+        }
+        
+        @media (max-width: 760px) {
+            header { padding: 8px 14px; }
+            .header-actions { margin-left: auto; }
+            .logo-text { font-size: .94rem; }
+            .logo-img { height: 46px; }
+        }
             .student-data-actions {
                 width: 100%;
                 justify-content: stretch;
@@ -2448,9 +2443,175 @@
             width: 100%;
             border-collapse: collapse;
         }
+
+        /* Homepage visual refresh */
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            align-items: center;
+            gap: clamp(28px, 6vw, 78px);
+            text-align: left;
+            min-height: 570px;
+            padding: clamp(42px, 7vw, 78px);
+            background:
+                linear-gradient(118deg, rgba(7, 13, 30, 0.97) 0%, rgba(10, 71, 111, 0.94) 58%, rgba(190, 24, 93, 0.78) 100%),
+                radial-gradient(circle at 78% 20%, rgba(250, 204, 21, 0.55), transparent 28%);
+            isolation: isolate;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: linear-gradient(to right, rgba(0,0,0,.8), transparent 78%);
+            z-index: -1;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 360px;
+            height: 360px;
+            right: -120px;
+            bottom: -160px;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 50%;
+            box-shadow: 0 0 0 34px rgba(255,255,255,.04), 0 0 0 68px rgba(255,255,255,.03);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 720px;
+            margin: 0;
+        }
+
+        .hero-badge {
+            margin-bottom: 22px;
+            padding: 8px 16px;
+            letter-spacing: 1.1px;
+        }
+
+        .hero h1 {
+            max-width: 720px;
+            font-size: clamp(2.7rem, 6vw, 5.7rem);
+            line-height: .98;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+
+        .hero p {
+            max-width: 590px;
+            margin: 0 0 32px;
+            font-size: clamp(1rem, 1.8vw, 1.18rem);
+            line-height: 1.8;
+        }
+
+        .hero-btns {
+            justify-content: flex-start;
+        }
+
+        .hero-side-panel {
+            position: relative;
+            min-height: 360px;
+            padding: 26px;
+            border: 1px solid rgba(255,255,255,.28);
+            border-radius: 24px;
+            background: rgba(255,255,255,.11);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 24px 60px rgba(2,8,23,.28);
+            overflow: hidden;
+        }
+
+        .hero-side-panel::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            top: -80px;
+            right: -50px;
+            border-radius: 50%;
+            background: rgba(250,204,21,.22);
+        }
+
+        .hero-crest {
+            width: 92px;
+            height: 92px;
+            object-fit: cover;
+            border-radius: 22px;
+            border: 4px solid rgba(255,255,255,.78);
+            box-shadow: 0 12px 25px rgba(2,8,23,.28);
+            margin-bottom: 26px;
+        }
+
+        .hero-side-kicker {
+            color: #fde68a;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+
+        .hero-side-panel h2 {
+            margin: 8px 0 22px;
+            color: #fff;
+            font-size: clamp(1.5rem, 3vw, 2.1rem);
+            line-height: 1.08;
+        }
+
+        .hero-proof-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .hero-proof {
+            padding: 13px;
+            border-radius: 14px;
+            background: rgba(2,8,23,.25);
+            border: 1px solid rgba(255,255,255,.14);
+        }
+
+        .hero-proof strong {
+            display: block;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+        }
+
+        .hero-proof span {
+            color: rgba(255,255,255,.7);
+            font-size: .72rem;
+            line-height: 1.3;
+        }
+
+        @media (max-width: 760px) {
+            .hero {
+                grid-template-columns: 1fr;
+                min-height: auto;
+                gap: 34px;
+                text-align: center;
+            }
+
+            .hero-content,
+            .hero p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-btns {
+                justify-content: center;
+            }
+
+            .hero-side-panel {
+                min-height: auto;
+                text-align: left;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="light-mode">
 
     <div class="ambient-blob blob-1"></div>
     <div class="ambient-blob blob-2"></div>
@@ -2465,18 +2626,8 @@
             </div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <!-- Light/Dark Theme Toggle Switch -->
-            <div class="theme-switch-wrapper">
-                <label class="theme-switch" for="checkbox" title="Toggle Light/Dark Mode">
-                    <input type="checkbox" id="checkbox" />
-                    <div class="slider">
-                        <i data-lucide="moon" class="theme-icon theme-icon-moon" aria-hidden="true"></i>
-                        <i data-lucide="sun" class="theme-icon theme-icon-sun" aria-hidden="true"></i>
-                    </div>
-                </label>
-            </div>
-
+        <div class="header-actions">
+            <span class="header-status">Admissions open</span>
             <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navMenu">
                 <i data-lucide="menu" class="icon-menu" aria-hidden="true"></i>
                 <i data-lucide="x" class="icon-close" aria-hidden="true"></i>
@@ -2495,14 +2646,25 @@
 
     <div class="hero">
         <div class="hero-content">
-            <span class="hero-badge animated-float">Welcome to Dynolinks Global College</span>
-            <h1>Nurturing Minds, Shaping <span>Tomorrow's Leaders</span></h1>
-            <p>Providing exceptional academic standards, character development, and modern learning infrastructure for the future generation.</p>
+            <span class="hero-badge animated-float">A place to learn, lead, and belong</span>
+            <h1>Nurturing minds. <span>Shaping tomorrow.</span></h1>
+            <p>Exceptional academics, character development, and modern learning experiences for students ready to go forth and reign.</p>
             <div class="hero-btns">
-                <a href="/portal.html" class="btn-primary">Check Student Result</a>
-                <a href="javascript:void(0)" onclick="requestEnquiryAccess()" class="btn-secondary">Make an Enquiry</a>
+                <a href="/portal.html" class="btn-primary"><i data-lucide="chart-column" aria-hidden="true"></i> Check Student Result</a>
+                <a href="javascript:void(0)" onclick="requestEnquiryAccess()" class="btn-secondary"><i data-lucide="arrow-up-right" aria-hidden="true"></i> Start an Enquiry</a>
             </div>
         </div>
+        <aside class="hero-side-panel" aria-label="School highlights">
+            <img class="hero-crest" src="logo.jpg" alt="Dynolinks Global College crest">
+            <div class="hero-side-kicker">Dynolinks Global College</div>
+            <h2>Big ambitions need a strong beginning.</h2>
+            <div class="hero-proof-grid">
+                <div class="hero-proof"><strong>JSS</strong><span>Foundations that last</span></div>
+                <div class="hero-proof"><strong>SSS</strong><span>Focused academic tracks</span></div>
+                <div class="hero-proof"><strong>CBT</strong><span>Digital assessment access</span></div>
+                <div class="hero-proof"><strong>24/7</strong><span>Online result portal</span></div>
+            </div>
+        </aside>
     </div>
 
     <section id="about">
@@ -3281,35 +3443,6 @@
                 error.classList.add('is-visible');
             }
         });
-
-        /* Theme Toggle Logic with System Default and Smooth Transition */
-        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
-        const currentTheme = localStorage.getItem('theme');
-
-        if (currentTheme) {
-            if (currentTheme === 'light') {
-                document.body.classList.add('light-mode');
-                toggleSwitch.checked = true;
-            } else if (currentTheme === 'dark') {
-                document.body.classList.remove('light-mode');
-                toggleSwitch.checked = false;
-            }
-        } else {
-            document.body.classList.add('light-mode');
-            toggleSwitch.checked = true;
-        }
-
-        function switchTheme(e) {
-            if (e.target.checked) {
-                document.body.classList.add('light-mode');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-mode');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        toggleSwitch.addEventListener('change', switchTheme);
 
         let enquiriesList = [
             {
