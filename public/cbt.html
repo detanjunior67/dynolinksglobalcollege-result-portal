@@ -29,7 +29,6 @@
     <!-- Font Awesome Icons & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1259,9 +1258,20 @@
                                 <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Class
                                     Level</label>
                                 <select id="qBankClassSelect"
-                                    onchange="updateSubjectBankSelector(); renderAdminQuestionBank()"
+                                    onchange="toggleQuestionBankDepartment(); updateSubjectBankSelector(); renderAdminQuestionBank()"
                                     class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                     <!-- Class options -->
+                                </select>
+                            </div>
+                            <div id="qBankDepartmentField" class="hidden">
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Department</label>
+                                <select id="qBankDepartmentSelect"
+                                    onchange="updateSubjectBankSelector(); renderAdminQuestionBank()"
+                                    class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <option value="">-- Select Department --</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Commercial">Commercial</option>
                                 </select>
                             </div>
                             <div>
@@ -1280,6 +1290,12 @@
                                 class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
                                 <i class="fa-solid fa-boxes-stacked"></i> Update Questions (Open Boxes)
                             </button>
+                            <button onclick="document.getElementById('questionTxtImportInput').click()"
+                                class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
+                                <i class="fa-solid fa-file-arrow-up"></i> Import TXT
+                            </button>
+                            <input id="questionTxtImportInput" type="file" accept=".txt,text/plain" class="hidden"
+                                onchange="importQuestionsFromTxtFile(event)">
 
                             <!-- AI QUESTION GENERATOR -->
                             <button onclick="openAiAutofillModal()"
@@ -1607,19 +1623,23 @@
         function ensureClassConfiguredSubjects(classKey = '', department = '') {
             const normalizedClass = normalizeClassKey(classKey);
             if (!normalizedClass || !classConfigs || !classConfigs[normalizedClass]) return;
-            const selectedDepartment = normalizeDepartmentName(department || classConfigs[normalizedClass].department || '');
+            const config = classConfigs[normalizedClass];
+            const selectedDepartment = normalizeDepartmentName(department || config.department || '');
             const generatedSubjects = buildClassSubjectDefaults(normalizedClass, selectedDepartment);
             const shouldReplace = !classConfigs[normalizedClass].subjects || !classConfigs[normalizedClass].subjects.length ||
-                classConfigs[normalizedClass].subjects.some(subject => /General Studies|General Science/i.test(subject.name || '')) ||
-                classConfigs[normalizedClass].subjects.length !== generatedSubjects.length;
+                config.subjects.some(subject => /General Studies|General Science/i.test(subject.name || '')) ||
+                config.subjects.length !== generatedSubjects.length ||
+                (normalizedClass.startsWith('SSS') && config.subjectDepartment !== selectedDepartment);
 
             if (generatedSubjects.length && shouldReplace) {
-                classConfigs[normalizedClass].subjects = generatedSubjects;
+                config.subjects = generatedSubjects;
             }
             if (normalizedClass.startsWith('SSS')) {
-                classConfigs[normalizedClass].department = selectedDepartment || classConfigs[normalizedClass].department || 'Science';
+                config.department = selectedDepartment || config.department || 'Science';
+                config.subjectDepartment = selectedDepartment || config.department;
             } else {
-                delete classConfigs[normalizedClass].department;
+                delete config.department;
+                delete config.subjectDepartment;
             }
         }
 
@@ -1922,6 +1942,10 @@
             const classOption = [...classSelect.options].find(option => option.value === baseClass || option.value === normalizedClass || option.value === student.student_class || option.textContent === student.student_class);
             if (classOption) {
                 classSelect.value = classOption.value;
+                const profileDepartment = document.getElementById('studentDepartmentSelect');
+                if (profileDepartment && classOption.value.startsWith('SSS')) {
+                    profileDepartment.value = normalizeDepartmentName(student.department || '');
+                }
                 handleClassChange();
             }
 
@@ -3293,6 +3317,7 @@
         // ========================================================
         let currentWorkspaceClass = '';
         let currentWorkspaceSubId = '';
+        let currentWorkspaceDepartment = '';
 
         function populateQuestionBankSelectors() {
             const classSel = document.getElementById('qBankClassSelect');
@@ -3304,21 +3329,47 @@
                 classSel.appendChild(opt);
             });
 
+            toggleQuestionBankDepartment();
             updateSubjectBankSelector();
+        }
+
+        function getSubjectsForClassSelection(classKey, department = '') {
+            const cfg = classConfigs[classKey];
+            if (!cfg) return [];
+            const normalizedDepartment = normalizeDepartmentName(department || cfg.department || '');
+            if (classKey.startsWith('SSS') && normalizedDepartment) {
+                return buildClassSubjectDefaults(classKey, normalizedDepartment).map((subject, index) => ({
+                    ...subject,
+                    timerMins: cfg.subjects[index]?.timerMins || subject.timerMins
+                }));
+            }
+            return cfg.subjects || [];
+        }
+
+        function toggleQuestionBankDepartment() {
+            const classKey = document.getElementById('qBankClassSelect')?.value || '';
+            const field = document.getElementById('qBankDepartmentField');
+            const select = document.getElementById('qBankDepartmentSelect');
+            const needsDepartment = classKey.startsWith('SSS');
+            if (field) field.classList.toggle('hidden', !needsDepartment);
+            if (select) {
+                select.disabled = !needsDepartment;
+                if (needsDepartment && !select.value) select.value = normalizeDepartmentName(classConfigs[classKey]?.department) || '';
+                if (!needsDepartment) select.value = '';
+            }
         }
 
         function updateSubjectBankSelector() {
             const classKey = document.getElementById('qBankClassSelect').value;
             const subSel = document.getElementById('qBankSubjectSelect');
             subSel.innerHTML = '';
-            if (classConfigs[classKey]) {
-                classConfigs[classKey].subjects.forEach(sub => {
+            const department = document.getElementById('qBankDepartmentSelect')?.value || '';
+            getSubjectsForClassSelection(classKey, department).forEach(sub => {
                     const opt = document.createElement('option');
                     opt.value = sub.id;
                     opt.innerText = sub.name;
                     subSel.appendChild(opt);
-                });
-            }
+            });
         }
 
         async function renderAdminQuestionBank() {
@@ -3380,6 +3431,15 @@
                             ${classOptionsHtml}
                         </select>
                     </div>
+                    <div id="setupDepartmentField" class="hidden">
+                        <label class="block font-bold mb-1">Department *</label>
+                        <select id="setupDepartmentSelect" onchange="updateSetupSubjectDropdown()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="">-- Select Department --</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block font-bold mb-1">Select Subject *</label>
                         <select id="setupSubjectSelect" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
@@ -3404,6 +3464,9 @@
             `;
             document.getElementById('appModal').classList.remove('hidden');
             document.getElementById('appModal').classList.add('flex');
+            const setupClassSelect = document.getElementById('setupClassSelect');
+            const questionBankClass = document.getElementById('qBankClassSelect')?.value || '';
+            if (setupClassSelect && questionBankClass) setupClassSelect.value = questionBankClass;
             updateSetupSubjectDropdown();
         }
 
@@ -3412,26 +3475,37 @@
             const subSel = document.getElementById('setupSubjectSelect');
             if (!subSel) return;
             subSel.innerHTML = '';
-            if (classConfigs[classKey]) {
-                classConfigs[classKey].subjects.forEach(sub => {
+            const departmentField = document.getElementById('setupDepartmentField');
+            const departmentSelect = document.getElementById('setupDepartmentSelect');
+            const needsDepartment = classKey.startsWith('SSS');
+            if (departmentField) departmentField.classList.toggle('hidden', !needsDepartment);
+            if (departmentSelect) {
+                departmentSelect.disabled = !needsDepartment;
+                if (needsDepartment && !departmentSelect.value) departmentSelect.value = normalizeDepartmentName(classConfigs[classKey]?.department) || '';
+                if (!needsDepartment) departmentSelect.value = '';
+            }
+            const department = departmentSelect?.value || '';
+            getSubjectsForClassSelection(classKey, department).forEach(sub => {
                     const opt = document.createElement('option');
                     opt.value = sub.id;
                     opt.innerText = sub.name;
                     subSel.appendChild(opt);
-                });
-            }
+            });
         }
 
         function executeOpenQuestionBoxes() {
             const classKey = document.getElementById('setupClassSelect').value;
             const subId = document.getElementById('setupSubjectSelect').value;
+            const department = normalizeDepartmentName(document.getElementById('setupDepartmentSelect')?.value || '');
             const numBoxes = parseInt(document.getElementById('setupNumQuestions').value) || 5;
             const timePerQ = parseInt(document.getElementById('setupTimePerQuestion').value) || 60;
 
+            if (classKey.startsWith('SSS') && !department) return showToast('Please select a department for this SSS class.', 'error');
             if (!classKey || !subId) return showToast('Please select valid Class and Subject.', 'error');
 
             currentWorkspaceClass = classKey;
             currentWorkspaceSubId = subId;
+            currentWorkspaceDepartment = department;
 
             // Load existing questions or fill blanks up to numBoxes
             const existingQs = (questionBank[classKey] && questionBank[classKey][subId]) ? [...questionBank[classKey][subId]] : [];
@@ -3483,6 +3557,15 @@
                             ${classOptionsHtml}
                         </select>
                     </div>
+                    <div id="aiDepartmentField" class="hidden">
+                        <label class="block font-bold mb-1">Department *</label>
+                        <select id="aiDepartmentSelect" onchange="updateAiSubjectDropdown()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="">-- Select Department --</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block font-bold mb-1">Subject *</label>
                         <select id="aiSubjectSelect" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
@@ -3519,19 +3602,28 @@
             const subSel = document.getElementById('aiSubjectSelect');
             if (!subSel) return;
             subSel.innerHTML = '';
-            if (classConfigs[classKey]) {
-                classConfigs[classKey].subjects.forEach(sub => {
+            const departmentField = document.getElementById('aiDepartmentField');
+            const departmentSelect = document.getElementById('aiDepartmentSelect');
+            const needsDepartment = classKey.startsWith('SSS');
+            if (departmentField) departmentField.classList.toggle('hidden', !needsDepartment);
+            if (departmentSelect) {
+                departmentSelect.disabled = !needsDepartment;
+                if (needsDepartment && !departmentSelect.value) departmentSelect.value = normalizeDepartmentName(classConfigs[classKey]?.department) || '';
+                if (!needsDepartment) departmentSelect.value = '';
+            }
+            const department = departmentSelect?.value || '';
+            getSubjectsForClassSelection(classKey, department).forEach(sub => {
                     const opt = document.createElement('option');
                     opt.value = sub.id;
                     opt.innerText = sub.name;
                     subSel.appendChild(opt);
-                });
-            }
+            });
         }
 
         async function executeAiGeneration() {
             const classKey = document.getElementById('aiClassSelect').value;
             const subId = document.getElementById('aiSubjectSelect').value;
+            const department = normalizeDepartmentName(document.getElementById('aiDepartmentSelect')?.value || '');
             const topics = document.getElementById('aiTopicInput').value
                 .split(',')
                 .map(topic => topic.trim())
@@ -3539,10 +3631,11 @@
             const topic = topics.join(', ');
             const numQs = Math.min(20, Math.max(1, parseInt(document.getElementById('aiNumQuestions').value, 10) || 5));
 
+            if (classKey.startsWith('SSS') && !department) return showToast('Please select a department for this SSS class.', 'error');
             if (!classKey || !subId) return showToast('Please select class and subject.', 'error');
             if (!topics.length) return showToast('Please enter at least one topic for AI question generation.', 'error');
 
-            const subObj = classConfigs[classKey].subjects.find(s => s.id === subId);
+            const subObj = getSubjectsForClassSelection(classKey, department).find(s => s.id === subId);
             const subName = subObj ? subObj.name : 'Subject';
             const classLabel = classConfigs[classKey] ? classConfigs[classKey].label : classKey;
 
@@ -3559,6 +3652,7 @@
             }
 
             let generatedBoxes = [];
+            let generationError = '';
             try {
                 const response = await fetch(`${API_BASE_URL}/cbt/generate-questions`, {
                     method: 'POST',
@@ -3566,6 +3660,7 @@
                     body: JSON.stringify({
                         classKey,
                         classLabel,
+                        department,
                         subjectName: subName,
                         topic,
                         topics,
@@ -3584,9 +3679,13 @@
                         customTime: 60,
                         isAiAutofilled: true
                     }));
+                } else if (status) {
+                    generationError = data.error || 'The AI providers did not return valid questions.';
+                    status.innerText = generationError;
                 }
             } catch (err) {
                 console.warn('Online question search failed:', err);
+                generationError = 'Could not reach the AI question service.';
             }
 
             if (!generatedBoxes.length) {
@@ -3595,13 +3694,14 @@
                     btn.classList.remove('opacity-70', 'pointer-events-none');
                     btn.innerHTML = 'Generate &amp; Fill Boxes';
                 }
-                if (status) status.innerText = 'No verified questions were returned. Check the AI provider configuration and try again.';
-                return showToast('AI did not return verified questions. No placeholder questions were created.', 'error');
+                if (status) status.innerText = generationError || 'No verified questions were returned. Check the AI provider configuration and try again.';
+                return showToast(generationError || 'AI did not return verified questions. No placeholder questions were created.', 'error');
             }
             showToast(`Filled ${generatedBoxes.length} question boxes from AI providers for "${topic}".`);
 
             currentWorkspaceClass = classKey;
             currentWorkspaceSubId = subId;
+            currentWorkspaceDepartment = department;
             closeModal();
             renderQuestionWorkspace(classKey, subId, generatedBoxes);
         }
@@ -3613,7 +3713,7 @@
             const metaText = document.getElementById('workspaceMetaText');
 
             const classLabel = classConfigs[classKey] ? classConfigs[classKey].label : classKey;
-            const subObj = classConfigs[classKey] ? classConfigs[classKey].subjects.find(s => s.id === subId) : null;
+            const subObj = getSubjectsForClassSelection(classKey, currentWorkspaceDepartment).find(s => s.id === subId);
             const subName = subObj ? subObj.name : subId;
 
             metaText.innerText = `Editing ${boxesData.length} Question Boxes for ${classLabel} -> ${subName}`;
@@ -3828,6 +3928,77 @@
 
         function closeWorkspace() {
             document.getElementById('batchQuestionWorkspace').classList.add('hidden');
+        }
+
+        function parseTxtQuestions(text) {
+            const normalized = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+            const blocks = normalized.split(/\n\s*\n+/).map(block => block.trim()).filter(Boolean);
+            const questions = [];
+
+            blocks.forEach((block, index) => {
+                const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+                const questionLine = lines.find(line => /^(?:q(?:uestion)?\s*)?\d+\s*[.):\-]/i.test(line)) || lines[0];
+                const questionMatch = questionLine.match(/^(?:q(?:uestion)?\s*)?\d+\s*[.):\-]\s*(.+)$/i);
+                const text = (questionMatch ? questionMatch[1] : questionLine).trim();
+                const options = ['', '', '', ''];
+                let correctIndex = 0;
+                let points = 1;
+                let customTime = 60;
+
+                lines.forEach(line => {
+                    const optionMatch = line.match(/^([A-D])\s*[.):\-]\s*(.+)$/i);
+                    if (optionMatch) options[optionMatch[1].toUpperCase().charCodeAt(0) - 65] = optionMatch[2].trim();
+                    const answerMatch = line.match(/^(?:answer|correct)\s*[:=\-]\s*([A-D1-4])\b/i);
+                    if (answerMatch) {
+                        const answer = answerMatch[1].toUpperCase();
+                        correctIndex = /^[A-D]$/.test(answer) ? answer.charCodeAt(0) - 65 : Number(answer) - 1;
+                    }
+                    const pointsMatch = line.match(/^points?\s*[:=\-]\s*(\d+)/i);
+                    if (pointsMatch) points = Math.max(1, Number(pointsMatch[1]));
+                    const timeMatch = line.match(/^(?:time|timer)\s*[:=\-]\s*(\d+)/i);
+                    if (timeMatch) customTime = Math.max(5, Number(timeMatch[1]));
+                });
+
+                if (text && options.every(Boolean) && correctIndex >= 0 && correctIndex < 4) {
+                    questions.push({
+                        id: `q-txt-${Date.now()}-${index}`,
+                        qNumber: questions.length + 1,
+                        text,
+                        options,
+                        correctIndex,
+                        points,
+                        customTime
+                    });
+                }
+            });
+            return questions;
+        }
+
+        function importQuestionsFromTxtFile(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+
+            const classKey = document.getElementById('qBankClassSelect')?.value || '';
+            const subId = document.getElementById('qBankSubjectSelect')?.value || '';
+            const department = normalizeDepartmentName(document.getElementById('qBankDepartmentSelect')?.value || '');
+            if (!classKey || !subId) return showToast('Select a class and subject before importing questions.', 'error');
+            if (classKey.startsWith('SSS') && !department) return showToast('Select a department before importing SSS questions.', 'error');
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                const questions = parseTxtQuestions(reader.result);
+                if (!questions.length) {
+                    return showToast('No valid questions found. Use the sample.txt template format.', 'error');
+                }
+                currentWorkspaceClass = classKey;
+                currentWorkspaceSubId = subId;
+                currentWorkspaceDepartment = department;
+                renderQuestionWorkspace(classKey, subId, questions);
+                showToast(`Imported ${questions.length} questions. Review them, then save all questions.`);
+            };
+            reader.onerror = () => showToast('The TXT file could not be read.', 'error');
+            reader.readAsText(file);
         }
 
         function openEditQuestionModal(idx) {

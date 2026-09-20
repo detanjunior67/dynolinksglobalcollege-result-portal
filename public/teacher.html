@@ -97,6 +97,8 @@
         .teacher-name { border: 0; padding: 0; color: var(--teal-dark); background: transparent; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(15,118,110,0.3); text-underline-offset: 3px; }
         .teacher-name:hover { color: var(--coral); }
         .delete-teacher { margin-left: 8px; }
+        .attendance-toggle { margin-left: 8px; border: 0; border-radius: 7px; padding: 4px 8px; color: #0369a1; background: #e0f2fe; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+        .attendance-toggle:hover { background: #bae6fd; }
         .login-detail { display: flex; justify-content: space-between; gap: 18px; padding: 7px 0; color: var(--muted); font-size: 0.84rem; }
         .login-detail a { color: var(--teal-dark); font-weight: 700; }
         .delete-login { border: 0; border-radius: 7px; padding: 4px 8px; color: #b42318; background: #fff0ee; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
@@ -112,6 +114,20 @@
         .password-confirm { color: white; background: var(--teal); }
         .password-error { min-height: 20px; margin-top: 8px; color: #b42318; font-size: 0.8rem; font-weight: 700; }
         .empty { color: var(--muted); padding: 18px 10px; }
+        .attendance-calendar { margin-top: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #f8fcfa; }
+        .calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .calendar-heading strong { font-family: 'Space Grotesk', sans-serif; }
+        .calendar-nav { display: flex; gap: 6px; }
+        .calendar-nav button { border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; color: var(--teal-dark); background: white; font-weight: 700; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+        .calendar-weekday { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-align: center; }
+        .calendar-day { min-height: 34px; border: 1px solid #dbe5e1; border-radius: 7px; color: var(--muted); background: white; font: inherit; font-size: 0.78rem; font-weight: 700; display: grid; place-items: center; }
+        .calendar-day.is-present { border-color: #86efac; color: #166534; background: #dcfce7; }
+        .calendar-day.is-absent { border-color: #fecaca; color: #991b1b; background: #fee2e2; }
+        .calendar-day.is-empty { visibility: hidden; }
+        .calendar-legend { display: flex; gap: 12px; margin-top: 10px; color: var(--muted); font-size: 0.72rem; }
+        .calendar-legend span::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 4px; border-radius: 2px; background: #dcfce7; vertical-align: -1px; }
+        .calendar-legend span:last-child::before { background: #fee2e2; }
         .privacy { color: var(--muted); font-size: 0.78rem; margin: 16px 0 0; }
         @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 760px) {
@@ -182,11 +198,48 @@
         .admin-view { background: transparent; border: 0; box-shadow: none; padding: 0; }
         .admin-section-card { padding: clamp(20px, 3vw, 32px); border: 1px solid #d9e7e4; border-radius: 22px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(17,63,70,.08); }
         .admin-section-card + .admin-section-card { margin-top: 24px; }
-        @media (max-width: 560px) { .class-session-grid { grid-template-columns: 1fr; } }
+        .topbar > * { min-width: 0; }
+        .brand { min-width: 0; }
+        .brand span { min-width: 0; overflow-wrap: anywhere; }
+        .class-session-grid { min-width: 0; }
+        select { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; color: var(--ink); background: #fbfdfb; font: inherit; outline: none; }
+        select:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.12); }
+        :focus-visible { outline: 3px solid rgba(2,132,199,.45); outline-offset: 3px; }
+        @media (max-width: 560px) {
+            .class-session-grid { grid-template-columns: 1fr; }
+            .availability-settings { align-items: stretch; }
+            .availability-settings > * { width: 100%; }
+            .availability-settings input { width: 100%; min-width: 0; }
+            .admin-heading { align-items: flex-start; flex-direction: column; }
+            .login-detail { align-items: flex-start; flex-direction: column; gap: 4px; }
+            .password-actions { flex-direction: column-reverse; }
+        }
 
         @media (max-width: 760px) {
             .shell { width: min(100% - 24px, 620px); }
-            .topbar { margin-bottom: 56px; }
+            .topbar { align-items: flex-start; margin-bottom: 56px; }
+            .brand { flex: 1 1 auto; }
+            .back-link { flex: 0 0 auto; }
+            .workspace { grid-template-columns: 1fr; }
+            .workspace > div { min-width: 0; }
+            .side-panel { width: 100%; }
+        }
+
+        @media (max-width: 420px) {
+            .shell { width: min(100% - 20px, 620px); padding-bottom: 36px; }
+            .topbar { gap: 10px; padding: 9px 10px; }
+            .brand-mark { width: 40px; height: 40px; }
+            .brand { font-size: .82rem; gap: 8px; }
+            .brand small { font-size: .66rem; }
+            .back-link { padding: 8px 10px; font-size: .78rem; }
+            h1 { font-size: clamp(2.25rem, 14vw, 3.5rem); }
+            .intro p { font-size: 1rem; }
+            .panel { padding: 20px; }
+            .side-panel { padding: 22px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
         }
     </style>
 </head>
@@ -344,6 +397,8 @@
         const deleteAdminPassword = document.getElementById('deleteAdminPassword');
         const deletePasswordError = document.getElementById('deletePasswordError');
         let deletePasswordResolver = null;
+        let attendanceDates = new Set();
+        let attendanceMonth = new Date();
 
         function requestDeletePassword() {
             return new Promise(resolve => {
@@ -461,13 +516,17 @@
                     const place = location.mapUrl ? `<a href="${location.mapUrl}" target="_blank" rel="noopener">${escapeHtml(location.label)}</a>` : escapeHtml(location.label || 'Location unavailable');
                     return `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${place}${coordinates}${accuracy} <button class="delete-login" type="button" data-login-id="${escapeHtml(record._id)}">Delete</button></span></div>`;
                 }).join('');
-                return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button><button class="delete-login delete-teacher" type="button" data-teacher-name="${encodeURIComponent(name)}">Delete teacher</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}</td></tr>`;
+                return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button><button class="attendance-toggle" type="button" data-attendance-name="${encodeURIComponent(name)}" hidden>Calendar</button><button class="delete-login delete-teacher" type="button" data-teacher-name="${encodeURIComponent(name)}">Delete teacher</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}<div class="attendance-calendar" id="attendance-calendar-${index}" hidden></div></td></tr>`;
             }).join('') : '<tr><td class="empty" colspan="2">No teacher sign-ins yet.</td></tr>';
             loginTableBody.querySelectorAll('[data-teacher-row]').forEach(button => {
                 button.addEventListener('click', () => {
                     const details = document.getElementById(`teacher-details-${button.dataset.teacherRow}`);
                     details.hidden = !details.hidden;
+                    button.parentElement.querySelector('[data-attendance-name]').hidden = details.hidden;
                 });
+            });
+            loginTableBody.querySelectorAll('[data-attendance-name]').forEach(button => {
+                button.addEventListener('click', () => toggleAttendanceCalendar(button));
             });
             loginTableBody.querySelectorAll('[data-login-id]').forEach(button => {
                 button.addEventListener('click', () => deleteTeacherLogin(button.dataset.loginId));
@@ -476,6 +535,47 @@
                 button.addEventListener('click', () => deleteTeacher(button.dataset.teacherName));
             });
             await renderClassSessions();
+        }
+
+        async function toggleAttendanceCalendar(button) {
+            const name = decodeURIComponent(button.dataset.attendanceName);
+            const teacherRow = button.closest('tr');
+            const detailsRow = teacherRow.nextElementSibling;
+            const calendar = detailsRow?.querySelector('.attendance-calendar');
+            if (!calendar) return;
+            if (!calendar.hidden) {
+                calendar.hidden = true;
+                return;
+            }
+            calendar.hidden = false;
+            calendar.innerHTML = '<p class="empty">Loading attendance...</p>';
+            try {
+                const response = await fetch(`/api/teacher/attendance?name=${encodeURIComponent(name)}`, { headers: { 'x-teacher-admin-password': adminPassword } });
+                if (!response.ok) throw new Error('Could not load attendance history.');
+                const data = await response.json();
+                attendanceDates = new Set(data.dates || []);
+                renderAttendanceCalendar(calendar, name);
+            } catch (error) {
+                calendar.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        function renderAttendanceCalendar(container, name) {
+            const year = attendanceMonth.getFullYear();
+            const month = attendanceMonth.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date());
+            const monthLabel = attendanceMonth.toLocaleDateString('en-NG', { month: 'long', year: 'numeric' });
+            const dayCells = Array.from({ length: firstDay }, () => '<span class="calendar-day is-empty" aria-hidden="true"></span>');
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const state = attendanceDates.has(date) ? 'is-present' : (date < today ? 'is-absent' : '');
+                dayCells.push(`<span class="calendar-day ${state}" title="${date}">${day}</span>`);
+            }
+            container.innerHTML = `<div class="calendar-heading"><strong>${escapeHtml(name)} - ${monthLabel}</strong><div class="calendar-nav"><button type="button" data-calendar-prev aria-label="Previous month">&lt;</button><button type="button" data-calendar-next aria-label="Next month">&gt;</button></div></div><div class="calendar-grid"><span class="calendar-weekday">Sun</span><span class="calendar-weekday">Mon</span><span class="calendar-weekday">Tue</span><span class="calendar-weekday">Wed</span><span class="calendar-weekday">Thu</span><span class="calendar-weekday">Fri</span><span class="calendar-weekday">Sat</span>${dayCells.join('')}</div><div class="calendar-legend"><span>Checked in</span><span>Did not check in</span></div>`;
+            container.querySelector('[data-calendar-prev]').addEventListener('click', () => { attendanceMonth = new Date(year, month - 1, 1); renderAttendanceCalendar(container, name); });
+            container.querySelector('[data-calendar-next]').addEventListener('click', () => { attendanceMonth = new Date(year, month + 1, 1); renderAttendanceCalendar(container, name); });
         }
 
         async function renderClassSessions() {
@@ -534,6 +634,8 @@
                 window.alert(message);
                 return;
             }
+            localStorage.removeItem(teacherNameKey);
+            classSessionTeacher.value = '';
             renderAdminLog().catch(error => {
                 loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
             });
@@ -751,7 +853,11 @@
             if (savedName) {
                 const statusResponse = await fetch(`/api/teacher/status?name=${encodeURIComponent(savedName)}`);
                 const status = statusResponse.ok ? await statusResponse.json() : { checkedIn: false };
-                if (status.checkedIn) showCheckedInTeacher(savedName);
+                if (status.reset) {
+                    localStorage.removeItem(teacherNameKey);
+                    showAvailableGuest();
+                    formStatus.textContent = 'Your previous sign-in was removed by an administrator. Please sign in again.';
+                } else if (status.checkedIn) showCheckedInTeacher(savedName);
                 else if (isCheckInAvailable()) showReturningTeacher(savedName);
                 else showUnavailableTeacher(savedName);
             } else if (!isCheckInAvailable()) {

@@ -650,6 +650,13 @@ const TeacherLoginSchema = new mongoose.Schema({
 TeacherLoginSchema.index({ period: 1, name: 1, loggedInAt: -1 });
 const TeacherLogin = mongoose.model('TeacherLogin', TeacherLoginSchema);
 
+const TeacherResetSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true, trim: true },
+    resetAt: { type: Date, required: true, default: Date.now }
+}, { timestamps: true });
+
+const TeacherReset = mongoose.model('TeacherReset', TeacherResetSchema);
+
 const TeacherClassSessionSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     className: { type: String, required: true, trim: true },
@@ -727,11 +734,14 @@ app.get('/api/teacher/logins', requireTeacherAdmin, async (req, res) => {
 
 app.get('/api/teacher/status', async (req, res) => {
     try {
+        res.set('Cache-Control', 'no-store');
         const name = String(req.query.name || '').trim();
         const settings = await getTeacherSettings();
         const period = getTeacherPeriod(new Date(), settings.appearTime);
-        const login = name ? await TeacherLogin.findOne({ name, period }).sort({ loggedInAt: -1 }).lean() : null;
-        res.json({ success: true, checkedIn: Boolean(login), period });
+        const reset = name ? await TeacherReset.findOne({ name }).lean() : null;
+        const loginQuery = { name, period, ...(reset ? { loggedInAt: { $gt: reset.resetAt } } : {}) };
+        const login = name ? await TeacherLogin.findOne(loginQuery).sort({ loggedInAt: -1 }).lean() : null;
+        res.json({ success: true, checkedIn: Boolean(login), reset: Boolean(reset && !login), period });
     } catch (err) {
         console.error('Load teacher status error:', err.message);
         res.status(500).json({ success: false, message: 'Could not load teacher status.' });
@@ -745,6 +755,7 @@ app.post('/api/teacher/logins', async (req, res) => {
         const settings = await getTeacherSettings();
         const period = getTeacherPeriod(new Date(), settings.appearTime);
         const login = await TeacherLogin.create({ name, period, loggedInAt: new Date(), location: req.body?.location || {} });
+        await TeacherReset.deleteOne({ name });
         res.status(201).json({ success: true, login });
     } catch (err) {
         console.error('Save teacher sign-in error:', err.message);
@@ -782,6 +793,19 @@ app.get('/api/teacher/class-sessions', requireTeacherAdmin, async (req, res) => 
     }
 });
 
+app.get('/api/teacher/attendance', requireTeacherAdmin, async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store');
+        const name = String(req.query.name || '').trim();
+        if (!name) return res.status(400).json({ success: false, message: 'Teacher name is required.' });
+        const logins = await TeacherLogin.find({ name }).select('period loggedInAt').sort({ loggedInAt: 1 }).lean();
+        res.json({ success: true, name, dates: [...new Set(logins.map(login => login.period))] });
+    } catch (err) {
+        console.error('Load teacher attendance history error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load teacher attendance history.' });
+    }
+});
+
 app.delete('/api/teacher/class-sessions/:id', requireTeacherAdmin, async (req, res) => {
     try {
         const deleted = await TeacherClassSession.findByIdAndDelete(req.params.id);
@@ -808,8 +832,16 @@ app.delete('/api/teacher/teachers/:name', requireTeacherAdmin, async (req, res) 
     try {
         const name = decodeURIComponent(req.params.name || '').trim();
         if (!name) return res.status(400).json({ success: false, message: 'Teacher name is required.' });
-        const result = await TeacherLogin.deleteMany({ name });
-        res.json({ success: true, deleted: result.deletedCount, message: 'Teacher attendance data deleted.' });
+        const [loginResult, sessionResult] = await Promise.all([
+            TeacherLogin.deleteMany({ name }),
+            TeacherClassSession.deleteMany({ name })
+        ]);
+        await TeacherReset.findOneAndUpdate(
+            { name },
+            { $set: { resetAt: new Date() } },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        res.json({ success: true, deleted: loginResult.deletedCount + sessionResult.deletedCount, message: 'Teacher data deleted. Their saved sign-in will be cleared on the next online visit.' });
     } catch (err) {
         console.error('Delete teacher attendance data error:', err.message);
         res.status(500).json({ success: false, message: 'Could not delete teacher attendance data.' });
@@ -2159,13 +2191,30 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
             topic: topicList.join(', '),
             count
         };
-        const settled = await Promise.allSettled([
-            fetchOpenRouterQuestions(aiParams),
-            fetchGeminiQuestions(aiParams)
-        ]);
+        const providers = [
+            ['ChatGPT', fetchChatGptQuestions(aiParams)],
+            ['OpenRouter', fetchOpenRouterQuestions(aiParams)],
+            ['Google Gemini', fetchGeminiQuestions(aiParams)]
+        ];
+        const settled = await Promise.allSettled(providers.map(([, request]) => request));
+        const providerErrors = settled
+            .map((result, index) => result.status === 'rejected' ? `${providers[index][0]}: ${result.reason.message}` : '')
+            .filter(Boolean);
+        const configuredProviderCount = [
+            process.env.OPENAI_API_KEY,
+            process.env.OPENROUTER_API_KEY,
+            process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY
+        ].filter(Boolean).length;
+        if (!configuredProviderCount) {
+            return res.status(503).json({ error: 'No AI provider is configured. Add OPENAI_API_KEY, OPENROUTER_API_KEY, or GEMINI_API_KEY to the server environment.' });
+        }
         const generated = settled.flatMap(result => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []);
         const questions = rankOnlineQuestions(generated, aiParams.topic, count);
-        if (questions.length < count) return res.status(502).json({ error: 'AI providers returned too few valid questions.' });
+        if (questions.length < count) {
+            return res.status(502).json({
+                error: `AI providers returned ${questions.length} of ${count} valid questions.${providerErrors.length ? ` ${providerErrors.join(' ')}` : ''}`
+            });
+        }
         res.json({ source: 'ai', topic: aiParams.topic, questions });
     } catch (err) {
         console.error('AI question generation error:', err);

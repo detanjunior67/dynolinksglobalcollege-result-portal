@@ -1,0 +1,89 @@
+Q1. Solve the simultaneous equations: x + y = 10 and x - y = 4. What is the value of x?
+A. 3
+B. 5
+C. 7
+D. 9
+Answer: C
+Points: 1
+Time: 60
+
+Q2. Solve the simultaneous equations: 2x + y = 11 and x - y = 1. What is the value of y?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: B
+Points: 1
+Time: 60
+
+Q3. Solve the simultaneous equations: 3x + 2y = 16 and x + y = 6. What is the value of x?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: C
+Points: 1
+Time: 60
+
+Q4. Solve the simultaneous equations: x + 2y = 11 and 3x - y = 5. What is the value of y?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: C
+Points: 1
+Time: 60
+
+Q5. Solve the simultaneous equations: 4x + y = 17 and 2x - y = 1. What is the value of x?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: B
+Points: 1
+Time: 60
+
+Q6. Solve the simultaneous equations: 2x + 3y = 19 and x + y = 7. What is the value of y?
+A. 3
+B. 4
+C. 5
+D. 6
+Answer: C
+Points: 1
+Time: 60
+
+Q7. Solve the simultaneous equations: 5x - y = 17 and x + y = 7. What is the value of x?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: C
+Points: 1
+Time: 60
+
+Q8. Solve the simultaneous equations: 3x + y = 14 and x - 2y = 0. What is the value of y?
+A. 1
+B. 2
+C. 3
+D. 4
+Answer: B
+Points: 1
+Time: 60
+
+Q9. Solve the simultaneous equations: x + 3y = 14 and 2x - y = 8. What is the value of x?
+A. 4
+B. 5
+C. 6
+D. 7
+Answer: B
+Points: 1
+Time: 60
+
+Q10. Solve the simultaneous equations: 2x + y = 8 and 3x - y = 7. What is the value of x?
+A. 2
+B. 3
+C. 4
+D. 5
+Answer: B
+Points: 1
+Time: 60
