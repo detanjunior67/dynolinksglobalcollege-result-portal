@@ -328,6 +328,7 @@
         }
 
         .menu-toggle {
+            position: relative;
             display: none;
             flex-direction: column;
             justify-content: space-between;
@@ -343,28 +344,27 @@
         .menu-toggle span {
             width: 100%;
             height: 3px;
-            background: var(--crest-blue-light);
+            display: block;
+            background: #0284c7;
             border-radius: 2px;
-            transition: all 0.3s ease;
+            transition: transform 0.25s ease, opacity 0.2s ease;
         }
+
+        .menu-toggle.is-open .menu-line {
+            position: absolute;
+            top: 10px;
+            left: 0;
+        }
+
+        .menu-toggle.is-open .menu-line:nth-child(1) { transform: rotate(45deg); }
+        .menu-toggle.is-open .menu-line:nth-child(2) { opacity: 0; }
+        .menu-toggle.is-open .menu-line:nth-child(3) { transform: rotate(-45deg); }
 
         .menu-toggle svg {
             width: 25px;
             height: 25px;
             color: var(--crest-blue-light);
             stroke-width: 2.5;
-        }
-
-        .menu-toggle .icon-close {
-            display: none;
-        }
-
-        .menu-toggle.is-open .icon-menu {
-            display: none;
-        }
-
-        .menu-toggle.is-open .icon-close {
-            display: block;
         }
 
         nav {
@@ -741,23 +741,6 @@
             border-radius: 50%;
             font-size: 0.75rem;
             font-weight: 800;
-        }
-
-        .admission-paper {
-            background: var(--card-dark);
-            border-radius: var(--radius-lg);
-            padding: clamp(18px, 4vw, 44px);
-            box-shadow: var(--shadow-float);
-            position: relative;
-            border: 1px solid var(--border-dark);
-            width: 100%;
-        }
-
-        .admission-paper-header {
-            text-align: center;
-            border-bottom: 2px solid var(--border-dark);
-            padding-bottom: 24px;
-            margin-bottom: 32px;
         }
 
         .admission-paper-header h2 {
@@ -2912,6 +2895,18 @@
         }
 
         @media (max-width: 640px) {
+            .ambient-blob,
+            .ambient-orb,
+            .hero-badge.animated-float,
+            .whatsapp-float {
+                animation: none !important;
+            }
+
+            nav {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+
             .whatsapp-float {
                 left: 16px;
                 bottom: 18px;
@@ -3060,7 +3055,6 @@
                 display: flex;
                 transition: transform .35s cubic-bezier(.22, 1, .36, 1), filter .25s ease;
             }
-
             .menu-toggle.is-open {
                 transform: rotate(90deg) scale(1.08);
                 filter: drop-shadow(0 5px 12px rgba(56, 189, 248, .35));
@@ -3509,8 +3503,9 @@
         <div class="header-actions">
             <span class="header-status">Admissions open</span>
             <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navMenu">
-                <i data-lucide="menu" class="icon-menu" aria-hidden="true"></i>
-                <i data-lucide="x" class="icon-close" aria-hidden="true"></i>
+                <span class="menu-line"></span>
+                <span class="menu-line"></span>
+                <span class="menu-line"></span>
             </button>
         </div>
 
@@ -4247,6 +4242,10 @@
 
         const installAppBtn = document.getElementById('installAppBtn');
         let deferredInstallPrompt = null;
+        const standaloneMedia = window.matchMedia('(display-mode: standalone)');
+        const isStandaloneApp = standaloneMedia.matches || window.navigator.standalone === true;
+
+        if (isStandaloneApp && installAppBtn) installAppBtn.hidden = true;
 
         window.addEventListener('beforeinstallprompt', (event) => {
             event.preventDefault();
@@ -4256,6 +4255,12 @@
                 if (label) label.textContent = 'Install App';
             }
         });
+
+        const handleDisplayModeChange = (event) => {
+            if (installAppBtn) installAppBtn.hidden = event.matches;
+        };
+        if (standaloneMedia.addEventListener) standaloneMedia.addEventListener('change', handleDisplayModeChange);
+        else if (standaloneMedia.addListener) standaloneMedia.addListener(handleDisplayModeChange);
 
         window.addEventListener('appinstalled', () => {
             deferredInstallPrompt = null;
