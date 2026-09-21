@@ -6,7 +6,10 @@ self.addEventListener('install', (event) => {
     caches.open(APP_CACHE_NAME).then((cache) => cache.addAll([
       '/',
       '/index.html',
-      '/mini.png'
+      '/manifest.json',
+      '/logo-transparent.png',
+      '/dgc-loader.css',
+      '/device-detector.js'
     ))
   );
   self.skipWaiting();

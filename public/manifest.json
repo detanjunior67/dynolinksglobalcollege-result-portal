@@ -1,16 +1,24 @@
 {
   "name": "Dynolinks Global College",
   "short_name": "DGC",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0E172A",
   "theme_color": "#0284C7",
   "description": "Dynolinks Global College student portal and result access",
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/logo-transparent.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-transparent.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

@@ -125,6 +125,10 @@
             overflow: hidden;
         }
 
+        html.modal-open {
+            overflow: hidden;
+        }
+
         /* Ambient Blobs */
         .ambient-blob {
             position: absolute;
@@ -2065,7 +2069,7 @@
         }
 
         #adminModal #authSection::before {
-            content: 'DGC / ADMIN CONSOLE';
+            content: 'ADMIN ONLY';
             display: inline-flex;
             align-items: center;
             min-height: 30px;
@@ -2197,13 +2201,344 @@
 
         #adminModal .student-data-toolbar h3 { color: #193a3b !important; }
 
+        /* Admin console theme: white workspace with sky-blue and red signal colors. */
+        #adminModal {
+            --admin-ink: #16324f;
+            --admin-muted: #58708a;
+            --admin-sky: #0284c7;
+            --admin-sky-light: #e0f2fe;
+            --admin-red: #e11d48;
+            --admin-border: #cfe1ef;
+            background: rgba(8, 32, 57, 0.72) !important;
+            overflow: hidden;
+        }
+
+        #adminModal > .modal-card {
+            background: #ffffff !important;
+            border: 1px solid #b9d8ea !important;
+            box-shadow: 0 32px 80px rgba(8, 47, 73, 0.28) !important;
+            color: var(--admin-ink) !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        #adminModal .close-modal {
+            top: 14px;
+            right: 16px;
+            z-index: 5;
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e11d48, #be123c) !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 18px rgba(225, 29, 72, 0.28);
+        }
+
+        #adminModal #authSection {
+            min-height: 520px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 62%, #e0f2fe 100%) !important;
+            color: var(--admin-ink) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #adminModal #authSection::after {
+            content: '';
+            position: absolute;
+            right: -100px;
+            bottom: -130px;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(225, 29, 72, 0.18), rgba(14, 165, 233, 0.08));
+            pointer-events: none;
+        }
+
+        #adminModal #authSection > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        #adminModal #authSection::before {
+            color: #0369a1 !important;
+            border-color: #7dd3fc !important;
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        #adminModal #authSection h2 {
+            color: var(--admin-ink) !important;
+        }
+
+        #adminModal #authSection > p {
+            color: var(--admin-muted) !important;
+        }
+
+        #adminModal #authSection input,
+        #adminModal #studentDataGate input,
+        #adminModal #studentDataManager input,
+        #adminModal #studentDataManager select {
+            border: 1px solid #a9cbe0 !important;
+            background: #ffffff !important;
+            color: var(--admin-ink) !important;
+            box-shadow: 0 5px 14px rgba(14, 116, 144, 0.07) !important;
+        }
+
+        #adminModal #authSection input::placeholder,
+        #adminModal #studentDataManager input::placeholder {
+            color: #7891a5 !important;
+        }
+
+        #adminModal #authSection input:focus,
+        #adminModal #studentDataManager input:focus,
+        #adminModal #studentDataManager select:focus {
+            outline: none;
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.16) !important;
+        }
+
+        #adminModal #authSection > button,
+        #adminModal #studentDataGate button,
+        #adminModal .student-data-action-btn,
+        #adminModal .password-manager-action,
+        #adminModal .admin-pin-toolbar button {
+            background: linear-gradient(135deg, #0284c7 0%, #38bdf8 58%, #e11d48 145%) !important;
+            color: #ffffff !important;
+            border: 0 !important;
+            box-shadow: 0 9px 20px rgba(2, 132, 199, 0.22) !important;
+        }
+
+        #adminModal #authSection > button:hover,
+        #adminModal #studentDataGate button:hover,
+        #adminModal .student-data-action-btn:hover,
+        #adminModal .admin-pin-toolbar button:hover {
+            filter: brightness(1.06) saturate(1.08);
+            transform: translateY(-2px);
+        }
+
+        #adminModal #enquiriesDashboard {
+            background: #f8fcff !important;
+            color: var(--admin-ink) !important;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation {
+            background: linear-gradient(110deg, #075985 0%, #0284c7 58%, #e11d48 145%) !important;
+            border-bottom: 4px solid #e11d48;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn {
+            color: #075985 !important;
+            background: #ffffff !important;
+            border-color: #bae6fd !important;
+            text-shadow: none !important;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn:hover,
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 5px 14px rgba(2, 132, 199, 0.28) !important;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #075985) !important;
+        }
+
+        #adminModal #admin-dashboard-title,
+        #adminModal .student-data-toolbar h3,
+        #adminModal .admin-summary-box h3,
+        #adminModal .admin-summary-box h4 {
+            color: var(--admin-ink) !important;
+        }
+
+        #adminModal .student-data-admin-link {
+            color: #be123c !important;
+            background: #fff1f2 !important;
+            border-color: #fecdd3 !important;
+        }
+
+        #adminModal .admin-summary-box {
+            border: 1px solid var(--admin-border) !important;
+            background: #ffffff !important;
+            box-shadow: 0 12px 28px rgba(14, 116, 144, 0.08) !important;
+        }
+
+        #adminModal .admin-summary-box p,
+        #adminModal .admin-summary-box label,
+        #adminModal #studentDataManager > p {
+            color: var(--admin-muted) !important;
+        }
+
+        #adminModal .enquiry-table {
+            background: #ffffff !important;
+        }
+
+        #adminModal .enquiry-table th {
+            background: linear-gradient(135deg, #e0f2fe, #fef2f2) !important;
+            color: #075985 !important;
+            border-color: var(--admin-border) !important;
+        }
+
+        #adminModal .enquiry-table td {
+            color: #29445d !important;
+            border-color: #e5eef5 !important;
+        }
+
+        #adminModal .enquiry-table tbody tr:hover {
+            background: #f0f9ff !important;
+        }
+
+        #adminModal .student-data-toolbar {
+            border-color: #dbeaf3 !important;
+        }
+
+        #adminModal #studentPasswordManager,
+        #adminModal #studentDataEditor {
+            background: linear-gradient(135deg, #f0f9ff, #fff1f2) !important;
+            border-color: #c7e2f1 !important;
+        }
+
         @media (max-width: 700px) {
-            #adminModal { padding: 0; }
-            #adminModal > .modal-card { min-height: 100vh; max-height: 100vh; border-radius: 0; }
-            #adminModal #enquiriesDashboard > .tab-navigation { overflow-x: auto; padding: 12px 56px 12px 12px; }
-            #adminModal #enquiriesDashboard > .tab-navigation .tab-btn { flex: 0 0 auto; }
-            #adminModal #enquiriesDashboard > div:not(.tab-navigation) { padding: 18px 12px 28px; }
-            #adminModal #authSection { min-height: 100vh; padding: 34px 22px; }
+            #adminModal {
+                align-items: stretch;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            #adminModal > .modal-card {
+                width: 100%;
+                min-height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            #adminModal #authSection {
+                min-height: 100dvh;
+                padding: max(76px, 12vh) 22px max(42px, env(safe-area-inset-bottom));
+            }
+
+            #adminModal #authSection h2 {
+                max-width: 100%;
+                font-size: clamp(1.7rem, 8vw, 2.35rem);
+                line-height: 1.08;
+                letter-spacing: -0.035em;
+                overflow-wrap: anywhere;
+            }
+
+            #adminModal #authSection > p {
+                max-width: 32rem;
+                font-size: 0.92rem;
+            }
+
+            #adminModal #authSection > div,
+            #adminModal #authSection > button {
+                width: min(100%, 390px) !important;
+            }
+
+            #adminModal #authSection input {
+                min-width: 0;
+                font-size: 16px;
+            }
+
+            #adminModal .close-modal {
+                top: max(12px, env(safe-area-inset-top));
+                right: max(12px, env(safe-area-inset-right));
+            }
+
+            #adminModal #enquiriesDashboard > .tab-navigation {
+                overflow-x: auto;
+                padding: max(12px, env(safe-area-inset-top)) 58px 12px 12px;
+                scrollbar-width: thin;
+            }
+
+            #adminModal #enquiriesDashboard > .tab-navigation .tab-btn {
+                flex: 0 0 auto;
+                min-height: 42px;
+                white-space: nowrap;
+            }
+
+            #adminModal #enquiriesDashboard > div:not(.tab-navigation) {
+                padding: 18px 12px max(28px, env(safe-area-inset-bottom));
+            }
+
+            #adminModal #admin-dashboard-title {
+                max-width: 100%;
+                font-size: clamp(1.2rem, 6vw, 1.65rem);
+                overflow-wrap: anywhere;
+            }
+
+            #adminModal .admin-summary-box {
+                max-width: 100%;
+                overflow: hidden;
+            }
+
+            #adminModal .table-responsive,
+            #adminModal .student-data-table-wrap,
+            #adminModal .cbt-table-responsive {
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #adminModal .student-data-toolbar,
+            #adminModal .admin-pin-toolbar {
+                align-items: stretch;
+            }
+
+            #adminModal .student-data-actions,
+            #adminModal .admin-pin-toolbar {
+                flex-wrap: wrap;
+            }
+
+            #adminModal .student-data-actions > *,
+            #adminModal .admin-pin-toolbar > * {
+                max-width: 100%;
+            }
+
+            #adminModal #studentDataSearch {
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 420px) {
+            #adminModal #authSection {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            #adminModal #authSection::before {
+                margin-bottom: 14px;
+                font-size: 0.62rem;
+                letter-spacing: 0.1em;
+            }
+
+            #adminModal #authSection > p {
+                font-size: 0.86rem;
+            }
+
+            #adminModal #authSection input,
+            #adminModal #authSection > button {
+                min-height: 50px;
+            }
+        }
+
+        @media (max-height: 620px) and (min-width: 701px) {
+            #adminModal > .modal-card {
+                max-height: 96vh;
+            }
+
+            #adminModal #authSection {
+                min-height: 0;
+                padding-top: 52px;
+                padding-bottom: 52px;
+            }
         }
 
         .cbt-table-responsive {
@@ -4317,6 +4652,7 @@
 
         function openAdminModal() {
             document.body.classList.add('modal-open');
+            document.documentElement.classList.add('modal-open');
             document.getElementById('adminModal').style.display = 'flex';
         }
 
@@ -4334,6 +4670,7 @@
 
         function closeAdminModal() {
             document.body.classList.remove('modal-open');
+            document.documentElement.classList.remove('modal-open');
             document.getElementById('adminModal').style.display = 'none';
         }
 
