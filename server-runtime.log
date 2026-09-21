@@ -1,0 +1,6 @@
+◇ injected env (13) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+MongoDB target: cluster0.wosavjw.mongodb.net/dynolinks
+Dynolinks Portal Server running on port 5000
+Connected to Cloud MongoDB Database Successfully!
+Gmail API Email sent successfully. Message ID: 1a0c34555b4be7d3
+Gmail API Email sent successfully. Message ID: 1a0c34554f2b28db

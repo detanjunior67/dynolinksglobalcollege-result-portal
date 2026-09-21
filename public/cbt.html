@@ -758,6 +758,14 @@
                             class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase"
                             placeholder="e.g. STU-2026-001">
                     </div>
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">CBT Login Password *</label>
+                        <input type="password" id="studentPasswordInput"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Enter your CBT password">
+                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">This password is assigned by the administrator and must match your CBT account.</p>
+                    </div>
                     <div class="sm:col-span-2">
                         <label
                             class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1">Class
@@ -1221,6 +1229,7 @@
                                 class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-medium">
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Roster List Table -->
@@ -1424,7 +1433,7 @@
         // ========================================================
         const API_BASE_URL = '/api'; // Replace with Node.js/Express server API endpoint linked to MongoDB
 
-        async function apiFetchQuestions(classKey, subjectId = '') {
+        async function apiFetchQuestions(classKey, subjectId = '', allowLocalFallback = true) {
             try {
                 const url = subjectId
                     ? `${API_BASE_URL}/questions?classKey=${encodeURIComponent(classKey)}&subjectId=${encodeURIComponent(subjectId)}`
@@ -1434,13 +1443,37 @@
                     const questions = await response.json();
                     return questions.map(question => ({ ...question, id: question.id || question._id }));
                 }
+                if (!allowLocalFallback) {
+                    throw new Error(`Server returned ${response.status} while loading questions.`);
+                }
             } catch (err) {
+                if (!allowLocalFallback) throw err;
                 console.warn('MongoDB API fetch failed, falling back to local memory:', err);
             }
             if (subjectId) {
                 return (questionBank[classKey] && questionBank[classKey][subjectId]) || [];
             }
             return [];
+        }
+
+        async function syncRemoteQuestionsForClass(classKey, serverOnly = false) {
+            if (serverOnly) questionBank[classKey] = {};
+            const remoteQuestions = await apiFetchQuestions(classKey, '', !serverOnly);
+            if (!remoteQuestions.length) return remoteQuestions;
+
+            if (!questionBank[classKey]) questionBank[classKey] = {};
+            remoteQuestions.forEach(question => {
+                const subjectId = question.subjectId;
+                if (!subjectId) return;
+                if (!questionBank[classKey][subjectId]) questionBank[classKey][subjectId] = [];
+                const subjectQuestions = questionBank[classKey][subjectId];
+                const existingIndex = subjectQuestions.findIndex(existing =>
+                    (existing.id && existing.id === question.id) || existing.text === question.text
+                );
+                if (existingIndex >= 0) subjectQuestions[existingIndex] = question;
+                else subjectQuestions.push(question);
+            });
+            return remoteQuestions;
         }
 
         async function apiSaveQuestion(classKey, subjectId, questionObj) {
@@ -1816,6 +1849,21 @@
             localStorage.setItem('dgc_cbt_results_v2', JSON.stringify(cbtResults));
         }
 
+        async function verifyStudentPasswordOnServer(studentId, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, password })
+                });
+                const data = await response.json().catch(() => ({}));
+                return response.ok && !!data.success;
+            } catch (err) {
+                console.warn('Student CBT password verification failed:', err);
+                return false;
+            }
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -2014,6 +2062,7 @@
         async function prepareStudentExam() {
             const name = document.getElementById('studentFullName').value.trim();
             const studentId = document.getElementById('studentIdInput').value.trim().toUpperCase();
+            const studentPassword = document.getElementById('studentPasswordInput').value.trim();
             let classKey = document.getElementById('studentClassSelect').value;
             const selectedDepartment = normalizeDepartmentName(document.getElementById('studentDepartmentSelect')?.value || '');
 
@@ -2027,9 +2076,15 @@
 
             if (!name) return showCustomAlert('Validation Error', 'Please enter candidate full name.');
             if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
+            if (!studentPassword) return showCustomAlert('Password Required', 'Please enter your CBT password before continuing.');
             if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
             if (classKey.startsWith('SSS') && !selectedDepartment && !normalizeDepartmentName(savedProfile?.department || '')) {
                 return showCustomAlert('Validation Error', 'Please select the student department for this SSS class before continuing.');
+            }
+
+            const passwordValid = await verifyStudentPasswordOnServer(studentId, studentPassword);
+            if (!passwordValid) {
+                return showCustomAlert('Access Denied', 'This CBT password is incorrect or has not been set for this student ID yet. Please contact the admin to set/update it.');
             }
 
             const effectiveDepartment = normalizeDepartmentName(selectedDepartment || savedProfile?.department || '');
@@ -2084,6 +2139,14 @@
                     timerMins: 5
                 }))
                 : classConfigs[classKey].subjects;
+
+            try {
+                await syncRemoteQuestionsForClass(classKey, true);
+            } catch (loadError) {
+                console.error('Could not load server questions before exam preparation:', loadError);
+                return showCustomAlert('Server Data Unavailable', 'The examination questions could not be loaded from the server. Check your connection and try again.');
+            }
+
             const questionReadySubjects = getQuestionReadySubjects(classKey, exactConfiguredSubjects);
 
             if (!questionReadySubjects.length) {
@@ -2145,23 +2208,7 @@
 
             try {
                 // Sync with MongoDB for active class questions in one bulk request
-                const remoteQs = await apiFetchQuestions(currentCandidate.classKey);
-                if (remoteQs && remoteQs.length > 0) {
-                    if (!questionBank[currentCandidate.classKey]) questionBank[currentCandidate.classKey] = {};
-                    remoteQs.forEach(q => {
-                        const sid = q.subjectId;
-                        if (sid) {
-                            if (!questionBank[currentCandidate.classKey][sid]) questionBank[currentCandidate.classKey][sid] = [];
-                            const list = questionBank[currentCandidate.classKey][sid];
-                            const idx = list.findIndex(existing => (existing.id && existing.id === q.id) || (existing.text === q.text));
-                            if (idx >= 0) {
-                                list[idx] = q;
-                            } else {
-                                list.push(q);
-                            }
-                        }
-                    });
-                }
+                await syncRemoteQuestionsForClass(currentCandidate.classKey, true);
 
                 // Detect exact phone model and notify administrator via Gmail
                 const deviceData = (typeof window.getDeviceFingerprint === 'function')
@@ -4465,6 +4512,7 @@
             document.getElementById('appModal').classList.add('flex');
         }
     </script>
+    <script src="password-controls.js"></script>
 </body>
 
 </html>

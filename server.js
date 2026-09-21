@@ -516,6 +516,7 @@ const StudentSchema = new mongoose.Schema({
     session: { type: String, default: '' },
     term: { type: String, default: '' },
     pin_code: { type: String, default: '' },
+    cbt_password: { type: String, default: '' },
     usage_count: { type: Number, default: 0 },
     max_usage: { type: Number, default: 3 },
     results: [{
@@ -534,7 +535,7 @@ const Student = mongoose.model('Student', StudentSchema);
 const STUDENT_DATA_PASSWORD = process.env.STUDENT_DATA_PASSWORD || 'studata';
 
 const requireStudentDataPassword = (req, res, next) => {
-    const password = req.body?.password || req.headers['x-student-data-password'];
+    const password = req.headers['x-student-data-password'] || req.body?.password;
     if (password !== STUDENT_DATA_PASSWORD) {
         return res.status(401).json({ success: false, message: 'Invalid student data password.' });
     }
@@ -889,6 +890,23 @@ function invalidateQuestionCache() {
     questionCache.clear();
 }
 
+const normalizeQuestionSubjectId = (classKey, subjectId) => {
+    const normalizedClass = String(classKey || '').trim().toLowerCase();
+    const normalizedSubject = String(subjectId || '').trim().toLowerCase();
+    if (!normalizedClass || !normalizedSubject) return normalizedSubject;
+    if (normalizedSubject === 'eng' || normalizedSubject === 'english') return `${normalizedClass}_english`;
+    if (normalizedSubject === 'sci' || normalizedSubject === 'science') return `${normalizedClass}_biology`;
+    return normalizedSubject;
+};
+
+const getQuestionSubjectAliases = (classKey, subjectId) => {
+    const canonicalSubject = normalizeQuestionSubjectId(classKey, subjectId);
+    const aliases = [canonicalSubject];
+    if (canonicalSubject.endsWith('_english')) aliases.push('eng', 'english');
+    if (canonicalSubject.endsWith('_biology')) aliases.push('sci', 'science');
+    return [...new Set(aliases)];
+};
+
 const normalizeStudentIdKey = (value = '') => String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const expandStudentIdVariants = (value = '') => {
@@ -1008,6 +1026,107 @@ app.post('/api/admin/student-data/login', requireStudentDataPassword, (req, res)
     res.json({ success: true });
 });
 
+app.post('/api/student/login', async (req, res) => {
+    try {
+        const studentId = String(req.body?.studentId || '').trim();
+        const password = String(req.body?.password || '').trim();
+
+        if (!studentId) {
+            return res.status(400).json({ success: false, message: 'Student ID is required.' });
+        }
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Password is required.' });
+        }
+
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id full_name student_class department picture status cbt_password').lean();
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student record not found.' });
+        }
+
+        const savedPassword = String(student.cbt_password || '').trim();
+        if (!savedPassword) {
+            return res.status(401).json({ success: false, message: 'No CBT password has been set for this student yet.' });
+        }
+
+        if (savedPassword !== password) {
+            return res.status(401).json({ success: false, message: 'Incorrect CBT password.' });
+        }
+
+        return res.json({
+            success: true,
+            student: {
+                student_id: student.student_id,
+                full_name: student.full_name,
+                student_class: student.student_class,
+                department: student.department || '',
+                picture: student.picture || '',
+                status: student.status || 'Authorized'
+            }
+        });
+    } catch (error) {
+        console.error('Student CBT login error:', error);
+        return res.status(500).json({ success: false, message: 'Could not verify student CBT password.' });
+    }
+});
+
+app.post('/api/admin/student-password', requireStudentDataPassword, async (req, res) => {
+    try {
+        const studentId = String(req.body?.studentId || '').trim();
+        const password = String(req.body?.password || '').trim();
+
+        if (!studentId) {
+            return res.status(400).json({ success: false, message: 'Student ID is required.' });
+        }
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'A password is required to set or update the student CBT password.' });
+        }
+
+        const existingStudent = await Student.findOne(buildStudentQuery(studentId)).select('student_id').lean();
+        if (!existingStudent) {
+            return res.status(404).json({ success: false, message: 'Student record not found. Select an existing student from the table.' });
+        }
+
+        const updated = await Student.findOneAndUpdate(
+            { _id: existingStudent._id },
+            { $set: { cbt_password: password } },
+            { new: true, runValidators: true }
+        );
+
+        res.json({
+            success: true,
+            savedToServer: true,
+            studentId: updated?.student_id || studentId,
+            message: `CBT password saved for ${updated?.student_id || studentId}.`
+        });
+    } catch (error) {
+        console.error('Set student CBT password error:', error);
+        res.status(500).json({ success: false, message: 'Could not save the student CBT password.' });
+    }
+});
+
+app.get('/api/admin/student-password', requireStudentDataPassword, async (req, res) => {
+    try {
+        const studentId = String(req.query.studentId || '').trim();
+        if (!studentId) {
+            return res.status(400).json({ success: false, message: 'Student ID is required.' });
+        }
+
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id cbt_password').lean();
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+
+        res.json({
+            success: true,
+            studentId: student.student_id,
+            hasPassword: Boolean(student.cbt_password)
+        });
+    } catch (error) {
+        console.error('Get student CBT password status error:', error);
+        res.status(500).json({ success: false, message: 'Could not fetch student CBT password status.' });
+    }
+});
+
 app.post('/api/admin/student-data/cleanup-pictures', requireStudentDataPassword, async (req, res) => {
     try {
         if (!mongoose.connection || mongoose.connection.readyState !== 1) {
@@ -1036,8 +1155,12 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 { student_class: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
             ]
         } : {};
+        const summaryOnly = String(req.query.summary || '') === '1';
+        const fields = summaryOnly
+            ? 'student_id full_name student_class department show_result status'
+            : 'student_id full_name student_class department picture show_result status cbt_password';
         const students = await Student.find(filter)
-            .select('student_id full_name student_class department picture show_result status')
+            .select(fields)
             .lean();
 
         const studentSummaries = students
@@ -1048,7 +1171,8 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 student_class: student.student_class,
                 department: student.department || '',
                 has_picture: Boolean(student.picture),
-                picture: student.picture || '',
+                picture: summaryOnly ? '' : (student.picture || ''),
+                has_password: summaryOnly ? false : Boolean(String(student.cbt_password || '').trim()),
                 show_result: student.show_result !== false,
                 status: student.status || 'Authorized'
             }))
@@ -1830,11 +1954,15 @@ app.get('/api/questions', async (req, res) => {
 
         const filter = {};
         if (classKey) filter.classKey = classKey;
-        if (subjectId) filter.subjectId = subjectId;
+        if (subjectId) filter.subjectId = { $in: getQuestionSubjectAliases(classKey, subjectId) };
 
         const questions = await Question.find(filter).sort({ qNumber: 1 }).lean();
-        setCachedQuestions(classKey, subjectId, questions);
-        res.json(questions);
+        const normalizedQuestions = questions.map(question => ({
+            ...question,
+            subjectId: normalizeQuestionSubjectId(question.classKey, question.subjectId)
+        }));
+        setCachedQuestions(classKey, subjectId, normalizedQuestions);
+        res.json(normalizedQuestions);
     } catch (err) {
         console.error('Error fetching questions:', err);
         res.status(500).json({ error: 'Failed to fetch questions' });
@@ -1873,7 +2001,10 @@ app.put('/api/cbt-config', async (req, res) => {
 // POST a new CBT question
 app.post('/api/questions', async (req, res) => {
     try {
-        const newQuestion = new Question(req.body);
+        const newQuestion = new Question({
+            ...req.body,
+            subjectId: normalizeQuestionSubjectId(req.body?.classKey, req.body?.subjectId)
+        });
         const saved = await newQuestion.save();
         invalidateQuestionCache();
         res.status(201).json(saved);
@@ -2502,7 +2633,7 @@ app.post('/api/questions/bulk', async (req, res) => {
 
         const documents = questions.map((question, index) => ({
             classKey,
-            subjectId,
+            subjectId: normalizeQuestionSubjectId(classKey, subjectId),
             qNumber: index + 1,
             text: question.text,
             options: question.options,
@@ -2511,7 +2642,8 @@ app.post('/api/questions/bulk', async (req, res) => {
             customTime: question.customTime,
             hint: question.hint || ''
         }));
-        await Question.deleteMany({ classKey, subjectId });
+        const canonicalSubjectId = normalizeQuestionSubjectId(classKey, subjectId);
+        await Question.deleteMany({ classKey, subjectId: { $in: getQuestionSubjectAliases(classKey, canonicalSubjectId) } });
         const saved = await Question.insertMany(documents, { ordered: true });
         invalidateQuestionCache();
         res.status(201).json(saved);

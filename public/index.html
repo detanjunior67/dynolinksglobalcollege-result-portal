@@ -1478,6 +1478,26 @@
             justify-content: flex-end;
         }
 
+        .student-data-admin-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: var(--crest-blue-light);
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .student-data-admin-link:hover {
+            background: rgba(14, 165, 233, 0.25);
+        }
+
         .student-data-actions input[type="search"] {
             height: 44px !important;
             width: 230px !important;
@@ -1569,11 +1589,12 @@
         }
 
         .student-row-photo-editor {
-            position: relative;
             display: flex;
             align-items: center;
-            justify-content: center;
-            width: 86px;
+            justify-content: flex-start;
+            gap: 6px;
+            width: 140px;
+            max-width: 100%;
             min-height: 86px;
             margin: 0 auto;
         }
@@ -1589,14 +1610,10 @@
         }
 
         .student-row-edit-toggle {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
             border: none;
             border-radius: 999px;
-            padding: 5px 9px;
-            font-size: 0.62rem;
+            padding: 6px 7px;
+            font-size: 0.7rem;
             font-weight: 800;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -1604,7 +1621,8 @@
             color: #fff;
             cursor: pointer;
             box-shadow: 0 8px 18px rgba(249, 115, 22, 0.28);
-            z-index: 2;
+            line-height: 1.1;
+            flex: 0 0 auto;
         }
 
         .student-inline-dropzone {
@@ -1726,6 +1744,76 @@
 
         .table-responsive .enquiry-table {
             min-width: 680px;
+        }
+
+        .student-data-table {
+            min-width: 1060px !important;
+            table-layout: fixed;
+        }
+
+        .student-data-table th:nth-child(1),
+        .student-data-table td:nth-child(1) { width: 150px; min-width: 150px; }
+
+        .student-data-table th:nth-child(2),
+        .student-data-table td:nth-child(2) { width: 190px; }
+
+        .student-data-table th:nth-child(3),
+        .student-data-table td:nth-child(3) { width: 145px; }
+
+        .student-data-table th:nth-child(4),
+        .student-data-table td:nth-child(4) { width: 105px; }
+
+        .student-data-table th:nth-child(5),
+        .student-data-table td:nth-child(5) { width: 135px; }
+
+        .student-data-table th:nth-child(6),
+        .student-data-table td:nth-child(6) { width: 245px; }
+
+        .student-data-table th:nth-child(7),
+        .student-data-table td:nth-child(7) { width: 154px; }
+
+        .student-data-table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 1px solid var(--border-dark);
+            border-radius: 12px;
+            scrollbar-gutter: stable;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            touch-action: pan-x;
+            scrollbar-width: auto;
+            scrollbar-color: rgba(56, 189, 248, 0.85) rgba(15, 23, 42, 0.16);
+        }
+
+        .student-data-table-wrap::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        .student-data-table-wrap::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.16);
+            border-radius: 999px;
+        }
+
+        .student-data-table-wrap::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            border: 3px solid rgba(15, 23, 42, 0.16);
+            border-radius: 999px;
+        }
+
+        .student-cbt-password-input { min-height: 40px; }
+
+        .student-cbt-status.set {
+            background: rgba(34, 197, 94, 0.14);
+            color: #15803d;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .student-cbt-status.not-set {
+            background: rgba(245, 158, 11, 0.14);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.32);
         }
 
         .cbt-table-responsive {
@@ -1869,6 +1957,12 @@
         }
 
         @media (max-width: 560px) {
+            .student-data-table-wrap {
+                margin-left: -4px;
+                width: calc(100% + 8px);
+                padding-bottom: 4px;
+            }
+
             .student-data-actions {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -2994,6 +3088,7 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 id="admin-dashboard-title" style="color: var(--text-light); font-weight: 800;">Received Enquiries / Admission Forms</h2>
+                    <a href="#student-data" class="student-data-admin-link" onclick="openStudentDataAccess(event);">Open Student Data</a>
                 </div>
 
                 <!-- TAB 1: Enquiry Submitted Table -->
@@ -3076,6 +3171,31 @@
                                 </label>
                             </div>
                         </div>
+                        <button type="button" id="studentPasswordManagerToggle" onclick="toggleStudentPasswordManager()" aria-expanded="false" aria-controls="studentPasswordManager" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 16px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #FFFFFF; border: none; border-radius: 12px; padding: 12px 16px; font-weight: 800; cursor: pointer;">Set / Update Student CBT Password</button>
+                        <div id="studentPasswordManager" class="admin-summary-box" style="display: none; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.25); margin-bottom: 16px; padding: 16px; border-radius: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                                <h4 style="margin: 0; color: var(--text-light); font-weight: 800;">Set / Update Student CBT Password</h4>
+                                <button type="button" onclick="clearStudentPasswordManagerForm()" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(59,130,246,0.2); color: var(--text-light); border-radius: 999px; padding: 7px 12px; cursor: pointer; font-weight: 700;">Clear</button>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                                <div>
+                                    <label for="studentPasswordManagerId" style="display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: var(--text-muted); margin-bottom: 6px;">Student ID</label>
+                                    <input id="studentPasswordManagerId" type="text" placeholder="e.g. STU-2026-001" autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700; text-transform: uppercase;">
+                                </div>
+                                <div>
+                                    <label for="studentPasswordManagerNew" style="display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: var(--text-muted); margin-bottom: 6px;">New Password</label>
+                                    <input id="studentPasswordManagerNew" type="password" placeholder="Enter password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                                </div>
+                                <div>
+                                    <label for="studentPasswordManagerConfirm" style="display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: var(--text-muted); margin-bottom: 6px;">Confirm Password</label>
+                                    <input id="studentPasswordManagerConfirm" type="password" placeholder="Re-enter password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                                </div>
+                                <div style="display: flex; align-items: end;">
+                                    <button type="button" onclick="saveStudentPasswordFromAdminIndex()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer;">Save Password</button>
+                                </div>
+                            </div>
+                            <p id="studentPasswordManagerStatus" style="margin: 10px 0 0; min-height: 18px; color: var(--text-muted); font-size: 0.78rem; font-weight: 700;"></p>
+                        </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
                             CSV columns: <strong>Student ID, Full Name, Class, Department, Picture Data</strong>. For the picture column, just type the image's file name (e.g. <code>john-doe.jpg</code>) &mdash; the photo itself must already be saved in the server's <code>public/stud-data</code> folder. Full URLs also work if you have one.
                         </p>
@@ -3110,7 +3230,7 @@
 
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
                         </div>
-                        <div class="table-responsive"><table class="enquiry-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Department</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
+                        <div class="table-responsive student-data-table-wrap"><table class="enquiry-table student-data-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Department</th><th>CBT Password</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
                     </div>
                 </div>
 
@@ -3734,6 +3854,18 @@
             document.getElementById('adminModal').style.display = 'flex';
         }
 
+        function openStudentDataAccess(event) {
+            if (event) event.preventDefault();
+            pendingAdminTab = 'studentData';
+            window.location.hash = 'student-data';
+            openAdminModal();
+
+            const dashboard = document.getElementById('enquiriesDashboard');
+            if (dashboard && dashboard.style.display !== 'none') {
+                switchAdminTab('studentData');
+            }
+        }
+
         function closeAdminModal() {
             document.body.classList.remove('modal-open');
             document.getElementById('adminModal').style.display = 'none';
@@ -3747,15 +3879,33 @@
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('enquiriesDashboard').style.display = 'block';
                 fetchEnquiries();
+                if (pendingAdminTab === 'studentData' || window.location.hash === '#student-data') {
+                    switchAdminTab('studentData');
+                }
             } else {
                 err.style.display = 'block';
             }
         }
 
+        function restoreStudentDataRoute() {
+            if (window.location.hash !== '#student-data') return;
+            pendingAdminTab = 'studentData';
+            openAdminModal();
+
+            const dashboard = document.getElementById('enquiriesDashboard');
+            if (dashboard && dashboard.style.display !== 'none') {
+                switchAdminTab('studentData');
+            }
+        }
+
+        window.addEventListener('hashchange', restoreStudentDataRoute);
+
         let studentDataPassword = localStorage.getItem('dgc_student_data_password') || '';
         let editingStudentDataId = '';
         let editingStudentDataPicture = '';
         let pendingStudentDataEdits = new Map();
+        let pendingAdminTab = '';
+        restoreStudentDataRoute();
 
         function compressStudentImageDataUrl(dataUrl, maxDimension = 900, quality = 0.68) {
             return new Promise((resolve) => {
@@ -3800,23 +3950,99 @@
             }
         }
 
-        async function syncSharedStudentRoster() {
-            if (!studentDataPassword) return;
+        async function saveStudentPasswordFromAdminIndex() {
+            const studentId = String(document.getElementById('studentPasswordManagerId').value || '').trim().toUpperCase();
+            const newPassword = String(document.getElementById('studentPasswordManagerNew').value || '').trim();
+            const confirmPassword = String(document.getElementById('studentPasswordManagerConfirm').value || '').trim();
+            const statusBox = document.getElementById('studentPasswordManagerStatus');
+
+            if (!studentId) {
+                statusBox.textContent = 'Please enter a student ID.';
+                statusBox.style.color = '#b42318';
+                return;
+            }
+            if (!newPassword || newPassword.length < 4) {
+                statusBox.textContent = 'Password must be at least 4 characters long.';
+                statusBox.style.color = '#b42318';
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                statusBox.textContent = 'Passwords do not match.';
+                statusBox.style.color = '#b42318';
+                return;
+            }
+            if (!studentDataPassword) {
+                statusBox.textContent = 'Please unlock the student data manager first.';
+                statusBox.style.color = '#b42318';
+                return;
+            }
+
             try {
-                const response = await fetch('/api/admin/student-data', {
-                    headers: { 'x-student-data-password': studentDataPassword }
+                const response = await fetch('/api/admin/student-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-student-data-password': studentDataPassword
+                    },
+                    body: JSON.stringify({ studentId, password: newPassword })
                 });
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok || !data.success || !Array.isArray(data.students)) {
-                    throw new Error(data.message || 'Could not load student data.');
+                if (!response.ok || !data.success || data.savedToServer !== true) throw new Error(data.message || 'The server did not confirm the password save.');
+
+                statusBox.textContent = `CBT password saved for ${studentId}.`;
+                statusBox.style.color = '#15803d';
+                document.getElementById('studentPasswordManagerId').value = '';
+                document.getElementById('studentPasswordManagerNew').value = '';
+                document.getElementById('studentPasswordManagerConfirm').value = '';
+            } catch (err) {
+                statusBox.textContent = err.message || 'Could not save the student CBT password.';
+                statusBox.style.color = '#b42318';
+            }
+        }
+
+        function clearStudentPasswordManagerForm() {
+            document.getElementById('studentPasswordManagerId').value = '';
+            document.getElementById('studentPasswordManagerNew').value = '';
+            document.getElementById('studentPasswordManagerConfirm').value = '';
+            const statusBox = document.getElementById('studentPasswordManagerStatus');
+            statusBox.textContent = '';
+            statusBox.style.color = 'var(--text-muted)';
+        }
+
+        function toggleStudentPasswordManager() {
+            const manager = document.getElementById('studentPasswordManager');
+            const toggle = document.getElementById('studentPasswordManagerToggle');
+            if (!manager || !toggle) return;
+
+            const willOpen = manager.style.display === 'none';
+            manager.style.display = willOpen ? 'block' : 'none';
+            toggle.setAttribute('aria-expanded', String(willOpen));
+            toggle.textContent = willOpen ? 'Hide CBT Password Manager' : 'Set / Update Student CBT Password';
+        }
+
+        async function syncSharedStudentRoster(students = null) {
+            if (!studentDataPassword) return;
+            try {
+                const existingRoster = JSON.parse(localStorage.getItem('dgc_student_roster') || '[]');
+                const existingPictures = new Map(existingRoster.map(item => [item.studentId, item.picture || '']));
+                let rosterStudents = students;
+                if (!Array.isArray(rosterStudents)) {
+                    const response = await fetch('/api/admin/student-data?summary=1', {
+                        headers: { 'x-student-data-password': studentDataPassword }
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || !data.success || !Array.isArray(data.students)) {
+                        throw new Error(data.message || 'Could not load student data.');
+                    }
+                    rosterStudents = data.students;
                 }
 
-                const roster = data.students.map(student => ({
+                const roster = rosterStudents.map(student => ({
                     studentId: String(student.student_id || '').trim().toUpperCase(),
                     name: String(student.full_name || 'Candidate').trim(),
                     classKey: String(student.student_class || '').trim(),
                     department: String(student.department || '').trim(),
-                    picture: String(student.picture || '').trim(),
+                    picture: String(student.picture || existingPictures.get(String(student.student_id || '').trim().toUpperCase()) || '').trim(),
                     showResult: student.show_result !== false,
                     status: 'Authorized'
                 })).filter(item => item.studentId && item.classKey);
@@ -3873,8 +4099,8 @@
                 persistStudentDataPassword(password);
                 document.getElementById('studentDataGate').style.display = 'none';
                 document.getElementById('studentDataManager').style.display = 'block';
-                await syncSharedStudentRoster();
-                loadStudentData();
+                const studentData = await loadStudentData();
+                await syncSharedStudentRoster(studentData?.students);
             } catch (err) {
                 error.textContent = err.message;
                 error.style.display = 'block';
@@ -3898,12 +4124,15 @@
                 const fullName = String(student.full_name || '').trim();
                 const studentClass = String(student.student_class || '').trim();
                 const studentDepartment = String(student.department || '').trim();
+                const hasPassword = student.has_password === true;
+                const passwordStatusText = hasPassword ? 'Password set' : 'Not set';
+                const passwordStatusClass = hasPassword ? 'student-cbt-status set' : 'student-cbt-status not-set';
                 return `
                 <tr data-student-id="${escapeHtml(studentId)}" data-full-name="${escapeHtml(fullName)}" data-student-class="${escapeHtml(studentClass)}" data-department="${escapeHtml(studentDepartment)}">
                     <td>
                         <div class="student-row-photo-editor">
                             <img class="student-inline-image" src="${escapeHtml(safePicture || '')}" alt="" onerror="this.style.display='none'; this.parentElement.querySelector('.student-row-edit-toggle').style.top='50%'; this.parentElement.querySelector('.student-row-edit-toggle').style.transform='translate(-50%, -50%)';" style="${safePicture ? '' : 'display:none;'}">
-                            <button type="button" class="student-row-edit-toggle" data-student-id="${escapeHtml(studentId)}">Edit mode</button>
+                            <button type="button" class="student-row-edit-toggle" data-student-id="${escapeHtml(studentId)}">Edit</button>
                             <div class="student-inline-dropzone hidden" data-student-id="${escapeHtml(studentId)}">
                                 <input type="file" accept="image/*" data-student-id="${escapeHtml(studentId)}">
                                 <span>Drop photo<br>or choose</span>
@@ -3911,6 +4140,15 @@
                         </div>
                     </td>
                     <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td><td>${escapeHtml(studentDepartment)}</td>
+                    <td>
+                        <div class="student-cbt-password-editor" style="display: flex; flex-direction: column; gap: 8px; min-width: 190px;">
+                            <input type="password" class="student-cbt-password-input" data-student-id="${escapeHtml(studentId)}" placeholder="Type CBT password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="student-cbt-save-btn" data-student-id="${escapeHtml(studentId)}" onclick="saveStudentPasswordFromTable('${escapeHtml(studentId)}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; padding: 8px 10px; font-weight: 800; cursor: pointer; font-size: 0.72rem; min-width: 90px;">Save</button>
+                                <span class="${passwordStatusClass}" style="display: inline-flex; align-items: center; justify-content: center; min-width: 92px; padding: 5px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em;">${passwordStatusText}</span>
+                            </div>
+                        </div>
+                    </td>
                     <td class="student-data-action-cell">
                         <div class="student-data-row-actions">
                             <button type="button" class="btn btn-primary btn-sm" onclick="editStudentData('${encodeURIComponent(student.student_id)}')">Edit</button>
@@ -3921,6 +4159,7 @@
             }).join('') : '<tr><td colspan="6">No student records found.</td></tr>';
 
             bindStudentRowEditHandlers();
+            return data;
         }
 
         function bindStudentRowEditHandlers() {
@@ -3934,7 +4173,7 @@
                     if (!dropZone) return;
                     const willShow = dropZone.classList.contains('hidden');
                     dropZone.classList.toggle('hidden', !willShow);
-                    button.textContent = willShow ? 'Close' : 'Edit mode';
+                    button.textContent = willShow ? 'Close' : 'Edit';
                 });
             });
 
@@ -3977,6 +4216,60 @@
             });
         }
 
+        async function saveStudentPasswordFromTable(studentId) {
+            const rowInput = Array.from(document.querySelectorAll('.student-cbt-password-input')).find((element) => element.dataset.studentId === studentId);
+            const rowStatus = Array.from(document.querySelectorAll('.student-cbt-status')).find((element) => element.closest('tr')?.dataset.studentId === studentId);
+            if (!rowInput) return;
+
+            const password = String(rowInput.value || '').trim();
+            if (!studentId) {
+                if (rowStatus) {
+                    rowStatus.textContent = 'Invalid student';
+                    rowStatus.className = 'student-cbt-status not-set';
+                }
+                return;
+            }
+            if (!password || password.length < 4) {
+                if (rowStatus) {
+                    rowStatus.textContent = 'Enter 4+ chars';
+                    rowStatus.className = 'student-cbt-status not-set';
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/student-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-student-data-password': studentDataPassword
+                    },
+                    body: JSON.stringify({ studentId, password })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.status === 401) {
+                    persistStudentDataPassword('');
+                    document.getElementById('studentDataGate').style.display = 'block';
+                    document.getElementById('studentDataManager').style.display = 'none';
+                    document.getElementById('studentDataPassword').focus();
+                    throw new Error('Student data access expired. Enter the admin student-data password, unlock again, then save.');
+                }
+                if (!response.ok || !data.success || data.savedToServer !== true) throw new Error(data.message || 'The server did not confirm the password save.');
+
+                rowInput.value = '';
+                if (rowStatus) {
+                    rowStatus.textContent = 'Saved to server';
+                    rowStatus.className = 'student-cbt-status set';
+                }
+            } catch (err) {
+                if (rowStatus) {
+                    rowStatus.textContent = err.message || 'Save failed';
+                    rowStatus.className = 'student-cbt-status not-set';
+                }
+                console.error(err);
+            }
+        }
+
         function handleInlineStudentPictureFile(studentId, file) {
             if (!file || !file.type || !file.type.startsWith('image/')) return;
 
@@ -3998,7 +4291,7 @@
                 const dropZone = row ? row.querySelector('.student-inline-dropzone') : null;
                 const toggle = row ? row.querySelector('.student-row-edit-toggle') : null;
                 if (dropZone) dropZone.classList.add('hidden');
-                if (toggle) toggle.textContent = 'Edit mode';
+                if (toggle) toggle.textContent = 'Edit';
             };
             reader.readAsDataURL(file);
         }
@@ -4530,5 +4823,6 @@
             }
         });
     </script>
+    <script src="password-controls.js"></script>
 </body>
 </html>
