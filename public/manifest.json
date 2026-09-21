@@ -10,13 +10,13 @@
   "description": "Dynolinks Global College student portal and result access",
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/logo-transparent.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo-transparent.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

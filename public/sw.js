@@ -8,6 +8,7 @@ self.addEventListener('install', (event) => {
       '/index.html',
       '/manifest.json',
       '/logo.jpg',
+      '/logo-transparent.png',
       '/student.jpg',
       '/cbt.html',
       '/portal.html',
