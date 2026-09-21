@@ -7,10 +7,17 @@ self.addEventListener('install', (event) => {
       '/',
       '/index.html',
       '/manifest.json',
-      '/logo-transparent.png',
+      '/logo.jpg',
+      '/student.jpg',
+      '/cbt.html',
+      '/portal.html',
+      '/teacher.html',
+      '/app.js',
+      '/style.css',
       '/dgc-loader.css',
-      '/device-detector.js'
-    ))
+      '/device-detector.js',
+      '/password-controls.js'
+    ]))
   );
   self.skipWaiting();
 });

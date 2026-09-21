@@ -31,10 +31,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <link rel="stylesheet" href="dgc-loader.css">
-    <script src="device-detector.js"></script>
+    <script src="device-detector.js" defer></script>
     <style>
         html,
         body {
@@ -647,6 +647,76 @@
             width: 100%;
             border-collapse: collapse;
         }
+
+        .header-controls a,
+        .header-controls button#portalToggleBtn {
+            min-height: 2.55rem;
+            border: 1px solid rgba(148, 163, 184, .28) !important;
+            border-radius: 0.9rem !important;
+            background: rgba(255, 255, 255, .78) !important;
+            box-shadow: 0 5px 16px rgba(15, 76, 76, .07);
+            backdrop-filter: blur(12px);
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+        }
+
+        .header-controls a:hover,
+        .header-controls button#portalToggleBtn:hover {
+            transform: translateY(-2px);
+            border-color: #7dd3c7 !important;
+            background: #f0fdfa !important;
+            box-shadow: 0 9px 20px rgba(15, 118, 110, .13);
+        }
+
+        .header-controls a:active,
+        .header-controls button#portalToggleBtn:active { transform: translateY(0); }
+        .header-controls a i,
+        .header-controls button#portalToggleBtn i { font-size: .85rem; transition: transform .18s ease; }
+        .header-controls a:hover i,
+        .header-controls button#portalToggleBtn:hover i { transform: scale(1.12); }
+        #portalToggleBtn { border-color: #f5d28a !important; background: #fffaf0 !important; }
+        #portalToggleBtn:hover { border-color: #f0b94f !important; background: #fff4d9 !important; }
+
+        #viewDashboard button[onclick="prepareStudentExam()"],
+        #viewInstructions button[onclick="startExamNow()"] {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 0.95rem !important;
+            font-weight: 800;
+            letter-spacing: .01em;
+            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        }
+
+        #viewDashboard button[onclick="prepareStudentExam()"]:hover,
+        #viewInstructions button[onclick="startExamNow()"]:hover {
+            transform: translateY(-2px);
+            filter: saturate(1.08);
+            box-shadow: 0 14px 26px rgba(2, 132, 199, .24) !important;
+        }
+
+        #viewDashboard button[onclick="prepareStudentExam()"]:active,
+        #viewInstructions button[onclick="startExamNow()"]:active { transform: translateY(0); }
+
+        #viewAdminPortal [id^="btnTab"] {
+            border: 1px solid transparent;
+            min-height: 2.35rem;
+            transition: transform .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease;
+        }
+
+        #viewAdminPortal [id^="btnTab"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(15, 76, 76, .1);
+        }
+
+        #viewAdminPortal [id^="btnTab"].admin-tab-active {
+            border-color: rgba(255, 255, 255, .24);
+            box-shadow: 0 8px 18px rgba(2, 132, 199, .2);
+        }
+
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 3px solid rgba(14, 165, 233, .32);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 
@@ -658,7 +728,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <!-- Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
-                <img src="logo.jpg" alt="Dynolinks Global College logo"
+                <img src="/logo.jpg" alt="Dynolinks Global College logo"
                     class="w-10 h-10 rounded-xl object-cover shadow-md shadow-blue-500/20">
                 <div>
                     <span
@@ -686,18 +756,18 @@
                     <span>Student Portal</span>
                 </a>
 
-                <!-- Admin Lock Button -->
-                <button id="portalToggleBtn" onclick="openAdminAuthModal()"
+                <!-- Dedicated Admin Console Link -->
+                <button type="button" id="portalToggleBtn" onclick="openAdminAuthModal()"
                     class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
                     <i class="fa-solid fa-lock text-amber-500"></i>
-                    <span id="portalToggleText">🔒 Admin Only</span>
+                    <span id="portalToggleText">Admin Console</span>
                 </button>
 
                 <!-- Profile Badge -->
                 <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 dark:border-gray-700">
-                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm"
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center font-bold text-sm"
                         id="userAvatar">
-                        ST
+                        <img src="/student.jpg" alt="Student Portal" class="w-full h-full object-cover">
                     </div>
                     <div class="hidden md:block text-left text-xs">
                         <div class="font-semibold" id="userName">Student Portal</div>
@@ -1054,8 +1124,20 @@
                     <i class="fa-solid fa-lock text-blue-600 dark:text-blue-400 text-xl mb-2"></i>
                     <p class="text-sm font-semibold text-blue-900 dark:text-blue-200">Your result has been recorded
                         securely.</p>
-                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">Results are available only to the school
-                        administrator.</p>
+                    <p id="submissionResultMessage" class="text-xs text-blue-700 dark:text-blue-300 mt-1">Your result will appear here when the school administrator makes it available.</p>
+                </div>
+
+                <div id="studentCbtResultPanel" class="hidden bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-chart-column text-emerald-600"></i> Your CBT Result</h3>
+                        <span id="studentCbtResultGrade" class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black"></span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3"><div class="text-[10px] uppercase font-bold text-gray-500">Score</div><div id="studentCbtResultScore" class="font-black text-blue-700"></div></div>
+                        <div class="rounded-xl bg-cyan-50 dark:bg-cyan-900/20 p-3"><div class="text-[10px] uppercase font-bold text-gray-500">Percentage</div><div id="studentCbtResultPercentage" class="font-black text-cyan-700"></div></div>
+                        <div class="rounded-xl bg-purple-50 dark:bg-purple-900/20 p-3"><div class="text-[10px] uppercase font-bold text-gray-500">Class</div><div id="studentCbtResultClass" class="font-black text-purple-700 text-xs"></div></div>
+                    </div>
+                    <div id="studentCbtSubjectRows" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></div>
                 </div>
 
                 <div class="text-center pt-2">
@@ -1377,10 +1459,27 @@
                     <input type="text" id="searchResultInput" onkeyup="filterResultsTable()"
                         placeholder="Search by student name or class..."
                         class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full sm:w-64">
-                    <button onclick="exportCbtResultsCSV()"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">
-                        <i class="fa-solid fa-file-csv mr-1"></i> Export Results CSV
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="editResultsBtn" onclick="toggleResultsEditMode()"
+                            class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Results
+                        </button>
+                        <button onclick="exportCbtResultsCSV()"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">
+                            <i class="fa-solid fa-file-csv mr-1"></i> Export Results CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resultsSelectionBar" class="hidden items-center justify-between gap-3 flex-wrap bg-slate-950 text-white p-3 rounded-2xl shadow-lg">
+                    <div class="flex items-center gap-3 text-xs font-bold">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white/10"><i class="fa-solid fa-list-check"></i></span>
+                        <span><strong id="selectedResultsCount">0</strong> results selected</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportSelectedCbtResults()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-xs font-bold"><i class="fa-solid fa-file-export mr-1"></i> Export Selected</button>
+                        <button onclick="deleteSelectedCbtResults()" class="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-xl text-xs font-bold"><i class="fa-solid fa-trash-can mr-1"></i> Delete Selected</button>
+                    </div>
                 </div>
 
                 <div
@@ -1390,6 +1489,7 @@
                             <thead>
                                 <tr
                                     class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                    <th id="resultSelectHeader" class="hidden p-4 font-semibold w-12"><input type="checkbox" id="selectAllResults" onchange="toggleAllResultSelection(this.checked)" class="h-4 w-4 accent-blue-600" aria-label="Select all results"></th>
                                     <th class="p-4 font-semibold">Student ID</th>
                                     <th class="p-4 font-semibold">Student Name</th>
                                     <th class="p-4 font-semibold">Class Level</th>
@@ -1756,6 +1856,8 @@
         let studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
         let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
+        let resultsEditMode = false;
+        let currentStudentCbtPassword = '';
         let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
 
         window.addEventListener('storage', (event) => {
@@ -1800,6 +1902,10 @@
             populateAdminClassDropdown();
             setStudentProfileCardVisibility(false);
             void loadStudentRosterFromDatabase();
+
+            if (new URLSearchParams(window.location.search).get('admin') === '442') {
+                setTimeout(openAdminAuthModal, 150);
+            }
 
             // Initialize Candidate photo placeholder
             const initPic = document.getElementById('studentCandidatePicture');
@@ -1911,8 +2017,13 @@
                 departmentField.classList.toggle('hidden', !needsDepartment);
             }
             if (departmentSelect) {
-                departmentSelect.disabled = !needsDepartment;
-                if (!needsDepartment) departmentSelect.value = '';
+                if (!needsDepartment) {
+                    departmentSelect.disabled = true;
+                    departmentSelect.value = '';
+                    departmentSelect.dataset.serverLocked = 'false';
+                } else {
+                    departmentSelect.disabled = departmentSelect.dataset.serverLocked === 'true';
+                }
             }
 
             const selectedDepartment = normalizeDepartmentName(departmentSelect ? departmentSelect.value : '');
@@ -1992,7 +2103,10 @@
                 classSelect.value = classOption.value;
                 const profileDepartment = document.getElementById('studentDepartmentSelect');
                 if (profileDepartment && classOption.value.startsWith('SSS')) {
-                    profileDepartment.value = normalizeDepartmentName(student.department || '');
+                    const savedDepartment = normalizeDepartmentName(student.department || '');
+                    profileDepartment.value = savedDepartment;
+                    profileDepartment.dataset.serverLocked = savedDepartment ? 'true' : 'false';
+                    profileDepartment.title = savedDepartment ? 'Locked after first selection.' : '';
                 }
                 handleClassChange();
             }
@@ -2087,7 +2201,35 @@
                 return showCustomAlert('Access Denied', 'This CBT password is incorrect or has not been set for this student ID yet. Please contact the admin to set/update it.');
             }
 
-            const effectiveDepartment = normalizeDepartmentName(selectedDepartment || savedProfile?.department || '');
+            let effectiveDepartment = normalizeDepartmentName(savedProfile?.department || selectedDepartment || '');
+            if (classKey.startsWith('SSS') && !savedProfile?.department) {
+                try {
+                    const departmentResponse = await fetch(`${API_BASE_URL}/student/department`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ studentId, password: studentPassword, department: selectedDepartment })
+                    });
+                    const departmentData = await departmentResponse.json().catch(() => ({}));
+                    if (!departmentResponse.ok || !departmentData.success) {
+                        return showCustomAlert('Department Locked', departmentData.message || 'The selected department could not be saved.');
+                    }
+                    effectiveDepartment = normalizeDepartmentName(departmentData.department || selectedDepartment);
+                    if (savedProfile) {
+                        savedProfile.department = effectiveDepartment;
+                        clientStudentCache.set(studentId, savedProfile);
+                    }
+                    const departmentSelect = document.getElementById('studentDepartmentSelect');
+                    if (departmentSelect) {
+                        departmentSelect.value = effectiveDepartment;
+                        departmentSelect.disabled = true;
+                        departmentSelect.dataset.serverLocked = 'true';
+                        departmentSelect.title = 'Locked after first selection.';
+                    }
+                } catch (error) {
+                    return showCustomAlert('Connection Error', 'The department could not be saved. Please check your connection and try again.');
+                }
+            }
+            currentStudentCbtPassword = studentPassword;
 
             const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId) && (r.classKey === classKey || normalizeClassKey(r.classKey) === classKey)) || (savedProfile ? {
                 studentId: savedProfile.student_id,
@@ -2605,6 +2747,7 @@
 
             try {
                 await apiSaveCbtResult(record, options.keepalive);
+                if (!options.silent) await loadStudentCbtResult();
             } catch (err) {
                 console.error('CBT result MongoDB save failed:', err);
                 if (!options.silent) showToast('Exam saved locally, but the server could not save the result.', 'error');
@@ -2617,6 +2760,32 @@
             if (options.silent) return;
 
             showView('viewSubmissionSuccess');
+        }
+
+        async function loadStudentCbtResult() {
+            const response = await fetch(`${API_BASE_URL}/student/cbt-result`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId: currentCandidate.studentId, password: currentStudentCbtPassword })
+            });
+            const data = await response.json().catch(() => ({}));
+            const message = document.getElementById('submissionResultMessage');
+            const panel = document.getElementById('studentCbtResultPanel');
+            if (!response.ok || !data.success) {
+                if (message) message.textContent = data.resultAvailable === false ? 'Your result is awaiting administrator release.' : 'Your result has been recorded and is being processed.';
+                return;
+            }
+
+            const result = data.result;
+            document.getElementById('studentCbtResultGrade').textContent = result.grade;
+            document.getElementById('studentCbtResultScore').textContent = `${result.totalPoints} / ${result.maxPoints}`;
+            document.getElementById('studentCbtResultPercentage').textContent = `${result.percentage}%`;
+            document.getElementById('studentCbtResultClass').textContent = result.classLevel;
+            document.getElementById('studentCbtSubjectRows').innerHTML = Object.entries(result.subjectBreakdown || {}).map(([subject, score]) => `
+                <div class="flex items-center justify-between py-2"><span class="text-gray-600 dark:text-gray-300">${subject}</span><strong class="text-gray-900 dark:text-white">${score.score} / ${score.max}</strong></div>
+            `).join('');
+            if (message) message.textContent = 'Your result has been released by the school administrator.';
+            panel.classList.remove('hidden');
         }
 
         window.addEventListener('pagehide', () => {
@@ -2643,7 +2812,7 @@
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-3">
                     <p class="text-xs text-gray-500 dark:text-gray-400">Enter administrator password to access college controls, curriculum config, and result logs.</p>
-                    <input type="password" id="adminPassInput" class="w-full px-4 py-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Password" onkeydown="if(event.key==='Enter') verifyAdminPass()">
+                    <input type="password" id="adminPassInput" class="w-full px-4 py-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Password">
                 </div>
             `;
             document.getElementById('modalActions').innerHTML = `
@@ -2658,7 +2827,11 @@
             }, 100);
         }
 
+        let adminLoginInProgress = false;
+
         async function verifyAdminPass() {
+            if (adminLoginInProgress) return;
+            adminLoginInProgress = true;
             const pass = document.getElementById('adminPassInput').value;
             if (window.showDatabaseLoader) {
                 window.showDatabaseLoader('Connecting to Database...', 'Verifying Administrator Credentials...');
@@ -2681,12 +2854,14 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
                 closeModal();
+                history.replaceState(null, '', 'cbt.html/only?admin=442');
                 showView('viewAdminPortal');
                 showAdminSubView('builder');
-                showToast(data.emailSent === false ? 'Admin Portal unlocked, but login notification failed.' : 'Admin Portal unlocked successfully!');
+                showToast(data.emailSent === false ? 'Admin Portal unlocked.' : 'Admin Portal unlocked successfully!');
             } catch (err) {
                 showCustomAlert('Access Denied', err.message || 'Incorrect Admin Password! Please try again.');
             } finally {
+                adminLoginInProgress = false;
                 if (window.hideDatabaseLoader) {
                     window.hideDatabaseLoader();
                 }
@@ -4165,6 +4340,15 @@
         async function toggleStudentResultVisibility(studentId) {
             const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId));
             const nextVisible = rosterMatch ? (rosterMatch.showResult !== false) ? false : true : true;
+            const previousVisible = rosterMatch ? rosterMatch.showResult !== false : true;
+
+            if (rosterMatch) rosterMatch.showResult = nextVisible;
+            const rosterEntry = studentRoster.find(r => studentIdsMatch(r.studentId, studentId));
+            if (rosterEntry) rosterEntry.showResult = nextVisible;
+            savePersistentData();
+            renderRosterTable();
+            renderCbtResultsTable();
+
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/student-result-visibility`, {
                     method: 'POST',
@@ -4173,13 +4357,13 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Could not update result visibility.');
-                if (rosterMatch) rosterMatch.showResult = nextVisible;
-                const rosterEntry = studentRoster.find(r => studentIdsMatch(r.studentId, studentId));
-                if (rosterEntry) rosterEntry.showResult = nextVisible;
-                savePersistentData();
-                renderCbtResultsTable();
                 showToast(`Result visibility set to ${nextVisible ? 'visible' : 'hidden'} for ${studentId}.`);
             } catch (err) {
+                if (rosterMatch) rosterMatch.showResult = previousVisible;
+                if (rosterEntry) rosterEntry.showResult = previousVisible;
+                savePersistentData();
+                renderRosterTable();
+                renderCbtResultsTable();
                 showToast(err.message || 'Could not update result visibility.', 'error');
             }
         }
@@ -4235,7 +4419,7 @@
             tbody.innerHTML = '';
 
             if (cbtResults.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
                 return;
             }
 
@@ -4251,6 +4435,7 @@
                     .join(' | ');
 
                 tr.innerHTML = `
+                    <td class="result-selection-cell ${resultsEditMode ? '' : 'hidden'} p-4"><input type="checkbox" value="${res.id}" onchange="updateSelectedResultsCount()" class="result-select h-4 w-4 accent-blue-600" aria-label="Select result for ${res.studentName}"></td>
                     <td class="p-4 font-mono font-bold text-gray-900 dark:text-white">${res.studentId}</td>
                     <td class="p-4 font-medium text-gray-800 dark:text-gray-200">${res.studentName}</td>
                     <td class="p-4 text-xs font-semibold text-blue-600 dark:text-blue-400">${res.classLevel}</td>
@@ -4273,6 +4458,112 @@
                 `;
                 tbody.appendChild(tr);
             });
+            updateSelectedResultsCount();
+        }
+
+        function toggleResultsEditMode() {
+            resultsEditMode = !resultsEditMode;
+            const header = document.getElementById('resultSelectHeader');
+            const selectionBar = document.getElementById('resultsSelectionBar');
+            const button = document.getElementById('editResultsBtn');
+            if (header) header.classList.toggle('hidden', !resultsEditMode);
+            if (selectionBar) {
+                selectionBar.classList.toggle('hidden', !resultsEditMode);
+                selectionBar.classList.toggle('flex', resultsEditMode);
+            }
+            if (button) {
+                button.innerHTML = resultsEditMode
+                    ? '<i class="fa-solid fa-xmark"></i> Close Edit'
+                    : '<i class="fa-solid fa-pen-to-square"></i> Edit Results';
+                button.className = resultsEditMode
+                    ? 'px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2'
+                    : 'px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2';
+            }
+            if (!resultsEditMode) {
+                const selectAll = document.getElementById('selectAllResults');
+                if (selectAll) selectAll.checked = false;
+            }
+            renderCbtResultsTable();
+        }
+
+        function getSelectedCbtResults() {
+            const selectedIds = Array.from(document.querySelectorAll('.result-select:checked')).map(input => input.value);
+            return cbtResults.filter(result => selectedIds.includes(String(result.id)));
+        }
+
+        function updateSelectedResultsCount() {
+            const selected = document.querySelectorAll('.result-select:checked').length;
+            const count = document.getElementById('selectedResultsCount');
+            if (count) count.textContent = selected;
+        }
+
+        function toggleAllResultSelection(checked) {
+            document.querySelectorAll('.result-select').forEach(input => {
+                input.checked = checked;
+            });
+            updateSelectedResultsCount();
+        }
+
+        function downloadCbtResultsCsv(results, filename) {
+            const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const rows = [['Student ID', 'Candidate Name', 'Class Level', 'Total Score', 'Max Score', 'Percentage', 'Grade', 'Timestamp']];
+            results.forEach(result => rows.push([result.studentId, result.studentName, result.classLevel, result.totalPoints, result.maxPoints, `${result.percentage}%`, result.grade, result.timestamp]));
+            const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n') + '\r\n';
+            const url = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function exportSelectedCbtResults() {
+            const selected = getSelectedCbtResults();
+            if (!selected.length) return showToast('Select at least one result to export.', 'error');
+            downloadCbtResultsCsv(selected, `selected_cbt_results_${Date.now()}.csv`);
+            showToast('Selected results exported successfully!');
+        }
+
+        function deleteSelectedCbtResults() {
+            const selected = getSelectedCbtResults();
+            if (!selected.length) return showToast('Select at least one result to delete.', 'error');
+
+            document.getElementById('modalTitle').innerText = 'Delete Selected Results';
+            document.getElementById('modalBody').innerHTML = `
+                <p class="mb-3">This will permanently delete <strong>${selected.length}</strong> selected result${selected.length === 1 ? '' : 's'} from the server.</p>
+                <label for="deleteResultsPassword" class="block text-xs font-bold mb-1">Deletion password</label>
+                <input id="deleteResultsPassword" type="password" autocomplete="off" placeholder="Enter password" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-red-500">
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button id="deleteResultsCancelBtn" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs font-semibold">Cancel</button>
+                <button id="deleteResultsConfirmBtn" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-trash-can mr-1"></i> Delete Permanently</button>
+            `;
+            document.getElementById('deleteResultsCancelBtn').onclick = closeModal;
+            document.getElementById('deleteResultsConfirmBtn').onclick = confirmDeleteSelectedCbtResults;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+            document.getElementById('deleteResultsPassword').focus();
+        }
+
+        async function confirmDeleteSelectedCbtResults() {
+            const passwordInput = document.getElementById('deleteResultsPassword');
+            const password = passwordInput?.value || '';
+            if (password !== 'delete me') {
+                return showToast('Incorrect deletion password.', 'error');
+            }
+
+            const selected = getSelectedCbtResults();
+            const response = await fetch(`${API_BASE_URL}/admin/cbt-results`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resultIds: selected.map(result => result.id), password })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) return showToast(data.message || 'Could not delete the selected results.', 'error');
+
+            closeModal();
+            await loadCbtResultsTable();
+            showToast(`${data.deleted} result${data.deleted === 1 ? '' : 's'} deleted permanently.`);
         }
 
         async function saveCbtResultAsPictureLegacy(resultId) {
@@ -4452,20 +4743,7 @@
                 return;
             }
 
-            const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-            const rows = [['Student ID', 'Candidate Name', 'Class Level', 'Total Score', 'Max Score', 'Percentage', 'Grade', 'Timestamp']];
-            cbtResults.forEach(r => {
-                rows.push([r.studentId, r.studentName, r.classLevel, r.totalPoints, r.maxPoints, `${r.percentage}%`, r.grade, r.timestamp]);
-            });
-
-            const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n') + '\r\n';
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cbt_exam_results_${Date.now()}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            downloadCbtResultsCsv(cbtResults, `cbt_exam_results_${Date.now()}.csv`);
             showToast('CSV Exported successfully!');
         }
 

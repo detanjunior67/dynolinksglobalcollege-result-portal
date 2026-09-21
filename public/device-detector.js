@@ -462,7 +462,7 @@
                     <div class="dgc-spinner-ring dgc-ring-outer"></div>
                     <div class="dgc-spinner-ring dgc-ring-middle"></div>
                     <div class="dgc-spinner-core">
-                        <img class="dgc-loader-logo" src="/logo-transparent.png" alt="Dynolinks Global College logo">
+                        <img class="dgc-loader-logo" src="/logo.jpg" alt="Dynolinks Global College logo">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const dns = require('dns');
 try {
     dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4']);
@@ -16,6 +17,7 @@ const app = express();
 // Middleware with increased payload size limits for large bulk uploads (50mb)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(compression({ threshold: 1024 }));
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -28,8 +30,8 @@ app.use((req, res, next) => {
     next();
 });
 // Serve static frontend files from both root and public directories
-app.use(express.static(__dirname));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname, { maxAge: '1d', etag: true }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d', etag: true }));
 
 // Google OAuth2 & Gmail HTTP API Configuration
 const OAuth2 = google.auth.OAuth2;
@@ -1069,6 +1071,41 @@ app.post('/api/student/login', async (req, res) => {
     }
 });
 
+app.post('/api/student/department', async (req, res) => {
+    try {
+        const studentId = String(req.body?.studentId || '').trim();
+        const password = String(req.body?.password || '').trim();
+        const department = normalizeStudentDepartmentValue(req.body?.department || '');
+        if (!studentId || !password || !department) {
+            return res.status(400).json({ success: false, message: 'Student ID, CBT password, and department are required.' });
+        }
+
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id cbt_password student_class department').lean();
+        if (!student || String(student.cbt_password || '').trim() !== password) {
+            return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
+        }
+        if (!String(student.student_class || '').toUpperCase().startsWith('SSS')) {
+            return res.status(400).json({ success: false, message: 'Department selection is only required for SSS students.' });
+        }
+
+        const savedDepartment = normalizeStudentDepartmentValue(student.department || '');
+        if (savedDepartment && savedDepartment !== department) {
+            return res.status(409).json({ success: false, locked: true, department: savedDepartment, message: `Your department is locked to ${savedDepartment}. Only an administrator can change it.` });
+        }
+        if (savedDepartment) return res.json({ success: true, locked: true, department: savedDepartment });
+
+        const updated = await Student.findOneAndUpdate(
+            { _id: student._id, $or: [{ department: { $exists: false } }, { department: '' }, { department: null }] },
+            { $set: { department } },
+            { new: true }
+        ).select('student_id department').lean();
+        return res.json({ success: true, locked: true, department: normalizeStudentDepartmentValue(updated?.department || department) });
+    } catch (error) {
+        console.error('Save student department error:', error);
+        return res.status(500).json({ success: false, message: 'Could not save the student department.' });
+    }
+});
+
 app.post('/api/admin/student-password', requireStudentDataPassword, async (req, res) => {
     try {
         const studentId = String(req.body?.studentId || '').trim();
@@ -1721,7 +1758,39 @@ app.post('/api/check-result', async (req, res) => {
 
         const detectedDevice = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
         const checkTime = new Date();
-        const resultRows = (student.results || []).map(result => `
+        let results = (student.results || []).map(result => ({
+            subject: result.subject,
+            ca: result.ca,
+            exam: result.exam,
+            total: result.total,
+            grade: result.grade,
+            max: 100
+        }));
+        let totalPossible = results.length * 100;
+
+        if (results.length === 0) {
+            const cbtResult = await CbtResult.findOne({
+                studentId: new RegExp(`^${student.student_id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+            }).sort({ createdAt: -1 }).lean();
+
+            if (cbtResult && cbtResult.subjectBreakdown && typeof cbtResult.subjectBreakdown === 'object') {
+                results = Object.entries(cbtResult.subjectBreakdown).map(([subject, score]) => {
+                    const max = Number(score?.max) || 0;
+                    const total = Number(score?.score) || 0;
+                    const percentage = max > 0 ? (total / max) * 100 : 0;
+                    let grade = 'F';
+                    if (percentage >= 70) grade = 'A';
+                    else if (percentage >= 60) grade = 'B';
+                    else if (percentage >= 50) grade = 'C';
+                    else if (percentage >= 45) grade = 'D';
+                    else if (percentage >= 40) grade = 'E';
+                    return { subject, ca: total, exam: 0, total, grade, max };
+                });
+                totalPossible = results.reduce((sum, result) => sum + result.max, 0);
+            }
+        }
+
+        const resultRows = results.map(result => `
                 <tr>
                     <td>${result.subject || ''}</td>
                     <td>${result.ca ?? 0}</td>
@@ -1768,7 +1837,8 @@ app.post('/api/check-result', async (req, res) => {
                 term: term
             },
             remainingChecks: student.max_usage - student.usage_count,
-            results: student.results.map(r => ({
+            totalPossible,
+            results: results.map(r => ({
                 subject: r.subject,
                 ca: r.ca,
                 exam: r.exam,
@@ -2559,6 +2629,78 @@ app.post('/api/cbt-results', async (req, res) => {
     }
 });
 
+// Return a completed CBT result to the student only after the administrator enables it.
+app.post('/api/student/cbt-result', async (req, res) => {
+    try {
+        const studentId = String(req.body?.studentId || '').trim();
+        const password = String(req.body?.password || '').trim();
+        if (!studentId || !password) {
+            return res.status(400).json({ success: false, message: 'Student ID and CBT password are required.' });
+        }
+
+        const student = await Student.findOne(buildStudentQuery(studentId))
+            .select('student_id full_name student_class cbt_password show_result picture')
+            .lean();
+        if (!student || String(student.cbt_password || '').trim() !== password) {
+            return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
+        }
+        if (student.show_result === false) {
+            return res.status(403).json({ success: false, resultAvailable: false, message: 'Your result is not yet available.' });
+        }
+
+        const result = await CbtResult.findOne({
+            studentId: new RegExp(`^${student.student_id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+        }).sort({ createdAt: -1 }).lean();
+        if (!result) {
+            return res.status(404).json({ success: false, resultAvailable: false, message: 'Completed result not found.' });
+        }
+
+        return res.json({
+            success: true,
+            result: {
+                studentId: result.studentId,
+                studentName: result.studentName || student.full_name,
+                classLevel: result.classLevel || student.student_class,
+                subjectBreakdown: result.subjectBreakdown || {},
+                totalPoints: result.totalPoints || 0,
+                maxPoints: result.maxPoints || 0,
+                percentage: result.percentage || 0,
+                grade: result.grade || 'F',
+                timestamp: result.timestamp || result.createdAt
+            }
+        });
+    } catch (err) {
+        console.error('Student CBT result lookup error:', err);
+        return res.status(500).json({ success: false, message: 'Could not retrieve the CBT result.' });
+    }
+});
+
+// DELETE selected CBT exam results
+app.delete('/api/admin/cbt-results', async (req, res) => {
+    try {
+        const { resultIds, password } = req.body || {};
+        if (password !== 'delete me') {
+            return res.status(401).json({ success: false, message: 'Incorrect deletion password.' });
+        }
+        if (!Array.isArray(resultIds) || resultIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'Select at least one result to delete.' });
+        }
+
+        const validIds = resultIds
+            .filter(id => mongoose.Types.ObjectId.isValid(String(id)))
+            .map(id => new mongoose.Types.ObjectId(String(id)));
+        if (validIds.length !== resultIds.length) {
+            return res.status(400).json({ success: false, message: 'One or more selected results are invalid.' });
+        }
+
+        const deletion = await CbtResult.deleteMany({ _id: { $in: validIds } });
+        return res.json({ success: true, deleted: deletion.deletedCount });
+    } catch (err) {
+        console.error('Delete CBT results error:', err);
+        return res.status(500).json({ success: false, message: 'Could not delete the selected results.' });
+    }
+});
+
 // GET export CBT exam results as CSV
 app.get('/api/admin/export-cbt-results', async (req, res) => {
     try {
@@ -2610,6 +2752,10 @@ app.get('/api/admin/student-data/export', requireStudentDataPassword, async (req
 });
 
 // Fallback route for SPA / static file serving
+app.get('/cbt.html/only', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'cbt.html'));
+});
+
 app.get('*', (req, res) => {
     const cbtFile = path.join(__dirname, 'cbt_8.html');
     if (fs.existsSync(cbtFile)) {

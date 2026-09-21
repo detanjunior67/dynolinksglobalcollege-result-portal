@@ -28,7 +28,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/logo.jpg">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
     <style>
         :root {
             /* Vibrant Dark Base (Default) */
@@ -4289,7 +4289,7 @@
                     window.location.reload();
                 });
 
-                navigator.serviceWorker.register(`/sw.js?cache=${Date.now()}`).then((registration) => {
+                navigator.serviceWorker.register('/sw.js').then((registration) => {
                     registration.addEventListener('updatefound', () => {
                         const installingWorker = registration.installing;
                         if (!installingWorker) return;

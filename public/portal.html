@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <link rel="stylesheet" href="dgc-loader.css">
-    <script src="device-detector.js"></script>
+    <script src="device-detector.js" defer></script>
 
     <style>
         :root {
@@ -931,7 +931,7 @@
 
     <div class="home-nav-bar">
         <a href="/" class="brand-logo">
-            <img src="logo.jpg" alt="Dynolinks Logo">
+            <img src="/logo.jpg" alt="Dynolinks Logo" width="44" height="44">
             <span>Dynolinks Global College Result Portal</span>
         </a>
         <a href="/" class="btn-back-home">&larr; Back to Main Website</a>
@@ -989,7 +989,7 @@
 
                 <div id="result-card" class="hidden">
                     <div class="school-header" style="text-align: center; margin-bottom: 20px;">
-                        <img src="logo.jpg" alt="School Logo" class="result-logo">
+                        <img src="/logo.jpg" alt="School Logo" class="result-logo" width="80" height="80">
                         <img id="resPicture" src="" alt="Student picture"
                             style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 12px; margin: 0 auto 10px;">
                         <h2>DYNOLINKS GLOBAL COLLEGE</h2>
@@ -1749,9 +1749,13 @@
             }
         }
 
+        let adminLoginInProgress = false;
+
         // Admin Login
         document.getElementById('adminAuthForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            if (adminLoginInProgress) return;
+            adminLoginInProgress = true;
             const pass = document.getElementById('adminPass').value;
             if (window.showDatabaseLoader) {
                 window.showDatabaseLoader('Connecting to Database...', 'Authenticating Administrator Credentials...');
@@ -1786,6 +1790,7 @@
             } catch (err) {
                 alert(err.message || 'Invalid Administrator Password!');
             } finally {
+                adminLoginInProgress = false;
                 if (window.hideDatabaseLoader) {
                     window.hideDatabaseLoader();
                 }
@@ -2093,7 +2098,7 @@
                     const resultStatusNotice = document.getElementById('resultStatusNotice');
                     body.innerHTML = '';
                     let totalObtained = 0;
-                    let totalPossible = data.results.length * 100;
+                    let totalPossible = data.totalPossible || data.results.length * 100;
 
                     if (!data.results || data.results.length === 0) {
                         resultStatusNotice.classList.remove('hidden');

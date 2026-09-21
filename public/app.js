@@ -374,7 +374,7 @@ document.getElementById('studentLoginForm').addEventListener('submit', async fun
                     </tr>`;
             });
 
-            const maxPossible = data.results.length * 100;
+            const maxPossible = data.totalPossible || data.results.length * 100;
             const percentage = maxPossible > 0 ? ((totalObtained / maxPossible) * 100).toFixed(2) : '0.00';
 
             document.getElementById('resTotalScore').textContent = `${totalObtained} / ${maxPossible}`;
