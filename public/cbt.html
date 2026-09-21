@@ -743,7 +743,7 @@
             <!-- Controls & Mode Toggle -->
             <div class="header-controls flex items-center space-x-3 sm:space-x-4">
                 <!-- Home Navigation -->
-                <a href="index.html"
+                <a href="/index.html"
                     class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2"
                     title="Go to home page">
                     <i class="fa-solid fa-house text-blue-600"></i>
@@ -1888,6 +1888,10 @@
         let examTimerInterval = null;
 
         window.onload = async function () {
+            if (/[?&]admin=(?:1|442)(?:&|$)/.test(window.location.search)) {
+                history.replaceState(null, '', '/cbt.html');
+            }
+
             try {
                 const sharedClassConfigs = await apiFetchCbtConfig();
                 if (sharedClassConfigs) {
@@ -1902,10 +1906,6 @@
             populateAdminClassDropdown();
             setStudentProfileCardVisibility(false);
             void loadStudentRosterFromDatabase();
-
-            if (new URLSearchParams(window.location.search).get('admin') === '442') {
-                setTimeout(openAdminAuthModal, 150);
-            }
 
             // Initialize Candidate photo placeholder
             const initPic = document.getElementById('studentCandidatePicture');
@@ -2854,7 +2854,6 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Invalid Administrator Password!');
                 closeModal();
-                history.replaceState(null, '', 'cbt.html/only?admin=442');
                 showView('viewAdminPortal');
                 showAdminSubView('builder');
                 showToast(data.emailSent === false ? 'Admin Portal unlocked.' : 'Admin Portal unlocked successfully!');

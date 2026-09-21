@@ -2753,7 +2753,7 @@ app.get('/api/admin/student-data/export', requireStudentDataPassword, async (req
 
 // Fallback route for SPA / static file serving
 app.get('/cbt.html/only', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'cbt.html'));
+    res.redirect(301, '/cbt.html');
 });
 
 app.get('*', (req, res) => {
