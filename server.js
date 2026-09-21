@@ -1173,6 +1173,7 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 has_picture: Boolean(student.picture),
                 picture: summaryOnly ? '' : (student.picture || ''),
                 has_password: summaryOnly ? false : Boolean(String(student.cbt_password || '').trim()),
+                cbt_password: summaryOnly ? '' : String(student.cbt_password || '').trim(),
                 show_result: student.show_result !== false,
                 status: student.status || 'Authorized'
             }))

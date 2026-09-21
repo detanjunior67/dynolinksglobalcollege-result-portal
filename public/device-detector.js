@@ -437,7 +437,8 @@
 
     let loaderTimeout = null;
     let loaderShownAt = 0;
-    const MIN_LOADER_DURATION_MS = 80;
+    let activeLoaderRequests = 0;
+    const MIN_LOADER_DURATION_MS = 40;
 
     function ensureLoaderDom() {
         if (document.getElementById('dgcGlobalLoader')) return;
@@ -461,6 +462,7 @@
                     <div class="dgc-spinner-ring dgc-ring-outer"></div>
                     <div class="dgc-spinner-ring dgc-ring-middle"></div>
                     <div class="dgc-spinner-core">
+                        <img class="dgc-loader-logo" src="/logo-transparent.png" alt="Dynolinks Global College logo">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
                 </div>
@@ -491,6 +493,7 @@
         }
 
         loaderShownAt = Date.now();
+        activeLoaderRequests += 1;
 
         // Force reflow and activate smoothly
         if (overlay) {
@@ -499,6 +502,7 @@
 
         // Auto-safety release after 30s to prevent trapped state
         loaderTimeout = setTimeout(() => {
+            activeLoaderRequests = 0;
             hideDatabaseLoader(true);
         }, 30000);
     }
@@ -506,6 +510,13 @@
     function hideDatabaseLoader(immediate = false) {
         const overlay = document.getElementById('dgcGlobalLoader');
         if (!overlay) return;
+
+        if (immediate) {
+            activeLoaderRequests = 0;
+        } else {
+            activeLoaderRequests = Math.max(0, activeLoaderRequests - 1);
+            if (activeLoaderRequests > 0) return;
+        }
 
         const performHide = () => {
             overlay.classList.remove('active');
@@ -515,18 +526,7 @@
             }
         };
 
-        if (immediate) {
-            performHide();
-            return;
-        }
-
-        // Guarantee minimum display time to prevent jarring flicker
-        const elapsed = Date.now() - loaderShownAt;
-        if (elapsed < MIN_LOADER_DURATION_MS) {
-            setTimeout(performHide, MIN_LOADER_DURATION_MS - elapsed);
-        } else {
-            performHide();
-        }
+        performHide();
     }
 
     async function withDatabaseLoader(action, title, subtitle) {

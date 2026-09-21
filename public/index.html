@@ -9,6 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="dgc-loader.css">
+    <script src="device-detector.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Loading Dynolinks Portal...', 'Preparing the installed app...');
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (window.hideDatabaseLoader) {
+                window.hideDatabaseLoader();
+            }
+        });
+    </script>
     <meta name="theme-color" content="#0284C7">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1478,6 +1493,162 @@
             justify-content: flex-end;
         }
 
+        .student-data-actions-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 40px;
+            padding: 8px 14px;
+            border: 1px solid #b7d9cb;
+            border-radius: 999px;
+            background: #e1f0ea;
+            color: #176b63;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 850;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .student-data-actions-toggle:hover { background: #cde5dc; }
+
+        .student-data-actions-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #176b63;
+            color: #fff;
+            font-size: 1rem;
+            line-height: 1;
+            transition: transform .38s cubic-bezier(.22, 1, .36, 1), background .25s ease;
+        }
+
+        .student-data-actions-toggle.is-open .student-data-actions-icon {
+            transform: rotate(180deg);
+            background: #c9782d;
+        }
+
+        .student-data-actions[hidden] { display: none; }
+
+        .student-data-actions:not([hidden]) {
+            width: 100%;
+            padding-top: 14px;
+            border-top: 1px solid #e1ebe5;
+            transform-origin: top center;
+            animation: studentActionsReveal 0.52s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        @keyframes studentActionsReveal {
+            0% { opacity: 0; transform: translateY(-18px) scaleY(.88); filter: blur(4px); clip-path: inset(0 0 100% 0 round 12px); }
+            60% { opacity: 1; transform: translateY(3px) scaleY(1.01); filter: blur(0); clip-path: inset(0 0 8% 0 round 12px); }
+            100% { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0); clip-path: inset(0 0 0 0 round 12px); }
+        }
+
+        .student-data-actions:not([hidden]) > * {
+            animation: actionItemRise .42s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        .student-data-actions:not([hidden]) > :nth-child(1) { animation-delay: .03s; }
+        .student-data-actions:not([hidden]) > :nth-child(2) { animation-delay: .07s; }
+        .student-data-actions:not([hidden]) > :nth-child(3) { animation-delay: .11s; }
+        .student-data-actions:not([hidden]) > :nth-child(4) { animation-delay: .15s; }
+        .student-data-actions:not([hidden]) > :nth-child(5) { animation-delay: .19s; }
+        .student-data-actions:not([hidden]) > :nth-child(6) { animation-delay: .23s; }
+
+        @keyframes actionItemRise {
+            0% { opacity: 0; transform: translateY(14px) scale(.94); filter: blur(2px); }
+            70% { opacity: 1; transform: translateY(-2px) scale(1.01); filter: blur(0); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+
+        #adminModal .student-data-actions-toggle,
+        #adminModal .student-data-action-btn,
+        #adminModal .studentPasswordManagerToggle {
+            transition: transform .24s cubic-bezier(.22, 1, .36, 1), box-shadow .24s ease, filter .24s ease;
+        }
+
+        #adminModal .student-data-actions-toggle:hover,
+        #adminModal .student-data-action-btn:hover {
+            transform: translateY(-3px);
+            filter: saturate(1.12);
+        }
+
+        #adminModal .student-data-actions-toggle:active,
+        #adminModal .student-data-action-btn:active {
+            transform: translateY(0) scale(.97);
+        }
+
+        #adminModal .password-manager-action {
+            background: linear-gradient(135deg, #176b63, #2b8a7d);
+            box-shadow: 0 9px 20px rgba(23, 107, 99, .2);
+        }
+
+        #adminModal .password-manager-action[aria-expanded="true"] {
+            background: linear-gradient(135deg, #c9782d, #e19a55);
+        }
+
+        #adminModal #studentPasswordManager[style*="display: block"] {
+            animation: passwordManagerOpen .42s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        @keyframes passwordManagerOpen {
+            from { opacity: 0; transform: translateY(-12px); clip-path: inset(0 0 100% 0 round 14px); }
+            to { opacity: 1; transform: translateY(0); clip-path: inset(0 0 0 0 round 14px); }
+        }
+
+        #adminModal .tab-content.active {
+            animation: adminViewEnter .42s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        @keyframes adminViewEnter {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #adminModal .admin-summary-box {
+            animation: adminCardEnter .5s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        @keyframes adminCardEnter {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #adminModal #studentDataListBody tr {
+            animation: adminRowEnter .36s ease both;
+        }
+
+        #adminModal #studentDataListBody tr:nth-child(2n) { animation-delay: .035s; }
+        #adminModal #studentDataListBody tr:nth-child(3n) { animation-delay: .07s; }
+
+        @keyframes adminRowEnter {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        #adminModal .student-cbt-status.set {
+            animation: passwordStatusGlow 1.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes passwordStatusGlow {
+            from { box-shadow: 0 0 0 rgba(34, 197, 94, 0); }
+            to { box-shadow: 0 0 0 4px rgba(34, 197, 94, .08); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #adminModal *,
+            #adminModal *::before,
+            #adminModal *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
         .student-data-admin-link {
             display: inline-flex;
             align-items: center;
@@ -1804,6 +1975,40 @@
 
         .student-cbt-password-input { min-height: 40px; }
 
+        .student-cbt-password-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .student-cbt-password-control .student-cbt-password-input {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .student-cbt-password-eye {
+            display: inline-grid;
+            place-items: center;
+            flex: 0 0 38px;
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(59, 130, 246, 0.24);
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
+            cursor: pointer;
+        }
+
+        .student-cbt-password-eye:hover {
+            background: #dbeafe;
+        }
+
+        .student-cbt-password-eye svg {
+            width: 17px;
+            height: 17px;
+        }
+
         .student-cbt-status.set {
             background: rgba(34, 197, 94, 0.14);
             color: #15803d;
@@ -1814,6 +2019,191 @@
             background: rgba(245, 158, 11, 0.14);
             color: #b45309;
             border: 1px solid rgba(245, 158, 11, 0.32);
+        }
+
+        /* Admin command center redesign: scoped to the admin modal only. */
+        #adminModal {
+            background: rgba(7, 25, 29, 0.82);
+            backdrop-filter: blur(18px);
+            padding: 18px;
+        }
+
+        #adminModal > .modal-card {
+            width: min(1240px, 100%);
+            max-width: none !important;
+            max-height: min(920px, 94vh);
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(152, 211, 195, 0.4);
+            border-radius: 22px;
+            background: #f5f8f5;
+            color: #193a3b;
+            box-shadow: 0 35px 100px rgba(0, 0, 0, 0.32);
+        }
+
+        #adminModal .close-modal {
+            top: 15px;
+            right: 16px;
+            z-index: 20;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            font-size: 1.35rem;
+        }
+
+        #adminModal #authSection {
+            min-height: 520px;
+            display: grid;
+            align-content: center;
+            justify-items: center;
+            padding: clamp(34px, 7vw, 90px);
+            text-align: center;
+            background: linear-gradient(135deg, #153f41 0%, #176b63 58%, #2b8a7d 100%);
+            color: #fff;
+        }
+
+        #adminModal #authSection::before {
+            content: 'DGC / ADMIN CONSOLE';
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 12px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            color: #d7f2e9;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+        }
+
+        #adminModal #authSection h2 {
+            margin-bottom: 10px !important;
+            color: #fff !important;
+            font-size: clamp(1.7rem, 4vw, 2.6rem);
+            letter-spacing: -0.05em;
+        }
+
+        #adminModal #authSection > p {
+            max-width: 420px;
+            color: #cde9e0 !important;
+            line-height: 1.65;
+        }
+
+        #adminModal #authSection > div {
+            width: min(390px, 100%);
+            margin: 18px 0 10px !important;
+        }
+
+        #adminModal #authSection input {
+            height: 52px;
+            border: 1px solid rgba(255, 255, 255, 0.36);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.13);
+            color: #fff;
+        }
+
+        #adminModal #authSection input::placeholder { color: rgba(255, 255, 255, 0.68); }
+
+        #adminModal #authSection > button {
+            width: min(390px, 100%) !important;
+            min-height: 52px;
+            border-radius: 10px !important;
+            background: #d8893a !important;
+            box-shadow: 0 12px 24px rgba(8, 45, 43, 0.25) !important;
+        }
+
+        #adminModal #enquiriesDashboard {
+            min-height: 620px;
+            background: #f5f8f5;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            min-height: 72px;
+            margin: 0;
+            padding: 14px 76px 14px 20px;
+            border: 0;
+            border-radius: 0;
+            background: #153f41;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn {
+            flex: 0 1 auto;
+            min-height: 40px;
+            padding: 9px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: #b9d9d1;
+            font-size: 0.76rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        #adminModal #enquiriesDashboard > .tab-navigation .tab-btn.active {
+            color: #153f41;
+            background: #f3c58e;
+            border-color: #f3c58e;
+            box-shadow: none;
+        }
+
+        #adminModal #enquiriesDashboard > div:not(.tab-navigation) {
+            padding: 22px 26px 32px;
+        }
+
+        #adminModal #admin-dashboard-title {
+            margin: 0;
+            color: #193a3b !important;
+            font-size: clamp(1.35rem, 3vw, 2rem);
+            letter-spacing: -0.045em;
+        }
+
+        #adminModal .student-data-admin-link {
+            color: #176b63;
+            background: #e1f0ea;
+            border-color: #b7d9cb;
+        }
+
+        #adminModal .admin-summary-box {
+            border: 1px solid #d6e4dc;
+            border-radius: 14px;
+            background: #fff !important;
+            box-shadow: 0 12px 26px rgba(27, 67, 62, 0.06);
+        }
+
+        #adminModal .admin-summary-box h3,
+        #adminModal .admin-summary-box h4,
+        #adminModal .admin-summary-box p,
+        #adminModal .admin-summary-box label { color: #476866 !important; }
+
+        #adminModal .enquiry-table th {
+            background: #e9f1ec;
+            color: #35625d;
+            border-color: #d6e4dc;
+        }
+
+        #adminModal .enquiry-table td { color: #294d4a !important; border-color: #e1ebe5; }
+
+        #adminModal .student-data-manager { background: #fff !important; }
+
+        #adminModal .student-data-toolbar {
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e1ebe5;
+        }
+
+        #adminModal .student-data-toolbar h3 { color: #193a3b !important; }
+
+        @media (max-width: 700px) {
+            #adminModal { padding: 0; }
+            #adminModal > .modal-card { min-height: 100vh; max-height: 100vh; border-radius: 0; }
+            #adminModal #enquiriesDashboard > .tab-navigation { overflow-x: auto; padding: 12px 56px 12px 12px; }
+            #adminModal #enquiriesDashboard > .tab-navigation .tab-btn { flex: 0 0 auto; }
+            #adminModal #enquiriesDashboard > div:not(.tab-navigation) { padding: 18px 12px 28px; }
+            #adminModal #authSection { min-height: 100vh; padding: 34px 22px; }
         }
 
         .cbt-table-responsive {
@@ -1868,6 +2258,8 @@
             .student-data-toolbar {
                 align-items: stretch;
             }
+
+            .student-data-actions-toggle { align-self: flex-start; }
 
         
         header {
@@ -2315,10 +2707,16 @@
 
             .menu-toggle {
                 display: flex;
+                transition: transform .35s cubic-bezier(.22, 1, .36, 1), filter .25s ease;
+            }
+
+            .menu-toggle.is-open {
+                transform: rotate(90deg) scale(1.08);
+                filter: drop-shadow(0 5px 12px rgba(56, 189, 248, .35));
             }
 
             nav {
-                display: none;
+                display: flex;
                 position: absolute;
                 top: 100%;
                 left: 0;
@@ -2333,6 +2731,14 @@
                 box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
                 border-bottom: 2px solid;
                 border-image: var(--grad-primary) 1;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                max-height: 0;
+                overflow: hidden;
+                transform: translateY(-16px) scale(.98);
+                transform-origin: top center;
+                transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1), max-height .45s cubic-bezier(.16, 1, .3, 1), visibility .45s;
             }
 
             body.light-mode nav {
@@ -2340,7 +2746,18 @@
             }
 
             nav.active {
-                display: flex;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                max-height: 560px;
+                transform: translateY(0) scale(1);
+                animation: mobileNavOpen .48s cubic-bezier(.16, 1, .3, 1);
+            }
+
+            @keyframes mobileNavOpen {
+                0% { opacity: 0; transform: translateY(-20px) scale(.96); filter: blur(5px); }
+                65% { opacity: 1; transform: translateY(3px) scale(1.01); filter: blur(0); }
+                100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
             }
 
             nav a {
@@ -2352,6 +2769,24 @@
                 background: transparent;
                 box-shadow: none;
                 padding: 8px 12px;
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            nav.active a {
+                animation: mobileNavLinkIn .38s cubic-bezier(.22, 1, .36, 1) both;
+            }
+
+            nav.active a:nth-child(1) { animation-delay: .08s; }
+            nav.active a:nth-child(2) { animation-delay: .13s; }
+            nav.active a:nth-child(3) { animation-delay: .18s; }
+            nav.active a:nth-child(4) { animation-delay: .23s; }
+            nav.active a:nth-child(5) { animation-delay: .28s; }
+            nav.active a:nth-child(6) { animation-delay: .33s; }
+
+            @keyframes mobileNavLinkIn {
+                from { opacity: 0; transform: translateY(-8px); }
+                to { opacity: 1; transform: translateY(0); }
             }
 
             nav a svg {
@@ -3159,7 +3594,11 @@
                     <div id="studentDataManager" class="admin-summary-box student-data-manager" style="display: none;">
                         <div class="student-data-toolbar">
                             <h3 style="color: var(--text-light); margin: 0;">Student Records</h3>
-                            <div class="student-data-actions">
+                            <button type="button" id="studentDataActionsToggle" class="student-data-actions-toggle" onclick="toggleStudentDataActions()" aria-expanded="false" aria-controls="studentDataActionsPanel">
+                                <span class="student-data-actions-icon" aria-hidden="true">+</span>
+                                <span>Actions</span>
+                            </button>
+                            <div id="studentDataActionsPanel" class="student-data-actions" hidden>
                                 <input type="search" id="studentDataSearch" placeholder="Search name, ID, or class" style="height: 42px; width: 220px; min-width: 0;">
                                 <button type="button" class="student-data-action-btn search" onclick="loadStudentData()">Search</button>
                                 <button type="button" class="student-data-action-btn add" onclick="openStudentDataEditor()">Add</button>
@@ -3169,9 +3608,9 @@
                                     Bulk Import CSV
                                     <input type="file" id="studentDataBulkFile" accept=".csv,text/csv" onchange="importStudentDataCsv(event)" style="display: none;">
                                 </label>
+                                <button type="button" id="studentPasswordManagerToggle" class="student-data-action-btn password-manager-action" onclick="toggleStudentPasswordManager()" aria-expanded="false" aria-controls="studentPasswordManager">Set / Update CBT Password</button>
                             </div>
                         </div>
-                        <button type="button" id="studentPasswordManagerToggle" onclick="toggleStudentPasswordManager()" aria-expanded="false" aria-controls="studentPasswordManager" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 16px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #FFFFFF; border: none; border-radius: 12px; padding: 12px 16px; font-weight: 800; cursor: pointer;">Set / Update Student CBT Password</button>
                         <div id="studentPasswordManager" class="admin-summary-box" style="display: none; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.25); margin-bottom: 16px; padding: 16px; border-radius: 14px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                                 <h4 style="margin: 0; color: var(--text-light); font-weight: 800;">Set / Update Student CBT Password</h4>
@@ -3997,6 +4436,10 @@
             } catch (err) {
                 statusBox.textContent = err.message || 'Could not save the student CBT password.';
                 statusBox.style.color = '#b42318';
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
@@ -4020,8 +4463,25 @@
             toggle.textContent = willOpen ? 'Hide CBT Password Manager' : 'Set / Update Student CBT Password';
         }
 
+        function toggleStudentDataActions() {
+            const panel = document.getElementById('studentDataActionsPanel');
+            const toggle = document.getElementById('studentDataActionsToggle');
+            const icon = toggle?.querySelector('.student-data-actions-icon');
+            if (!panel || !toggle) return;
+
+            const willOpen = panel.hidden;
+            panel.hidden = !willOpen;
+            toggle.setAttribute('aria-expanded', String(willOpen));
+            toggle.classList.toggle('is-open', willOpen);
+            if (icon) icon.textContent = willOpen ? '−' : '+';
+            toggle.querySelector('span:last-child').textContent = willOpen ? 'Hide actions' : 'Actions';
+        }
+
         async function syncSharedStudentRoster(students = null) {
             if (!studentDataPassword) return;
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Saving Student Password...', `Updating CBT password for ${studentId}...`);
+            }
             try {
                 const existingRoster = JSON.parse(localStorage.getItem('dgc_student_roster') || '[]');
                 const existingPictures = new Map(existingRoster.map(item => [item.studentId, item.picture || '']));
@@ -4088,6 +4548,9 @@
         async function unlockStudentData() {
             const password = document.getElementById('studentDataPassword').value;
             const error = document.getElementById('studentDataGateError');
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Connecting to Database...', 'Unlocking Student Data Manager...');
+            }
             try {
                 const response = await fetch('/api/admin/student-data/login', {
                     method: 'POST',
@@ -4104,11 +4567,19 @@
             } catch (err) {
                 error.textContent = err.message;
                 error.style.display = 'block';
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
         async function loadStudentData() {
             if (!studentDataPassword) return;
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Loading Student Data...', 'Retrieving the latest student records...');
+            }
+            try {
             const search = encodeURIComponent(document.getElementById('studentDataSearch').value.trim());
             const response = await fetch(`/api/admin/student-data?search=${search}`, { headers: { 'x-student-data-password': studentDataPassword } });
             const data = await response.json().catch(() => ({}));
@@ -4125,6 +4596,7 @@
                 const studentClass = String(student.student_class || '').trim();
                 const studentDepartment = String(student.department || '').trim();
                 const hasPassword = student.has_password === true;
+                const savedCbtPassword = String(student.cbt_password || '');
                 const passwordStatusText = hasPassword ? 'Password set' : 'Not set';
                 const passwordStatusClass = hasPassword ? 'student-cbt-status set' : 'student-cbt-status not-set';
                 return `
@@ -4142,7 +4614,10 @@
                     <td>${escapeHtml(student.full_name)}</td><td>${escapeHtml(student.student_id)}</td><td>${escapeHtml(student.student_class)}</td><td>${escapeHtml(studentDepartment)}</td>
                     <td>
                         <div class="student-cbt-password-editor" style="display: flex; flex-direction: column; gap: 8px; min-width: 190px;">
-                            <input type="password" class="student-cbt-password-input" data-student-id="${escapeHtml(studentId)}" placeholder="Type CBT password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                            <div class="student-cbt-password-control">
+                                <input type="password" class="student-cbt-password-input" data-password-control-skip="true" data-student-id="${escapeHtml(studentId)}" value="${escapeHtml(savedCbtPassword)}" placeholder="Type CBT password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                                <button type="button" class="student-cbt-password-eye" data-student-id="${escapeHtml(studentId)}" onclick="toggleStudentCbtPassword('${escapeHtml(studentId)}')" aria-label="Show saved password" title="Show saved password"><i data-lucide="eye-off" aria-hidden="true"></i></button>
+                            </div>
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                 <button type="button" class="student-cbt-save-btn" data-student-id="${escapeHtml(studentId)}" onclick="saveStudentPasswordFromTable('${escapeHtml(studentId)}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; padding: 8px 10px; font-weight: 800; cursor: pointer; font-size: 0.72rem; min-width: 90px;">Save</button>
                                 <span class="${passwordStatusClass}" style="display: inline-flex; align-items: center; justify-content: center; min-width: 92px; padding: 5px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em;">${passwordStatusText}</span>
@@ -4158,8 +4633,28 @@
                 </tr>`;
             }).join('') : '<tr><td colspan="6">No student records found.</td></tr>';
 
+            if (window.lucide) lucide.createIcons();
             bindStudentRowEditHandlers();
             return data;
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
+        }
+
+        function toggleStudentCbtPassword(studentId) {
+            const row = document.querySelector(`tr[data-student-id="${CSS.escape(String(studentId).trim())}"]`);
+            const input = row?.querySelector('.student-cbt-password-input');
+            const button = row?.querySelector('.student-cbt-password-eye');
+            if (!input || !button) return;
+
+            const willReveal = input.type === 'password';
+            input.type = willReveal ? 'text' : 'password';
+            button.setAttribute('aria-label', willReveal ? 'Hide saved password' : 'Show saved password');
+            button.title = willReveal ? 'Hide saved password' : 'Show saved password';
+            button.innerHTML = `<i data-lucide="${willReveal ? 'eye' : 'eye-off'}" aria-hidden="true"></i>`;
+            if (window.lucide) lucide.createIcons();
         }
 
         function bindStudentRowEditHandlers() {
@@ -4256,9 +4751,8 @@
                 }
                 if (!response.ok || !data.success || data.savedToServer !== true) throw new Error(data.message || 'The server did not confirm the password save.');
 
-                rowInput.value = '';
                 if (rowStatus) {
-                    rowStatus.textContent = 'Saved to server';
+                    rowStatus.textContent = 'Password set';
                     rowStatus.className = 'student-cbt-status set';
                 }
             } catch (err) {
@@ -4267,6 +4761,10 @@
                     rowStatus.className = 'student-cbt-status not-set';
                 }
                 console.error(err);
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
@@ -4300,9 +4798,13 @@
             if (!studentDataPassword) return alert('Please unlock student data first.');
             if (!pendingStudentDataEdits.size) return alert('No student picture changes to save.');
 
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Saving Student Data...', 'Applying pending picture changes...');
+            }
             const rows = Array.from(pendingStudentDataEdits.values());
             const results = [];
 
+            try {
             for (const edit of rows) {
                 const row = document.querySelector(`tr[data-student-id="${CSS.escape(String(edit.studentId).trim())}"]`);
                 const studentId = String(edit.studentId || '').trim();
@@ -4339,6 +4841,11 @@
             } else {
                 alert('All student picture edits were saved successfully.');
             }
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         function openStudentDataEditor(student = null) {
@@ -4357,9 +4864,18 @@
         function closeStudentDataEditor() { document.getElementById('studentDataEditor').style.display = 'none'; }
 
         async function editStudentData(encodedId) {
-            const response = await fetch(`/api/admin/student/${encodedId}`);
-            const data = await response.json().catch(() => ({}));
-            if (data.success) openStudentDataEditor(data.student);
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Loading Student Record...', 'Preparing the student editor...');
+            }
+            try {
+                const response = await fetch(`/api/admin/student/${encodedId}`);
+                const data = await response.json().catch(() => ({}));
+                if (data.success) openStudentDataEditor(data.student);
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         function handleStudentPictureFile(file) {
@@ -4455,27 +4971,45 @@
                 picture: editingStudentDataPicture,
                 show_result: true
             };
-            const response = await fetch('/api/admin/student-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');
-            closeStudentDataEditor();
-            await syncSharedStudentRoster();
-            loadStudentData();
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Saving Student Record...', 'Updating the student data manager...');
+            }
+            try {
+                const response = await fetch('/api/admin/student-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) return alert(data.message || 'Could not save student.');
+                closeStudentDataEditor();
+                await syncSharedStudentRoster();
+                await loadStudentData();
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         async function deleteStudentData(encodedId) {
             const studentId = decodeURIComponent(encodedId);
             if (!studentId) return;
             if (!confirm(`Delete student ${studentId}? This cannot be undone.`)) return;
-            const response = await fetch('/api/admin/delete-student', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentId, password: studentDataPassword })
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || !data.success) return alert(data.message || 'Could not delete student.');
-            await syncSharedStudentRoster();
-            loadStudentData();
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Deleting Student Record...', `Removing ${studentId} from the data manager...`);
+            }
+            try {
+                const response = await fetch('/api/admin/delete-student', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, password: studentDataPassword })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) return alert(data.message || 'Could not delete student.');
+                await syncSharedStudentRoster();
+                await loadStudentData();
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         // Folder (relative to the site root) where student photos live.
@@ -4567,21 +5101,30 @@
         }
 
         async function exportStudentData() {
-            const response = await fetch('/api/admin/student-data/export', {
-                headers: { 'x-student-data-password': studentDataPassword }
-            });
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                return alert(data.message || 'Could not export student data.');
+            if (window.showDatabaseLoader) {
+                window.showDatabaseLoader('Exporting Student Data...', 'Preparing the CSV download...');
             }
-            const blob = await response.blob();
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Dynolinks_Student_Data.csv';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(link.href);
+            try {
+                const response = await fetch('/api/admin/student-data/export', {
+                    headers: { 'x-student-data-password': studentDataPassword }
+                });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    return alert(data.message || 'Could not export student data.');
+                }
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Dynolinks_Student_Data.csv';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(link.href);
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
+            }
         }
 
         function importStudentDataCsv(event) {
@@ -4589,19 +5132,28 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async () => {
-                const rows = deduplicateStudentImportRows(parseStudentDataCsv(reader.result));
-                const response = await fetch('/api/admin/student-data/bulk', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: studentDataPassword, students: rows })
-                });
-                const data = await response.json().catch(() => ({}));
-                alert(data.success ? `Imported ${data.count} student records.` : (data.message || 'Import failed.'));
-                if (data.success) {
-                    await syncSharedStudentRoster();
-                    loadStudentData();
+                if (window.showDatabaseLoader) {
+                    window.showDatabaseLoader('Importing Student Data...', 'Uploading and processing the CSV file...');
                 }
-                event.target.value = '';
+                try {
+                    const rows = deduplicateStudentImportRows(parseStudentDataCsv(reader.result));
+                    const response = await fetch('/api/admin/student-data/bulk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: studentDataPassword, students: rows })
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    alert(data.success ? `Imported ${data.count} student records.` : (data.message || 'Import failed.'));
+                    if (data.success) {
+                        await syncSharedStudentRoster();
+                        await loadStudentData();
+                    }
+                } finally {
+                    if (window.hideDatabaseLoader) {
+                        window.hideDatabaseLoader();
+                    }
+                    event.target.value = '';
+                }
             };
             reader.readAsText(file);
         }

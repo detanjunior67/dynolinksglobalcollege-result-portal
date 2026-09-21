@@ -3,6 +3,7 @@
 
     function addPasswordToggle(input) {
         if (!input || input.dataset.passwordControlReady === 'true') return;
+        if (input.dataset.passwordControlSkip === 'true') return;
         if (input.parentElement?.classList.contains('cbt-password-wrap') || input.parentElement?.querySelector('.cbt-password-toggle')) return;
         input.dataset.passwordControlReady = 'true';
 
