@@ -1545,6 +1545,27 @@ app.post('/api/admin/reset-pin', async (req, res) => {
     }
 });
 
+app.post('/api/admin/reset-student-result', async (req, res) => {
+    try {
+        const { studentId, password } = req.body || {};
+        const requestPassword = password || req.headers['x-student-data-password'];
+        if (requestPassword && requestPassword !== STUDENT_DATA_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'Invalid student data password.' });
+        }
+        if (!studentId) return res.status(400).json({ success: false, message: 'Student ID required.' });
+        const updated = await Student.findOneAndUpdate(
+            buildStudentQuery(studentId),
+            { $set: { pin_code: '', results: [], usage_count: 0 } },
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ success: false, message: 'Student record not found.' });
+        res.json({ success: true, message: `Result, PIN, and usage count reset for ${studentId}.` });
+    } catch (err) {
+        console.error('Reset student result error:', err);
+        res.status(500).json({ success: false, message: 'Failed to reset student result.' });
+    }
+});
+
 // Delete Student Endpoint
 app.delete('/api/admin/delete-student', async (req, res) => {
     try {

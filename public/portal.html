@@ -368,6 +368,60 @@
             display: none !important;
         }
 
+        .student-action-dialog {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(5, 12, 22, 0.7);
+            animation: studentDialogFadeIn 0.2s ease-out;
+        }
+
+        .student-action-dialog.hidden {
+            display: none;
+        }
+
+        .student-action-card {
+            width: min(460px, 100%);
+            padding: 28px;
+            border: 1px solid #d9e7e4;
+            border-radius: 14px;
+            background: #fffdf8;
+            color: #163b3d;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            animation: studentDialogSlideDown 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .student-action-card h3 {
+            margin-bottom: 8px;
+        }
+
+        .student-action-card p {
+            margin-bottom: 20px;
+            color: #486669;
+            font-size: 0.9rem;
+        }
+
+        .student-action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @keyframes studentDialogFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes studentDialogSlideDown {
+            from { opacity: 0; transform: translateY(-32px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         #result-card {
             background: #FFFFFF !important;
             color: #0F172A !important;
@@ -1068,6 +1122,13 @@
                                 <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()"
                                     placeholder="Search Name or ID..."
                                     style="height: 38px; font-size: 0.85rem; width: 180px;">
+                                <select id="adminSortSelect" onchange="sortAdminTable(this.value)"
+                                    aria-label="Sort student records"
+                                    style="height: 38px; font-size: 0.85rem; width: 150px;">
+                                    <option value="default">Sort by...</option>
+                                    <option value="name">Name (A-Z)</option>
+                                    <option value="class">Class</option>
+                                </select>
                                 <button class="btn btn-primary btn-sm" onclick="exportAdminResultsCSV()"> Export
                                     CSV</button>
                             </div>
@@ -1323,6 +1384,19 @@
 
         </div>
     </main>
+
+    <div id="studentActionDialog" class="student-action-dialog hidden" role="dialog" aria-modal="true"
+        aria-labelledby="studentActionTitle">
+        <div class="student-action-card">
+            <h3 id="studentActionTitle">Manage Student Record</h3>
+            <p id="studentActionMessage"></p>
+            <div class="student-action-buttons">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeStudentActionDialog()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="resetStudentResultFromDialog()">Reset Result</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="deleteStudentFromDialog()">Delete Student</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const SUBJECT_LISTS = {
@@ -1994,6 +2068,7 @@
         // Load Student Table Overview
         async function fetchAdminStudentList() {
             try {
+                const selectedSort = document.getElementById('adminSortSelect')?.value || 'default';
                 const res = await fetch('/api/admin/student-status');
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
@@ -2015,9 +2090,12 @@
                         return;
                     }
 
-                    data.students.forEach(s => {
+                    data.students.forEach((s, index) => {
                         const tr = document.createElement('tr');
                         tr.dataset.studentId = String(s.student_id || '').trim();
+                        tr.dataset.studentName = String(s.full_name || '').trim();
+                        tr.dataset.studentClass = String(s.student_class || '').trim();
+                        tr.dataset.rowIndex = String(index);
                         tr.innerHTML = `
                             <td>${s.student_id}</td>
                             <td>${s.full_name}</td>
@@ -2032,6 +2110,9 @@
                         `;
                         tbody.appendChild(tr);
                     });
+                    const sortSelect = document.getElementById('adminSortSelect');
+                    if (sortSelect) sortSelect.value = selectedSort;
+                    if (selectedSort !== 'default') sortAdminTable(selectedSort);
                 }
             } catch (err) {
                 console.error('Failed to load student status overview:', err);
@@ -2159,8 +2240,44 @@
             }
         }
 
-        async function deleteStudent(studentId) {
+        let studentActionTargetId = '';
+
+        function openStudentActionDialog(studentId) {
+            studentActionTargetId = studentId;
+            document.getElementById('studentActionMessage').textContent =
+                `Choose an action for ${studentId}. Resetting clears the PIN, scores, and PIN usage, but keeps the student record.`;
+            document.getElementById('studentActionDialog').classList.remove('hidden');
+        }
+
+        function closeStudentActionDialog() {
+            studentActionTargetId = '';
+            document.getElementById('studentActionDialog').classList.add('hidden');
+        }
+
+        async function resetStudentResultFromDialog() {
+            const studentId = studentActionTargetId;
+            if (!studentId) return;
+            closeStudentActionDialog();
+            try {
+                const res = await fetch('/api/admin/reset-student-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || `Server returned HTTP ${res.status}.`);
+                alert(data.message);
+                fetchAdminStudentList();
+            } catch (err) {
+                alert(`Failed to reset student result: ${err.message}`);
+            }
+        }
+
+        async function deleteStudentFromDialog() {
+            const studentId = studentActionTargetId;
+            if (!studentId) return;
             if (!confirm(`Are you sure you want to permanently delete record for ${studentId}?`)) return;
+            closeStudentActionDialog();
             try {
                 const res = await fetch('/api/admin/delete-student', {
                     method: 'DELETE',
@@ -2168,11 +2285,16 @@
                     body: JSON.stringify({ studentId })
                 });
                 const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || `Server returned HTTP ${res.status}.`);
                 alert(data.message);
                 fetchAdminStudentList();
             } catch (err) {
-                alert('Failed to delete student.');
+                alert(`Failed to delete student: ${err.message}`);
             }
+        }
+
+        function deleteStudent(studentId) {
+            openStudentActionDialog(studentId);
         }
 
         function logoutAdmin() {
@@ -2240,6 +2362,21 @@
                 const text = row.innerText.toLowerCase();
                 row.style.display = text.includes(val) ? '' : 'none';
             });
+        }
+
+        function sortAdminTable(sortBy) {
+            const tbody = document.getElementById('adminStudentList');
+            const rows = Array.from(tbody.querySelectorAll('tr[data-student-id]'));
+
+            if (sortBy === 'default') {
+                rows.sort((a, b) => Number(a.dataset.rowIndex) - Number(b.dataset.rowIndex));
+            } else {
+                const key = sortBy === 'class' ? 'studentClass' : 'studentName';
+                rows.sort((a, b) => a.dataset[key].localeCompare(b.dataset[key], undefined, { sensitivity: 'base' }));
+            }
+
+            rows.forEach(row => tbody.appendChild(row));
+            filterAdminTable();
         }
 
         function exportAdminResultsCSV() {

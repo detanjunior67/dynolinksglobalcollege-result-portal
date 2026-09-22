@@ -478,8 +478,8 @@
     pointer-events: none;
     background: linear-gradient(112deg, transparent 34%, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, .95) 49%, rgba(255, 255, 255, 0) 56%, transparent 66%);
     background-size: 240% 100%;
-    -webkit-mask-image: url('/logo.jpg');
-    mask-image: url('/logo.jpg');
+    -webkit-mask-image: url('/logo-transparent.png');
+    mask-image: url('/logo-transparent.png');
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-position: center;
