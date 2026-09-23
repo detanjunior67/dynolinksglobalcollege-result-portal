@@ -29,9 +29,19 @@ app.use((req, res, next) => {
     }
     next();
 });
-// Serve static frontend files from both root and public directories
-app.use(express.static(__dirname, { maxAge: '1d', etag: true }));
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d', etag: true }));
+// Serve static frontend files from both root and public directories.
+// The service worker must always be revalidated so deployed assets can update promptly.
+const staticOptions = {
+    maxAge: '1d',
+    etag: true,
+    setHeaders: (res, filePath) => {
+        if (path.basename(filePath) === 'sw.js' || /\.(html|js|css|json)$/i.test(path.extname(filePath))) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+};
+app.use(express.static(__dirname, staticOptions));
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 
 // Google OAuth2 & Gmail HTTP API Configuration
 const OAuth2 = google.auth.OAuth2;
