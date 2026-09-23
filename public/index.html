@@ -3587,7 +3587,7 @@
             <a href="#about" onclick="closeMobileMenu()"><i data-lucide="compass" aria-hidden="true"></i><span>About</span></a>
             <a href="#programs" onclick="closeMobileMenu()"><i data-lucide="book-open" aria-hidden="true"></i><span>Programs</span></a>
             <a href="#programs" onclick="closeMobileMenu()"><i data-lucide="message-circle" aria-hidden="true"></i><span>Enquiries</span></a>
-            <a href="javascript:void(0)" onclick="accessCBT(); closeMobileMenu();" class="cbt-btn"><i data-lucide="monitor-play" aria-hidden="true"></i><span>CBT Exam</span></a>
+            <a href="javascript:void(0)" onclick="event.preventDefault(); closeMobileMenu(); setTimeout(accessCBT, 0);" class="cbt-btn"><i data-lucide="monitor-play" aria-hidden="true"></i><span>CBT Exam</span></a>
             <a href="/portal.html" class="btn-portal"><i data-lucide="chart-column" aria-hidden="true"></i><span>Check Result</span></a>
             <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();"><i data-lucide="shield-check" aria-hidden="true"></i><span>Admin Only</span></a>
         </nav>
