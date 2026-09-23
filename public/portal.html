@@ -1444,7 +1444,8 @@
         async function syncSharedStudentRoster() {
             const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
             try {
-                const response = await fetch('/api/admin/student-data', {
+                const response = await fetch('/api/admin/student-data?summary=1', {
+                    cache: 'no-store',
                     headers: { 'x-student-data-password': password }
                 });
                 const data = await response.json().catch(() => ({}));

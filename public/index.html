@@ -12,6 +12,15 @@
     <link rel="stylesheet" href="dgc-loader.css">
     <script src="device-detector.js" defer></script>
     <script>
+        (() => {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const lowEndDevice = (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 2)
+                || (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 2)
+                || connection?.saveData === true;
+            const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            if (lowEndDevice || reducedMotion) document.documentElement.classList.add('low-performance');
+        })();
+
         document.addEventListener('DOMContentLoaded', () => {
             if (window.showDatabaseLoader) {
                 window.showDatabaseLoader('Loading Dynolinks Portal...', 'Preparing the installed app...');
@@ -2915,6 +2924,38 @@
             }
         }
 
+        html.low-performance *,
+        html.low-performance *::before,
+        html.low-performance *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        html.low-performance .ambient-blob,
+        html.low-performance .ambient-orb {
+            display: none !important;
+        }
+
+        html.low-performance header,
+        html.low-performance nav,
+        html.low-performance .modal,
+        html.low-performance .modal-overlay,
+        html.low-performance .modal-card {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html.low-performance nav.active a {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        html.low-performance section,
+        html.low-performance footer {
+            content-visibility: auto;
+            contain-intrinsic-size: 640px;
+        }
+
         footer {
             background: var(--card-dark);
             color: var(--text-muted);
@@ -4016,6 +4057,7 @@
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;"><button type="button" onclick="saveStudentData()" style="background: var(--grad-primary); color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 50px; font-weight: 800; cursor: pointer;">Save Student</button><button type="button" onclick="closeStudentDataEditor()" class="btn-secondary" style="padding: 10px 18px; border-radius: 50px; cursor: pointer;">Cancel</button></div>
                         </div>
                         <div class="table-responsive student-data-table-wrap"><table class="enquiry-table student-data-table"><thead><tr><th>Picture</th><th>Full Name</th><th>Student ID</th><th>Class</th><th>Department</th><th>CBT Password</th><th>Action</th></tr></thead><tbody id="studentDataListBody"></tbody></table></div>
+                    <div id="studentDataPagination" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px;"></div>
                     </div>
                 </div>
 
@@ -4850,7 +4892,7 @@
         async function syncSharedStudentRoster(students = null) {
             if (!studentDataPassword) return;
             if (window.showDatabaseLoader) {
-                window.showDatabaseLoader('Saving Student Password...', `Updating CBT password for ${studentId}...`);
+                window.showDatabaseLoader('Syncing Student Roster...', 'Updating the shared student list...');
             }
             try {
                 const existingRoster = JSON.parse(localStorage.getItem('dgc_student_roster') || '[]');
@@ -4858,6 +4900,7 @@
                 let rosterStudents = students;
                 if (!Array.isArray(rosterStudents)) {
                     const response = await fetch('/api/admin/student-data?summary=1', {
+                        cache: 'no-store',
                         headers: { 'x-student-data-password': studentDataPassword }
                     });
                     const data = await response.json().catch(() => ({}));
@@ -4883,6 +4926,10 @@
             } catch (err) {
                 console.warn('Shared roster sync failed:', err);
                 return null;
+            } finally {
+                if (window.hideDatabaseLoader) {
+                    window.hideDatabaseLoader();
+                }
             }
         }
 
@@ -4932,8 +4979,8 @@
                 persistStudentDataPassword(password);
                 document.getElementById('studentDataGate').style.display = 'none';
                 document.getElementById('studentDataManager').style.display = 'block';
-                const studentData = await loadStudentData();
-                await syncSharedStudentRoster(studentData?.students);
+                await loadStudentData();
+                await syncSharedStudentRoster();
             } catch (err) {
                 error.textContent = err.message;
                 error.style.display = 'block';
@@ -4944,14 +4991,17 @@
             }
         }
 
-        async function loadStudentData() {
+        async function loadStudentData(page = 1) {
             if (!studentDataPassword) return;
             if (window.showDatabaseLoader) {
                 window.showDatabaseLoader('Loading Student Data...', 'Retrieving the latest student records...');
             }
             try {
             const search = encodeURIComponent(document.getElementById('studentDataSearch').value.trim());
-            const response = await fetch(`/api/admin/student-data?search=${search}`, { headers: { 'x-student-data-password': studentDataPassword } });
+            const response = await fetch(`/api/admin/student-data?search=${search}&page=${Math.max(1, Number(page) || 1)}&pageSize=50`, {
+                cache: 'no-store',
+                headers: { 'x-student-data-password': studentDataPassword }
+            });
             const data = await response.json().catch(() => ({}));
             const tbody = document.getElementById('studentDataListBody');
             if (!response.ok || !data.success) {
@@ -5005,6 +5055,18 @@
 
             if (window.lucide) lucide.createIcons();
             bindStudentRowEditHandlers();
+            const pagination = document.getElementById('studentDataPagination');
+            if (pagination) {
+                const currentPage = Number(data.page) || 1;
+                const totalPages = Number(data.totalPages) || 1;
+                const total = Number(data.total) || data.students.length;
+                pagination.innerHTML = `
+                    <span style="color: var(--text-muted); font-size: 0.82rem; font-weight: 700;">Page ${currentPage} of ${totalPages} (${total} students)</span>
+                    <span style="display: flex; gap: 8px;">
+                        <button type="button" class="student-data-action-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="loadStudentData(${currentPage - 1})">Previous</button>
+                        <button type="button" class="student-data-action-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="loadStudentData(${currentPage + 1})">Next</button>
+                    </span>`;
+            }
             return data;
             } finally {
                 if (window.hideDatabaseLoader) {

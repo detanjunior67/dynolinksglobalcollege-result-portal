@@ -1206,12 +1206,23 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
         const fields = summaryOnly
             ? 'student_id full_name student_class department show_result status'
             : 'student_id full_name student_class department picture show_result status cbt_password';
-        const students = await Student.find(filter)
-            .select(fields)
-            .lean();
+        const requestedPage = Number.parseInt(req.query.page, 10);
+        const requestedPageSize = Number.parseInt(req.query.pageSize, 10);
+        const page = !summaryOnly && Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+        const pageSize = !summaryOnly && Number.isFinite(requestedPageSize)
+            ? Math.min(Math.max(requestedPageSize, 10), 100)
+            : (summaryOnly ? 0 : 50);
+        const [students, total] = await Promise.all([
+            Student.find(filter)
+                .select(fields)
+                .sort({ full_name: 1, student_id: 1 })
+                .skip(pageSize ? (page - 1) * pageSize : 0)
+                .limit(pageSize)
+                .lean(),
+            pageSize ? Student.countDocuments(filter) : Promise.resolve(null)
+        ]);
 
-        const studentSummaries = students
-            .map(student => ({
+        const studentSummaries = students.map(student => ({
                 _id: student._id,
                 student_id: student.student_id,
                 full_name: student.full_name,
@@ -1223,10 +1234,13 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 cbt_password: summaryOnly ? '' : String(student.cbt_password || '').trim(),
                 show_result: student.show_result !== false,
                 status: student.status || 'Authorized'
-            }))
-            .sort((a, b) => String(a.full_name || '').localeCompare(String(b.full_name || '')) || String(a.student_id || '').localeCompare(String(b.student_id || '')));
+            }));
 
-        res.json({ success: true, students: studentSummaries });
+        res.json({
+            success: true,
+            students: studentSummaries,
+            ...(pageSize ? { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } : {})
+        });
     } catch (err) {
         console.error('Load student data error:', err);
         res.status(500).json({ success: false, message: 'Could not load student data.' });
