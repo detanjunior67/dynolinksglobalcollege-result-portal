@@ -615,6 +615,18 @@
     }
 
     // Expose helpers globally
+    detectExactDevice().then((device) => {
+        const root = document.documentElement;
+        if (!root || !device) return;
+        root.dataset.deviceType = device.deviceType || '';
+        root.dataset.deviceBrand = device.brand || '';
+        root.dataset.deviceModel = device.exactModel || '';
+        root.classList.toggle('phone-device', device.deviceType === 'Mobile Phone');
+        root.classList.toggle('tablet-device', device.deviceType === 'Tablet');
+        root.classList.toggle('desktop-device', !device.isMobile);
+        window.dispatchEvent(new CustomEvent('dgcdevicechange', { detail: device }));
+    }).catch(() => {});
+
     window.getDeviceFingerprint = detectExactDevice;
     window.showDatabaseLoader = showDatabaseLoader;
     window.hideDatabaseLoader = hideDatabaseLoader;

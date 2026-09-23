@@ -14,11 +14,19 @@
     <script>
         (() => {
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const userAgent = navigator.userAgent || '';
+            const isPhone = /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(userAgent);
+            const isAndroid = /Android/i.test(userAgent);
+            const isIPhone = /iPhone|iPod/i.test(userAgent);
             const lowEndDevice = (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 2)
                 || (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 2)
                 || connection?.saveData === true;
             const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-            if (lowEndDevice || reducedMotion) document.documentElement.classList.add('low-performance');
+            const root = document.documentElement;
+            if (isPhone) root.classList.add('phone-device');
+            if (isAndroid) root.classList.add('android-device');
+            if (isIPhone) root.classList.add('iphone-device');
+            if (lowEndDevice || reducedMotion) root.classList.add('low-performance');
         })();
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2954,6 +2962,20 @@
         html.low-performance footer {
             content-visibility: auto;
             contain-intrinsic-size: 640px;
+        }
+
+        html.phone-device .ambient-blob,
+        html.phone-device .ambient-orb {
+            display: none !important;
+        }
+
+        html.phone-device .hero-side-panel {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html.phone-device .hero::after {
+            display: none;
         }
 
         footer {
