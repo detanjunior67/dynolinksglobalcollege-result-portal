@@ -14,9 +14,63 @@ const { google } = require('googleapis');
 
 const app = express();
 
-// Middleware with increased payload size limits for large bulk uploads (50mb)
+const PAGE_ACCESS_COOKIE = 'dgc_page_access';
+const PAGE_ACCESS_SECRET = process.env.PAGE_ACCESS_SECRET || process.env.ADMIN_PASSWORD || 'dynolinks-page-access';
+const PAGE_ACCESS_TTL_SECONDS = 60 * 15;
+const protectedPageAccess = {
+    '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
+    '/teacher.html': { scope: 'teacher', passwords: [process.env.TEACHER_PAGE_PASSWORD || 'checkme', 'admincheck'] }
+};
+
+function createPageAccessToken(scope) {
+    const payload = Buffer.from(JSON.stringify({ scope, expiresAt: Date.now() + PAGE_ACCESS_TTL_SECONDS * 1000 })).toString('base64url');
+    const signature = crypto.createHmac('sha256', PAGE_ACCESS_SECRET).update(payload).digest('base64url');
+    return `${payload}.${signature}`;
+}
+
+function hasPageAccess(req, scope) {
+    const cookieHeader = req.headers.cookie || '';
+    const token = cookieHeader.split(';').map(part => part.trim()).find(part => part.startsWith(`${PAGE_ACCESS_COOKIE}=`))?.split('=').slice(1).join('=');
+    if (!token) return false;
+
+    const [payload, signature] = token.split('.');
+    if (!payload || !signature) return false;
+    const expectedSignature = crypto.createHmac('sha256', PAGE_ACCESS_SECRET).update(payload).digest('base64url');
+    if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) return false;
+
+    try {
+        const access = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return access.scope === scope && Number(access.expiresAt) > Date.now();
+    } catch (_) {
+        return false;
+    }
+}
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.post('/api/page-access', (req, res) => {
+    const target = String(req.body?.target || '').split('?')[0];
+    const protectedPage = protectedPageAccess[target];
+    const password = String(req.body?.password || '').trim().toLowerCase();
+    if (!protectedPage || !protectedPage.passwords.some(allowedPassword => password === allowedPassword.toLowerCase())) {
+        return res.status(401).json({ success: false, message: 'Incorrect access PIN.' });
+    }
+
+    res.setHeader('Set-Cookie', `${PAGE_ACCESS_COOKIE}=${createPageAccessToken(protectedPage.scope)}; Max-Age=${PAGE_ACCESS_TTL_SECONDS}; Path=/; HttpOnly; SameSite=Lax`);
+    res.json({ success: true, redirectTo: target });
+});
+
+app.use((req, res, next) => {
+    const requestedPage = protectedPageAccess[req.path];
+    if (req.method === 'GET' && requestedPage && !hasPageAccess(req, requestedPage.scope)) {
+        const returnTo = `${req.path}${req.originalUrl.includes('?') ? req.originalUrl.slice(req.path.length) : ''}`;
+        return res.redirect(`/?protected=${requestedPage.scope}&returnTo=${encodeURIComponent(returnTo)}`);
+    }
+    next();
+});
+
+// Middleware with increased payload size limits for large bulk uploads (50mb)
 app.use(compression({ threshold: 1024 }));
 
 // CORS middleware
@@ -2160,6 +2214,28 @@ app.delete('/api/questions/:id', async (req, res) => {
         res.json({ success: true, message: 'Question deleted successfully' });
     } catch (err) {
         console.error('Error deleting question:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE all CBT questions for one subject or an entire class
+app.delete('/api/questions', async (req, res) => {
+    try {
+        const classKey = String(req.body?.classKey || req.query?.classKey || '').trim();
+        const subjectId = String(req.body?.subjectId || req.query?.subjectId || '').trim();
+        if (!classKey) return res.status(400).json({ error: 'Class level is required.' });
+
+        const filter = { classKey };
+        if (subjectId) {
+            const canonicalSubjectId = normalizeQuestionSubjectId(classKey, subjectId);
+            filter.subjectId = { $in: getQuestionSubjectAliases(classKey, canonicalSubjectId) };
+        }
+
+        const result = await Question.deleteMany(filter);
+        invalidateQuestionCache();
+        res.json({ success: true, deletedCount: result.deletedCount || 0 });
+    } catch (err) {
+        console.error('Error clearing questions:', err);
         res.status(500).json({ error: err.message });
     }
 });

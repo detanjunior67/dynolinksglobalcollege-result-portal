@@ -1360,6 +1360,7 @@
                                     onchange="updateSubjectBankSelector(); renderAdminQuestionBank()"
                                     class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs font-bold focus:ring-2 focus:ring-blue-500">
                                     <option value="">-- Select Department --</option>
+                                        <option value="All">All Departments (Common Subjects)</option>
                                     <option value="Science">Science</option>
                                     <option value="Arts">Arts</option>
                                     <option value="Commercial">Commercial</option>
@@ -1384,6 +1385,10 @@
                             <button onclick="document.getElementById('questionTxtImportInput').click()"
                                 class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
                                 <i class="fa-solid fa-file-arrow-up"></i> Import TXT
+                            </button>
+                            <button onclick="openClearQuestionsModal()"
+                                class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl shadow transition flex items-center gap-2">
+                                <i class="fa-solid fa-eraser"></i> Clear Questions
                             </button>
                             <input id="questionTxtImportInput" type="file" accept=".txt,text/plain" class="hidden"
                                 onchange="importQuestionsFromTxtFile(event)">
@@ -1714,6 +1719,7 @@
             const cleaned = String(value || '').trim();
             if (!cleaned) return '';
             const normalized = cleaned.toLowerCase();
+            if (normalized === 'all' || normalized === 'all departments' || normalized === 'all departments (common subjects)') return 'All';
             if (normalized === 'science' || normalized === 'sci') return 'Science';
             if (normalized === 'art' || normalized === 'arts') return 'Arts';
             if (normalized === 'commercial' || normalized === 'comm') return 'Commercial';
@@ -1725,10 +1731,15 @@
             const dept = normalizeDepartmentName(department);
             if (normalizedClass && /^JSS/i.test(normalizedClass)) return JSS_SUBJECTS;
             if (normalizedClass && /^SSS/i.test(normalizedClass)) {
+                if (dept === 'All') return SSS_COMMON_SUBJECTS;
                 if (dept && SSS_DEPARTMENT_SUBJECTS[dept]) return SSS_DEPARTMENT_SUBJECTS[dept];
                 return [...new Set([...SSS_COMMON_SUBJECTS, ...SSS_DEPARTMENT_SUBJECTS.Science])];
             }
             return [];
+        }
+
+        function getAllSssSubjectList() {
+            return [...new Set(Object.values(SSS_DEPARTMENT_SUBJECTS).flat())];
         }
 
         function buildClassSubjectDefaults(classKey = '', department = '') {
@@ -2273,14 +2284,18 @@
             };
 
             const departmentSubjects = getDepartmentSubjectList(classKey, effectiveDepartment);
+            const configuredSubjects = classConfigs[classKey].subjects || [];
             const exactConfiguredSubjects = departmentSubjects.length
-                ? departmentSubjects.map((subjectName, index) => ({
-                    id: `${classKey.toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
-                    name: subjectName,
-                    code: `${classKey}_${index + 1}`,
-                    timerMins: 5
-                }))
-                : classConfigs[classKey].subjects;
+                ? departmentSubjects.map((subjectName, index) => {
+                    const configuredSubject = configuredSubjects[index] || {};
+                    return {
+                        id: `${classKey.toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+                        name: subjectName,
+                        code: configuredSubject.code || `${classKey}_${index + 1}`,
+                        timerMins: Number(configuredSubject.timerMins) > 0 ? Number(configuredSubject.timerMins) : 5
+                    };
+                })
+                : configuredSubjects;
 
             try {
                 await syncRemoteQuestionsForClass(classKey, true);
@@ -2788,21 +2803,32 @@
             panel.classList.remove('hidden');
         }
 
-        window.addEventListener('pagehide', () => {
-            if (document.getElementById('viewExamPortal')?.classList.contains('hidden') || examSubmissionStarted) return;
+        function submitExamOnPageExit() {
+            if (document.getElementById('viewExamPortal')?.classList.contains('hidden') || examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
+
             examSubmissionStarted = true;
             if (examTimerInterval) clearInterval(examTimerInterval);
+
             const record = buildCbtResultRecord();
             cbtResults.unshift(record);
             savePersistentData();
+
             const payload = JSON.stringify(record);
             const beaconSent = navigator.sendBeacon
                 ? navigator.sendBeacon(`${API_BASE_URL}/cbt-results`, new Blob([payload], { type: 'application/json' }))
                 : false;
             if (!beaconSent) {
-                void fetch(`${API_BASE_URL}/cbt-results`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
+                void fetch(`${API_BASE_URL}/cbt-results`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                });
             }
-        });
+        }
+
+        window.addEventListener('pagehide', submitExamOnPageExit);
+        window.addEventListener('beforeunload', submitExamOnPageExit);
 
         // ========================================================
         // ADMIN AUTHENTICATION & TEACHER HUB LOGIC
@@ -3540,6 +3566,7 @@
         let currentWorkspaceClass = '';
         let currentWorkspaceSubId = '';
         let currentWorkspaceDepartment = '';
+        let currentWorkspaceQuestionTime = 60;
 
         function populateQuestionBankSelectors() {
             const classSel = document.getElementById('qBankClassSelect');
@@ -3560,10 +3587,15 @@
             if (!cfg) return [];
             const normalizedDepartment = normalizeDepartmentName(department || cfg.department || '');
             if (classKey.startsWith('SSS') && normalizedDepartment) {
-                return buildClassSubjectDefaults(classKey, normalizedDepartment).map((subject, index) => ({
-                    ...subject,
-                    timerMins: cfg.subjects[index]?.timerMins || subject.timerMins
-                }));
+                return buildClassSubjectDefaults(classKey, normalizedDepartment).map(subject => {
+                    const configuredSubject = (cfg.subjects || []).find(savedSubject =>
+                        String(savedSubject.name || '').trim().toLowerCase() === subject.name.toLowerCase()
+                    );
+                    return {
+                        ...subject,
+                        timerMins: configuredSubject?.timerMins || subject.timerMins
+                    };
+                });
             }
             return cfg.subjects || [];
         }
@@ -3637,6 +3669,129 @@
                 `;
                 container.appendChild(card);
             });
+        }
+        function openClearQuestionsModal() {
+            const classKey = document.getElementById('qBankClassSelect')?.value || Object.keys(classConfigs)[0] || '';
+            const classOptionsHtml = Object.keys(classConfigs).map(key =>
+                `<option value="${escapeHtml(key)}" ${key === classKey ? 'selected' : ''}>${escapeHtml(classConfigs[key].label || key)}</option>`
+            ).join('');
+
+            document.getElementById('modalTitle').innerText = 'Clear Question Bank';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3 text-xs">
+                    <p class="text-red-600 dark:text-red-300 font-semibold">This permanently removes saved questions from the selected class or subject.</p>
+                    <div>
+                        <label class="block font-bold mb-1">Class Level *</label>
+                        <select id="clearQuestionsClass" onchange="updateClearQuestionsSubjects()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            ${classOptionsHtml}
+                        </select>
+                    </div>
+                    <div id="clearQuestionsDepartmentField" class="hidden">
+                        <label class="block font-bold mb-1">Department *</label>
+                        <select id="clearQuestionsDepartment" onchange="updateClearQuestionsSubjects()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="All">All Departments in this Class</option>
+                            <option value="Science">Science</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">What should be cleared? *</label>
+                        <select id="clearQuestionsScope" onchange="toggleClearQuestionsSubject()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
+                            <option value="all">All subjects in this class</option>
+                            <option value="subject">Only one subject</option>
+                        </select>
+                    </div>
+                    <div id="clearQuestionsSubjectField" class="hidden">
+                        <label class="block font-bold mb-1">Subject *</label>
+                        <select id="clearQuestionsSubject" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold"></select>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="confirmClearQuestions()" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-extrabold shadow">Continue</button>
+            `;
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+            updateClearQuestionsSubjects();
+        }
+
+        function updateClearQuestionsSubjects() {
+            const classSelect = document.getElementById('clearQuestionsClass');
+            const departmentField = document.getElementById('clearQuestionsDepartmentField');
+            const departmentSelect = document.getElementById('clearQuestionsDepartment');
+            const subjectSelect = document.getElementById('clearQuestionsSubject');
+            if (!classSelect || !subjectSelect) return;
+
+            const classKey = classSelect.value;
+            const needsDepartment = classKey.startsWith('SSS');
+            departmentField?.classList.toggle('hidden', !needsDepartment);
+            if (departmentSelect) {
+                departmentSelect.disabled = !needsDepartment;
+                if (needsDepartment && !departmentSelect.value) {
+                    departmentSelect.value = normalizeDepartmentName(classConfigs[classKey]?.department) || 'Science';
+                }
+            }
+
+            const department = needsDepartment ? normalizeDepartmentName(departmentSelect?.value || '') : '';
+            const subjects = department === 'All'
+                ? getAllSssSubjectList().map((subjectName, index) => ({
+                    id: `${classKey.toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+                    name: subjectName,
+                    code: `${classKey}_${index + 1}`
+                }))
+                : getSubjectsForClassSelection(classKey, department);
+            subjectSelect.innerHTML = subjects.map(subject =>
+                `<option value="${escapeHtml(subject.id)}">${escapeHtml(subject.name)}</option>`
+            ).join('');
+        }
+
+        function toggleClearQuestionsSubject() {
+            const scope = document.getElementById('clearQuestionsScope')?.value;
+            document.getElementById('clearQuestionsSubjectField')?.classList.toggle('hidden', scope !== 'subject');
+        }
+
+        function confirmClearQuestions() {
+            const classKey = document.getElementById('clearQuestionsClass')?.value || '';
+            const scope = document.getElementById('clearQuestionsScope')?.value || 'all';
+            const subjectSelect = document.getElementById('clearQuestionsSubject');
+            const subId = scope === 'subject' ? (subjectSelect?.value || '') : '';
+            const subjectName = scope === 'subject' ? (subjectSelect?.selectedOptions[0]?.textContent || 'selected subject') : 'all subjects';
+            if (!classKey || (scope === 'subject' && !subId)) return showToast('Select a class and subject before continuing.', 'error');
+
+            showCustomConfirm(
+                'Clear Saved Questions?',
+                `This will permanently delete ${subjectName} question(s) for ${classConfigs[classKey]?.label || classKey}. Continue?`,
+                () => executeClearQuestions(classKey, subId)
+            );
+        }
+
+        async function executeClearQuestions(classKey, subId = '') {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classKey, subjectId: subId })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.error || 'Questions could not be cleared.');
+
+                if (!questionBank[classKey]) questionBank[classKey] = {};
+                if (subId) {
+                    questionBank[classKey][subId] = [];
+                } else {
+                    questionBank[classKey] = {};
+                }
+                savePersistentData();
+                closeModal();
+                updateSubjectBankSelector();
+                await renderAdminQuestionBank();
+                showToast(`${data.deletedCount || 0} question(s) cleared successfully.`);
+            } catch (err) {
+                console.error('Question bank clear failed:', err);
+                showToast(err.message || 'Questions could not be cleared.', 'error');
+            }
         }
 
         // 1. TEACHER UPDATE QUESTIONS SETUP (PROMPT FOR CLASS, NUMBER OF QUESTIONS, TIME)
@@ -3728,6 +3883,7 @@
             currentWorkspaceClass = classKey;
             currentWorkspaceSubId = subId;
             currentWorkspaceDepartment = department;
+            currentWorkspaceQuestionTime = timePerQ;
 
             // Load existing questions or fill blanks up to numBoxes
             const existingQs = (questionBank[classKey] && questionBank[classKey][subId]) ? [...questionBank[classKey][subId]] : [];
@@ -3783,6 +3939,7 @@
                         <label class="block font-bold mb-1">Department *</label>
                         <select id="aiDepartmentSelect" onchange="updateAiSubjectDropdown()" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold">
                             <option value="">-- Select Department --</option>
+                            <option value="All">All Departments (Common Subjects)</option>
                             <option value="Science">Science</option>
                             <option value="Arts">Arts</option>
                             <option value="Commercial">Commercial</option>
@@ -3801,6 +3958,10 @@
                     <div>
                         <label class="block font-bold mb-1">Number of Questions *</label>
                         <input type="number" id="aiNumQuestions" min="1" max="20" value="5" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-purple-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Time Per Question (Seconds) *</label>
+                        <input type="number" id="aiTimePerQuestion" min="5" max="600" value="60" class="w-full p-2.5 border rounded-xl dark:bg-gray-700 dark:border-gray-600 font-bold text-purple-600">
                     </div>
                     <p id="aiGenerateStatus" class="hidden text-[11px] font-semibold text-purple-600 dark:text-purple-300"></p>
                 </div>
@@ -3852,6 +4013,7 @@
                 .filter(Boolean);
             const topic = topics.join(', ');
             const numQs = Math.min(20, Math.max(1, parseInt(document.getElementById('aiNumQuestions').value, 10) || 5));
+            const timePerQ = Math.min(600, Math.max(5, parseInt(document.getElementById('aiTimePerQuestion').value, 10) || 60));
 
             if (classKey.startsWith('SSS') && !department) return showToast('Please select a department for this SSS class.', 'error');
             if (!classKey || !subId) return showToast('Please select class and subject.', 'error');
@@ -3898,7 +4060,7 @@
                         options: (q.options || ['', '', '', '']).slice(0, 4),
                         correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : 0,
                         points: 1,
-                        customTime: 60,
+                        customTime: timePerQ,
                         isAiAutofilled: true
                     }));
                 } else if (status) {
@@ -3924,6 +4086,7 @@
             currentWorkspaceClass = classKey;
             currentWorkspaceSubId = subId;
             currentWorkspaceDepartment = department;
+            currentWorkspaceQuestionTime = timePerQ;
             closeModal();
             renderQuestionWorkspace(classKey, subId, generatedBoxes);
         }
@@ -4053,7 +4216,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Timer (Seconds)</label>
-                            <input type="number" id="qBoxTime_${idx}" value="60" min="5" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-blue-600">
+                            <input type="number" id="qBoxTime_${idx}" value="${currentWorkspaceQuestionTime}" min="5" max="600" class="w-full p-2 border rounded-xl dark:bg-gray-700 dark:border-gray-600 text-xs font-bold text-blue-600">
                         </div>
                     </div>
                 </div>

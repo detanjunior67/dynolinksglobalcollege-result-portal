@@ -4393,6 +4393,8 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
         /* CBT Access Function with Password Verification */
+        let requestedProtectedPath = '';
+
         function accessCBT() {
             const modal = document.getElementById('cbtAccessModal');
             const passwordInput = document.getElementById('cbtAccessPassword');
@@ -4421,19 +4423,30 @@
             e.preventDefault();
             const password = document.getElementById('cbtAccessPassword').value.trim().toLowerCase();
             const error = document.getElementById('cbtPasswordError');
-            if (password === 'cbtaccess') {
-                window.location.href = 'cbt.html';
-            } else if (password === 'checkme') {
-                window.location.href = 'teacher.html';
-            } else if (password === 'admincheck') {
-                sessionStorage.setItem('dgc_teacher_admin_password', password);
-                window.location.href = 'teacher.html?admin=1';
-            } else {
+            const target = requestedProtectedPath || (password === 'cbtaccess' ? '/cbt.html' : '/teacher.html');
+
+            fetch('/api/page-access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password, target })
+            }).then(async response => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Incorrect password.');
+                if (password === 'admincheck') sessionStorage.setItem('dgc_teacher_admin_password', password);
+                window.location.href = `${data.redirectTo}${password === 'admincheck' ? '?admin=1' : ''}`;
+            }).catch(() => {
                 error.classList.remove('is-visible');
                 void error.offsetWidth;
                 error.classList.add('is-visible');
-            }
+            });
         });
+
+        const protectedPageQuery = new URLSearchParams(window.location.search);
+        const protectedScope = protectedPageQuery.get('protected');
+        if (protectedScope === 'cbt' || protectedScope === 'teacher') {
+            requestedProtectedPath = protectedScope === 'cbt' ? '/cbt.html' : '/teacher.html';
+            setTimeout(accessCBT, 0);
+        }
 
         let enquiriesList = [
             {
