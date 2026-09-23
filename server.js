@@ -727,7 +727,7 @@ app.get('/api/teacher/logins', requireTeacherAdmin, async (req, res) => {
     try {
         const settings = await getTeacherSettings();
         const period = getTeacherPeriod(new Date(), settings.appearTime);
-        const logins = await TeacherLogin.find({ period }).sort({ loggedInAt: -1 }).lean();
+        const logins = await TeacherLogin.find({}).sort({ loggedInAt: -1 }).lean();
         res.json({ success: true, period, logins });
     } catch (err) {
         console.error('Load teacher sign-ins error:', err.message);
