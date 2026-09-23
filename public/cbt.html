@@ -2829,6 +2829,9 @@
 
         window.addEventListener('pagehide', submitExamOnPageExit);
         window.addEventListener('beforeunload', submitExamOnPageExit);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') submitExamOnPageExit();
+        });
 
         // ========================================================
         // ADMIN AUTHENTICATION & TEACHER HUB LOGIC
