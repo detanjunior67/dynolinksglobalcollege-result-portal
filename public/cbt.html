@@ -1762,6 +1762,18 @@
             });
         }
 
+        function getSubjectQuestionTimeSeconds(classKey, subject) {
+            const qList = (questionBank[classKey] && questionBank[classKey][subject.id]) || [];
+            const questionTimes = qList
+                .map(question => Number(question.customTime))
+                .filter(seconds => Number.isFinite(seconds) && seconds > 0);
+            return questionTimes.length ? questionTimes.reduce((total, seconds) => total + seconds, 0) : 0;
+        }
+
+        function getSubjectExamTimeSeconds(classKey, subject) {
+            return getSubjectQuestionTimeSeconds(classKey, subject) || (Number(subject.timerMins) > 0 ? Number(subject.timerMins) * 60 : 5 * 60);
+        }
+
         let classConfigs = {};
 
         function ensureClassConfiguredSubjects(classKey = '', department = '') {
@@ -1867,6 +1879,7 @@
         let studentRoster = JSON.parse(localStorage.getItem('dgc_student_roster')) || defaultRoster;
         let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
+        const pendingCbtSubmissionKey = 'dgc_pending_cbt_submissions_v1';
         let resultsEditMode = false;
         let currentStudentCbtPassword = '';
         let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
@@ -1913,6 +1926,7 @@
                 console.warn('Shared CBT configuration unavailable; using local configuration:', err);
             }
             savePersistentData();
+            void retryPendingCbtSubmissions();
             populateStudentClassDropdown();
             populateAdminClassDropdown();
             setStudentProfileCardVisibility(false);
@@ -1964,6 +1978,73 @@
             localStorage.setItem('dgc_student_roster', JSON.stringify(studentRoster));
             localStorage.setItem('dgc_question_bank_v2', JSON.stringify(questionBank));
             localStorage.setItem('dgc_cbt_results_v2', JSON.stringify(cbtResults));
+        }
+
+        function queuePendingCbtSubmission(record) {
+            const pending = JSON.parse(localStorage.getItem(pendingCbtSubmissionKey) || '[]');
+            if (!pending.some(item => item.id === record.id)) pending.push(record);
+            localStorage.setItem(pendingCbtSubmissionKey, JSON.stringify(pending));
+        }
+
+        function getCbtAttemptKey(studentId, classKey) {
+            return `${normalizeStudentIdKey(studentId)}|${String(classKey || '').trim().toUpperCase()}`;
+        }
+
+        function hasCompletedCbtAttempt(studentId, classKey) {
+            const attemptKey = getCbtAttemptKey(studentId, classKey);
+            const completedAttempts = JSON.parse(localStorage.getItem('dgc_completed_cbt_attempts_v1') || '{}');
+            return Boolean(completedAttempts[attemptKey]) || cbtResults.some(result =>
+                getCbtAttemptKey(result.studentId, result.classKey) === attemptKey
+            );
+        }
+
+        function markCbtAttemptCompleted(studentId, classKey) {
+            const completedAttempts = JSON.parse(localStorage.getItem('dgc_completed_cbt_attempts_v1') || '{}');
+            completedAttempts[getCbtAttemptKey(studentId, classKey)] = new Date().toISOString();
+            localStorage.setItem('dgc_completed_cbt_attempts_v1', JSON.stringify(completedAttempts));
+        }
+
+        function clearCbtAttemptLock(studentId, classKey) {
+            const attemptKey = getCbtAttemptKey(studentId, classKey);
+            const completedAttempts = JSON.parse(localStorage.getItem('dgc_completed_cbt_attempts_v1') || '{}');
+            delete completedAttempts[attemptKey];
+            localStorage.setItem('dgc_completed_cbt_attempts_v1', JSON.stringify(completedAttempts));
+            cbtResults = cbtResults.filter(result => getCbtAttemptKey(result.studentId, result.classKey) !== attemptKey);
+            savePersistentData();
+        }
+
+        function syncCompletedStatusOnExit(studentId) {
+            const password = localStorage.getItem('dgc_student_data_password') || studentDataManagerPassword || 'studata';
+            const payload = JSON.stringify({ studentId, status: 'Completed/Attempted', password });
+            const statusUrl = '/api/admin/student-status';
+            try {
+                const sent = navigator.sendBeacon?.(statusUrl, new Blob([payload], { type: 'application/json' }));
+                if (sent) return;
+            } catch (err) {
+                console.warn('CBT status beacon failed:', err);
+            }
+            void fetch(statusUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
+                keepalive: true
+            }).catch(err => console.warn('CBT completion status sync failed:', err));
+        }
+
+        async function retryPendingCbtSubmissions() {
+            const pending = JSON.parse(localStorage.getItem(pendingCbtSubmissionKey) || '[]');
+            if (!pending.length) return;
+
+            const remaining = [];
+            for (const record of pending) {
+                try {
+                    await apiSaveCbtResult(record, true);
+                } catch (err) {
+                    remaining.push(record);
+                    console.warn('Pending CBT submission retry failed:', err);
+                }
+            }
+            localStorage.setItem(pendingCbtSubmissionKey, JSON.stringify(remaining));
         }
 
         async function verifyStudentPasswordOnServer(studentId, password) {
@@ -2203,6 +2284,12 @@
             if (!studentId) return showCustomAlert('Validation Error', 'Please enter your authorized Student ID (e.g., STU-2026-001).');
             if (!studentPassword) return showCustomAlert('Password Required', 'Please enter your CBT password before continuing.');
             if (!classKey || !classConfigs[classKey]) return showCustomAlert('Validation Error', 'Please select a valid class level.');
+            if (String(savedProfile?.status || '').trim() === 'Authorized') {
+                clearCbtAttemptLock(studentId, classKey);
+            }
+            if (hasCompletedCbtAttempt(studentId, classKey)) {
+                return showCustomAlert('Assignment Already Submitted', `Student ID "${studentId}" has already completed and submitted the assignment for ${classConfigs[classKey].label}. Multiple attempts are not permitted.`);
+            }
             if (classKey.startsWith('SSS') && !selectedDepartment && !normalizeDepartmentName(savedProfile?.department || '')) {
                 return showCustomAlert('Validation Error', 'Please select the student department for this SSS class before continuing.');
             }
@@ -2287,7 +2374,9 @@
             const configuredSubjects = classConfigs[classKey].subjects || [];
             const exactConfiguredSubjects = departmentSubjects.length
                 ? departmentSubjects.map((subjectName, index) => {
-                    const configuredSubject = configuredSubjects[index] || {};
+                    const configuredSubject = configuredSubjects.find(subject =>
+                        String(subject.name || '').trim().toLowerCase() === subjectName.toLowerCase()
+                    ) || {};
                     return {
                         id: `${classKey.toLowerCase()}_${subjectName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
                         name: subjectName,
@@ -2338,12 +2427,13 @@
             let totalMins = 0;
             currentClassConfig.subjects.forEach(s => {
                 const qList = (questionBank[classKey] && questionBank[classKey][s.id]) || [];
-                totalMins += parseInt(s.timerMins) || 5;
+                const allocatedSeconds = getSubjectExamTimeSeconds(classKey, s);
+                totalMins += allocatedSeconds / 60;
                 const card = document.createElement('div');
                 card.className = 'p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 text-xs';
                 card.innerHTML = `
                     <div class="font-bold text-blue-600 dark:text-blue-400">${s.name} (${s.code})</div>
-                    <div class="text-gray-500 dark:text-gray-400 mt-1">${qList.length} Questions | ${s.timerMins} Mins Allocated</div>
+                    <div class="text-gray-500 dark:text-gray-400 mt-1">${qList.length} Questions | ${Math.ceil(allocatedSeconds / 60)} Mins Allocated</div>
                 `;
                 breakdownBox.appendChild(card);
             });
@@ -2421,7 +2511,7 @@
             sectionTimers = {};
             let totalSecs = 0;
             currentClassConfig.subjects.forEach(s => {
-                const secs = (parseInt(s.timerMins) || 5) * 60;
+                const secs = getSubjectExamTimeSeconds(currentCandidate.classKey, s);
                 sectionTimers[s.id] = secs;
                 totalSecs += secs;
             });
@@ -2734,6 +2824,7 @@
             const record = buildCbtResultRecord();
 
             cbtResults.unshift(record);
+            markCbtAttemptCompleted(currentCandidate.studentId, currentCandidate.classKey);
 
             const rItem = studentRoster.find(r => r.studentId.toUpperCase() === currentCandidate.studentId.toUpperCase() && r.classKey === currentCandidate.classKey);
             if (rItem) {
@@ -2803,7 +2894,7 @@
             panel.classList.remove('hidden');
         }
 
-        function submitExamOnPageExit() {
+        function submitExamOnPageExit({ preferFetch = false } = {}) {
             if (document.getElementById('viewExamPortal')?.classList.contains('hidden') || examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
 
             examSubmissionStarted = true;
@@ -2811,26 +2902,63 @@
 
             const record = buildCbtResultRecord();
             cbtResults.unshift(record);
+            markCbtAttemptCompleted(currentCandidate.studentId, currentCandidate.classKey);
+            const rosterEntry = studentRoster.find(item =>
+                studentIdsMatch(item.studentId, currentCandidate.studentId) && item.classKey === currentCandidate.classKey
+            );
+            if (rosterEntry) rosterEntry.status = 'Completed/Attempted';
             savePersistentData();
+            queuePendingCbtSubmission(record);
+            syncCompletedStatusOnExit(currentCandidate.studentId);
 
             const payload = JSON.stringify(record);
-            const beaconSent = navigator.sendBeacon
-                ? navigator.sendBeacon(`${API_BASE_URL}/cbt-results`, new Blob([payload], { type: 'application/json' }))
-                : false;
-            if (!beaconSent) {
-                void fetch(`${API_BASE_URL}/cbt-results`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: payload,
-                    keepalive: true
+            const requestBody = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
+                keepalive: true
+            };
+
+            if (preferFetch) {
+                void fetch(`${API_BASE_URL}/cbt-results`, requestBody).catch(err => {
+                    console.warn('CBT background submission failed; retrying with beacon:', err);
+                    try {
+                        navigator.sendBeacon?.(
+                            `${API_BASE_URL}/cbt-results`,
+                            new Blob([payload], { type: 'application/json' })
+                        );
+                    } catch (beaconErr) {
+                        console.warn('CBT fallback beacon submission failed:', beaconErr);
+                    }
                 });
+                return;
+            }
+
+            let beaconSent = false;
+            try {
+                beaconSent = Boolean(navigator.sendBeacon?.(
+                    `${API_BASE_URL}/cbt-results`,
+                    new Blob([payload], { type: 'application/json' })
+                ));
+            } catch (err) {
+                console.warn('CBT beacon submission failed:', err);
+            }
+            if (!beaconSent) {
+                void fetch(`${API_BASE_URL}/cbt-results`, requestBody);
             }
         }
 
         window.addEventListener('pagehide', submitExamOnPageExit);
         window.addEventListener('beforeunload', submitExamOnPageExit);
+        window.addEventListener('unload', submitExamOnPageExit);
+        window.addEventListener('freeze', submitExamOnPageExit);
+        window.addEventListener('blur', () => submitExamOnPageExit({ preferFetch: true }));
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') submitExamOnPageExit();
+            if (document.visibilityState === 'hidden') {
+                submitExamOnPageExit({ preferFetch: true });
+            } else if (examSubmissionStarted && !document.getElementById('viewExamPortal')?.classList.contains('hidden')) {
+                showView('viewSubmissionSuccess');
+            }
         });
 
         // ========================================================
@@ -2949,9 +3077,10 @@
                     const classKey = normalizeClassKey(student.student_class || '') || String(student.student_class || '').trim();
                     const existing = studentRoster.find(item => item.studentId === studentId && item.classKey === classKey);
                     const explicitStatus = String(student.status || existing?.status || '').trim();
-                    const status = ['Authorized', 'Suspended', 'Completed/Attempted'].includes(explicitStatus)
+                    const recordedAttemptStatus = completedAttemptMap.get(`${studentId}|${classKey}`);
+                    const status = recordedAttemptStatus || (['Authorized', 'Suspended', 'Completed/Attempted'].includes(explicitStatus)
                         ? explicitStatus
-                        : completedAttemptMap.get(`${studentId}|${classKey}`) || existing?.status || 'Authorized';
+                        : existing?.status || 'Authorized');
 
                     return {
                         studentId,
@@ -3054,6 +3183,9 @@
                     : 'Authorized';
 
             item.status = nextStatus;
+            if (nextStatus === 'Authorized') {
+                clearCbtAttemptLock(item.studentId, item.classKey);
+            }
             savePersistentData();
 
             try {

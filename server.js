@@ -673,6 +673,7 @@ const Question = mongoose.model('Question', QuestionSchema);
 
 // CBT Exam Result Schema
 const CbtResultSchema = new mongoose.Schema({
+    submissionId: { type: String, default: '' },
     studentId: { type: String, required: true },
     studentName: { type: String, required: true },
     classKey: { type: String, default: '' },
@@ -689,6 +690,7 @@ const CbtResultSchema = new mongoose.Schema({
 
 CbtResultSchema.index({ studentId: 1, classKey: 1 });
 CbtResultSchema.index({ createdAt: -1 });
+CbtResultSchema.index({ submissionId: 1 }, { unique: true, sparse: true });
 
 const CbtResult = mongoose.model('CbtResult', CbtResultSchema);
 
@@ -2656,8 +2658,21 @@ app.get('/api/cbt-results', async (req, res) => {
 app.post('/api/cbt-results', async (req, res) => {
     try {
         const studentId = String(req.body?.studentId || '').trim();
-        const cbtResult = new CbtResult(req.body);
-        const saved = await cbtResult.save();
+        const submissionId = String(req.body?.submissionId || req.body?.id || '').trim();
+        const resultData = { ...req.body };
+        if (submissionId) resultData.submissionId = submissionId;
+        else delete resultData.submissionId;
+        let wasExistingSubmission = false;
+        const saved = submissionId
+            ? await CbtResult.findOneAndUpdate(
+                { submissionId },
+                { $setOnInsert: resultData },
+                { upsert: true, new: true, setDefaultsOnInsert: true, includeResultMetadata: true }
+            ).then(result => {
+                wasExistingSubmission = Boolean(result.lastErrorObject?.updatedExisting);
+                return result.value;
+            })
+            : await new CbtResult(resultData).save();
 
         if (studentId) {
             await Student.findOneAndUpdate(
@@ -2667,8 +2682,11 @@ app.post('/api/cbt-results', async (req, res) => {
             );
         }
 
-        // Send submission alert email to admin with candidate photo and exact phone model
+        // Send one submission alert email to admin with candidate photo and exact phone model.
         try {
+            if (wasExistingSubmission) {
+                return res.json(saved);
+            }
             const detectedDevice = parseDeviceInfo(req.get('user-agent'), req.body.deviceName, req.body.deviceInfo, req.headers);
             let candidatePhotoPath = req.body.picture || '';
             if (!candidatePhotoPath && req.body.studentId) {
