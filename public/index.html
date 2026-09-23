@@ -3354,6 +3354,17 @@
             }
         }
 
+        /* Keep CBT access visible above the mobile navigation layer. */
+        #cbtAccessModal.cbt-access-modal.is-visible {
+            display: flex !important;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 3000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
         @media (max-width: 1024px) {
             .about-cards,
             .programs-grid,
