@@ -629,6 +629,34 @@
             }
         }
 
+        @media (min-width: 641px) and (max-width: 900px) {
+            header > div:first-child > div:first-child {
+                flex: 0 0 auto;
+            }
+
+            header > div:first-child > div:first-child > div > span:first-child {
+                font-size: 1rem;
+                white-space: nowrap;
+            }
+
+            .header-controls {
+                gap: .4rem !important;
+            }
+
+            .header-controls > * + * {
+                margin-left: 0 !important;
+            }
+
+            .header-controls > div:last-child {
+                display: none;
+            }
+
+            .header-controls > a,
+            .header-controls > button#portalToggleBtn {
+                padding-inline: .6rem !important;
+            }
+        }
+
         * {
             box-sizing: border-box;
         }

@@ -2546,7 +2546,7 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
         const generated = settled.flatMap(result => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []);
         const rankedQuestions = rankOnlineQuestions(generated, aiParams.topic, count);
         const questions = shuffleCorrectAnswerPositions(rankedQuestions);
-        if (questions.length < count) {
+        if (!questions.length) {
             return res.status(502).json({
                 error: `AI providers returned ${questions.length} of ${count} valid questions.${providerErrors.length ? ` ${providerErrors.join(' ')}` : ''}`
             });
