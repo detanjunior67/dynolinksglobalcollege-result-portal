@@ -3744,22 +3744,48 @@
 
         .site-header .menu-toggle {
             display: flex;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             width: 38px;
             height: 38px;
-            padding: 8px;
+            padding: 0;
             border: 1px solid rgba(255, 255, 255, .62);
             border-radius: 11px;
             background: rgba(255, 255, 255, .2);
         }
 
         .site-header .menu-toggle span {
+            width: 20px;
             height: 2px;
+            flex: 0 0 2px;
             border-radius: 2px;
             background: #fff;
         }
 
         .site-header .menu-toggle.is-open {
             transform: none;
+        }
+
+        .site-header .menu-toggle.is-open .menu-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+        }
+
+        .site-header .menu-toggle.is-open .menu-line:nth-child(1) {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .site-header .menu-toggle.is-open .menu-line:nth-child(2) {
+            opacity: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        .site-header .menu-toggle.is-open .menu-line:nth-child(3) {
+            transform: translate(-50%, -50%) rotate(-45deg);
         }
 
         .site-header #navMenu {
@@ -3899,6 +3925,18 @@
             box-shadow: 0 8px 20px rgba(30, 64, 90, .12), inset 0 1px 0 rgba(255, 255, 255, .82), inset 0 -1px 0 rgba(255, 255, 255, .24);
             backdrop-filter: blur(18px) saturate(1.65);
             -webkit-backdrop-filter: blur(18px) saturate(1.65);
+            scale: 1 1;
+        }
+
+        .site-header #navMenu .nav-glass-pill.is-liquid-moving {
+            animation: navPillLiquidRefraction .38s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        @keyframes navPillLiquidRefraction {
+            0% { scale: 1 1; }
+            34% { scale: var(--nav-pill-stretch-x, 1.08) var(--nav-pill-stretch-y, .97); }
+            62% { scale: .985 1.015; }
+            100% { scale: 1 1; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -3906,9 +3944,11 @@
             .site-header::before,
             .site-header::after,
             .site-header #navMenu.active,
-            .site-header #navMenu.active .mobile-utility-link {
+            .site-header #navMenu.active .mobile-utility-link,
+            .site-header #navMenu .nav-glass-pill {
                 animation: none !important;
                 transition: none !important;
+                scale: 1 1 !important;
             }
         }
 
@@ -5089,6 +5129,16 @@
 
             const menuBounds = navMenu.getBoundingClientRect();
             const linkBounds = link.getBoundingClientRect();
+            const pillBounds = navPill.getBoundingClientRect();
+            const currentCenter = pillBounds.left + pillBounds.width / 2;
+            const targetCenter = linkBounds.left + linkBounds.width / 2;
+            const travelRatio = Math.min(1, Math.abs(targetCenter - currentCenter) / Math.max(menuBounds.width, 1));
+            const stretch = 1 + travelRatio * .18;
+            navPill.style.setProperty('--nav-pill-stretch-x', stretch.toFixed(3));
+            navPill.style.setProperty('--nav-pill-stretch-y', (1 - travelRatio * .045).toFixed(3));
+            navPill.classList.remove('is-liquid-moving');
+            void navPill.offsetWidth;
+            navPill.classList.add('is-liquid-moving');
             navPill.style.width = `${linkBounds.width}px`;
             navPill.style.height = `${linkBounds.height}px`;
             navPill.style.setProperty('--nav-pill-x', `${linkBounds.left - menuBounds.left}px`);
