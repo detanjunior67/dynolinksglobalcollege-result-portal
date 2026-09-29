@@ -423,6 +423,80 @@
             transition: transform 0.25s ease, filter 0.25s ease;
         }
 
+        #navMenu {
+            position: relative;
+            isolation: isolate;
+        }
+
+        @media (max-width: 768px) {
+            #navMenu { position: absolute; }
+        }
+
+        #navMenu > a {
+            z-index: 1;
+            border-radius: 14px;
+            transition: color .2s ease, transform .2s ease;
+        }
+
+        #navMenu > a::after { display: none !important; }
+
+        #navMenu > a.btn-portal,
+        #navMenu > a.admin-link,
+        #navMenu > a.cbt-btn {
+            border: 1px solid transparent !important;
+            border-radius: 14px;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #334155 !important;
+        }
+
+        body:not(.light-mode) #navMenu > a,
+        body:not(.light-mode) #navMenu > a.btn-portal,
+        body:not(.light-mode) #navMenu > a.admin-link,
+        body:not(.light-mode) #navMenu > a.cbt-btn {
+            color: var(--text-light) !important;
+        }
+
+        #navMenu > a svg,
+        #navMenu > a:hover svg {
+            transform: none;
+        }
+
+        #navMenu .nav-glass-pill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            width: 0;
+            height: 0;
+            border: 1px solid rgba(255, 255, 255, .84);
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .9), rgba(224, 242, 254, .58));
+            box-shadow: 0 8px 22px rgba(14, 116, 144, .12), inset 0 1px 0 rgba(255, 255, 255, .94);
+            -webkit-backdrop-filter: blur(16px) saturate(1.35);
+            backdrop-filter: blur(16px) saturate(1.35);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate3d(var(--nav-pill-x, 0px), var(--nav-pill-y, 0px), 0);
+            transition: transform .38s cubic-bezier(.2, .8, .2, 1), opacity .16s ease;
+        }
+
+        #navMenu.has-nav-pill .nav-glass-pill { opacity: 1; }
+
+        body:not(.light-mode) #navMenu .nav-glass-pill {
+            border-color: rgba(255, 255, 255, .22);
+            background: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(56, 189, 248, .12));
+            box-shadow: 0 8px 22px rgba(2, 8, 23, .2), inset 0 1px 0 rgba(255, 255, 255, .2);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #navMenu > a,
+            #navMenu > a svg,
+            #navMenu .nav-glass-pill {
+                transition: none !important;
+            }
+        }
+
         .cbt-btn svg { color: #fde68a; }
         .btn-portal svg { color: #bae6fd; }
         .admin-link svg { color: #fecdd3; }
@@ -3600,6 +3674,7 @@
             <a href="javascript:void(0)" id="cbtNavButton" class="cbt-btn"><i data-lucide="monitor-play" aria-hidden="true"></i><span>CBT Exam</span></a>
             <a href="/portal.html" class="btn-portal"><i data-lucide="chart-column" aria-hidden="true"></i><span>Check Result</span></a>
             <a href="javascript:void(0)" class="admin-link" onclick="openAdminModal(); closeMobileMenu();"><i data-lucide="shield-check" aria-hidden="true"></i><span>Admin Only</span></a>
+            <span class="nav-glass-pill" aria-hidden="true"></span>
         </nav>
     </header>
 
@@ -4455,7 +4530,10 @@
                 if (!response.ok || !data.success) throw new Error(data.message || 'Incorrect password.');
                 if (password === 'admincheck') sessionStorage.setItem('dgc_teacher_admin_password', password);
                 window.location.href = `${data.redirectTo}${password === 'admincheck' ? '?admin=1' : ''}`;
-            }).catch(() => {
+            }).catch((err) => {
+                error.textContent = err instanceof TypeError
+                    ? 'Could not connect to the server. Please check your connection and try again.'
+                    : (err.message || 'Unable to verify access password.');
                 error.classList.remove('is-visible');
                 void error.offsetWidth;
                 error.classList.add('is-visible');
@@ -4509,6 +4587,70 @@
         const menuToggle = document.getElementById('menuToggle');
         const navMenu = document.getElementById('navMenu');
         const cbtNavButton = document.getElementById('cbtNavButton');
+        const navPill = navMenu.querySelector('.nav-glass-pill');
+        const navLinks = [...navMenu.querySelectorAll(':scope > a')];
+        let activeNavLink = navLinks.find(link => link.hash && link.hash === window.location.hash) || null;
+        let previewNavLink = null;
+
+        function setActiveNavLink(link) {
+            activeNavLink = link;
+            navLinks.forEach(navLink => navLink.classList.toggle('is-nav-current', navLink === link));
+        }
+
+        function moveNavPill(link) {
+            const mobileMenuClosed = window.matchMedia('(max-width: 768px)').matches && !navMenu.classList.contains('active');
+            if (!link || mobileMenuClosed) {
+                navMenu.classList.remove('has-nav-pill');
+                return;
+            }
+
+            const menuBounds = navMenu.getBoundingClientRect();
+            const linkBounds = link.getBoundingClientRect();
+            navPill.style.width = `${linkBounds.width}px`;
+            navPill.style.height = `${linkBounds.height}px`;
+            navPill.style.setProperty('--nav-pill-x', `${linkBounds.left - menuBounds.left}px`);
+            navPill.style.setProperty('--nav-pill-y', `${linkBounds.top - menuBounds.top}px`);
+            navMenu.classList.add('has-nav-pill');
+        }
+
+        function restoreNavPill() {
+            const focusedLink = navLinks.includes(document.activeElement) ? document.activeElement : null;
+            moveNavPill(activeNavLink || focusedLink);
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('pointerenter', event => {
+                if (event.pointerType === 'mouse') {
+                    previewNavLink = link;
+                    moveNavPill(link);
+                }
+            });
+            link.addEventListener('focus', () => moveNavPill(link));
+            link.addEventListener('click', () => {
+                setActiveNavLink(link);
+                moveNavPill(link);
+            });
+            link.addEventListener('animationend', event => {
+                if (event.target !== link) return;
+                const focusedLink = navLinks.includes(document.activeElement) ? document.activeElement : null;
+                const currentTarget = focusedLink || previewNavLink || activeNavLink;
+                if (currentTarget === link) moveNavPill(link);
+            });
+        });
+
+        navMenu.addEventListener('pointerleave', () => {
+            previewNavLink = null;
+            restoreNavPill();
+        });
+        navMenu.addEventListener('focusout', () => requestAnimationFrame(restoreNavPill));
+        window.addEventListener('resize', restoreNavPill, { passive: true });
+        window.addEventListener('hashchange', () => {
+            const matchingLink = navLinks.find(link => link.hash && link.hash === window.location.hash);
+            if (matchingLink) setActiveNavLink(matchingLink);
+            restoreNavPill();
+        });
+        if (activeNavLink) activeNavLink.classList.add('is-nav-current');
+        requestAnimationFrame(restoreNavPill);
 
         function openCbtAccessFromMobile(event) {
             event.preventDefault();
@@ -4525,6 +4667,7 @@
             menuToggle.classList.toggle('is-open', isOpen);
             menuToggle.setAttribute('aria-expanded', String(isOpen));
             menuToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+            requestAnimationFrame(restoreNavPill);
         });
 
         function closeMobileMenu() {

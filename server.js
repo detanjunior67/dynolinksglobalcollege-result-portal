@@ -2427,8 +2427,18 @@ function normalizeGeneratedQuestions(value, count) {
     }).filter(Boolean).slice(0, count);
 }
 
+function shuffleCorrectAnswerPositions(questions) {
+    const correctPositions = shuffleArray(questions.map((_, index) => index % 4));
+    return questions.map((question, index) => {
+        const options = [...question.options];
+        const [correctOption] = options.splice(question.correctIndex, 1);
+        options.splice(correctPositions[index], 0, correctOption);
+        return { ...question, options, correctIndex: correctPositions[index] };
+    });
+}
+
 function buildAiQuestionPrompt({ classLabel, subjectName, topic, count }) {
-    return `Create ${count} original four-option multiple-choice questions for ${classLabel}, subject ${subjectName}, on the syllabus topic "${topic}".\nReturn JSON only in this exact shape: {"questions":[{"text":"...","options":["...","...","...","..."],"correctIndex":0}]}.\nEach question must have exactly four distinct options, one unambiguous correct answer, and correctIndex must be a zero-based integer. Match the stated class level. Do not include markdown or explanations.`;
+    return `Create ${count} original four-option multiple-choice questions for ${classLabel}, subject ${subjectName}, on the syllabus topic "${topic}".\nReturn JSON only in this exact shape: {"questions":[{"text":"...","options":["...","...","...","..."],"correctIndex":2}]}.\nEach question must have exactly four distinct options, one unambiguous correct answer, and correctIndex must be a zero-based integer. Vary the correctIndex across the questions; do not make the same option correct repeatedly. Match the stated class level. Do not include markdown or explanations.`;
 }
 
 async function fetchChatGptQuestions(params) {
@@ -2534,7 +2544,8 @@ app.post('/api/cbt/generate-questions', async (req, res) => {
             return res.status(503).json({ error: 'No AI provider is configured. Add OPENAI_API_KEY, OPENROUTER_API_KEY, or GEMINI_API_KEY to the server environment.' });
         }
         const generated = settled.flatMap(result => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []);
-        const questions = rankOnlineQuestions(generated, aiParams.topic, count);
+        const rankedQuestions = rankOnlineQuestions(generated, aiParams.topic, count);
+        const questions = shuffleCorrectAnswerPositions(rankedQuestions);
         if (questions.length < count) {
             return res.status(502).json({
                 error: `AI providers returned ${questions.length} of ${count} valid questions.${providerErrors.length ? ` ${providerErrors.join(' ')}` : ''}`
@@ -2666,7 +2677,7 @@ app.post('/api/cbt-results', async (req, res) => {
         const saved = submissionId
             ? await CbtResult.findOneAndUpdate(
                 { submissionId },
-                { $setOnInsert: resultData },
+                { $set: resultData },
                 { upsert: true, new: true, setDefaultsOnInsert: true, includeResultMetadata: true }
             ).then(result => {
                 wasExistingSubmission = Boolean(result.lastErrorObject?.updatedExisting);

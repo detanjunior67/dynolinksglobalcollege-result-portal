@@ -717,6 +717,148 @@
             outline: 3px solid rgba(14, 165, 233, .32);
             outline-offset: 2px;
         }
+
+        /* Cursor-responsive glass navigation */
+        header {
+            isolation: isolate;
+            overflow: hidden;
+            background: rgba(255, 255, 255, .58) !important;
+            border-color: rgba(255, 255, 255, .72) !important;
+            box-shadow: 0 12px 34px rgba(23, 59, 60, .12), inset 0 1px rgba(255, 255, 255, .72) !important;
+            -webkit-backdrop-filter: blur(22px) saturate(1.45);
+            backdrop-filter: blur(22px) saturate(1.45);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(260px circle at var(--nav-pointer-x, 50%) var(--nav-pointer-y, 50%), rgba(255, 255, 255, .62), transparent 76%);
+            transition: opacity .35s ease;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -45%;
+            width: 35%;
+            height: 1px;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent);
+        }
+
+        header.is-pointer-active::before { opacity: .82; }
+        header:hover::after { animation: navGlassSheen 1s ease-out both; }
+
+        @keyframes navGlassSheen {
+            from { transform: translateX(0); opacity: 0; }
+            25% { opacity: 1; }
+            to { transform: translateX(420%); opacity: 0; }
+        }
+
+        header > div {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-controls > a,
+        .header-controls > button#portalToggleBtn {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            border-color: rgba(255, 255, 255, .72) !important;
+            background: rgba(255, 255, 255, .38) !important;
+            box-shadow: 0 5px 18px rgba(23, 59, 60, .08), inset 0 1px rgba(255, 255, 255, .68) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(1.35);
+            backdrop-filter: blur(14px) saturate(1.35);
+            transition: transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s ease, background .28s ease, border-color .28s ease;
+        }
+
+        .header-controls > a::before,
+        .header-controls > button#portalToggleBtn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            opacity: 0;
+            pointer-events: none;
+            background: radial-gradient(100px circle at var(--control-pointer-x, 50%) var(--control-pointer-y, 50%), rgba(255, 255, 255, .88), transparent 74%);
+            transition: opacity .2s ease;
+        }
+
+        .header-controls > a:hover,
+        .header-controls > a:focus-visible,
+        .header-controls > button#portalToggleBtn:hover,
+        .header-controls > button#portalToggleBtn:focus-visible {
+            transform: translateY(-2px) scale(1.025);
+            border-color: rgba(255, 255, 255, .96) !important;
+            background: rgba(255, 255, 255, .58) !important;
+            box-shadow: 0 10px 24px rgba(15, 76, 76, .14), inset 0 1px rgba(255, 255, 255, .92) !important;
+        }
+
+        .header-controls > a:hover::before,
+        .header-controls > a:focus-visible::before,
+        .header-controls > button#portalToggleBtn:hover::before,
+        .header-controls > button#portalToggleBtn:focus-visible::before { opacity: 1; }
+
+        .header-controls > a:active,
+        .header-controls > button#portalToggleBtn:active { transform: translateY(0) scale(.97); }
+
+        .header-controls > button#portalToggleBtn {
+            border-color: rgba(245, 210, 138, .8) !important;
+            background: rgba(255, 250, 240, .5) !important;
+        }
+
+        .header-controls > button#portalToggleBtn:hover,
+        .header-controls > button#portalToggleBtn:focus-visible {
+            border-color: rgba(240, 185, 79, .95) !important;
+            background: rgba(255, 246, 222, .78) !important;
+        }
+
+        .dark header {
+            background: rgba(15, 23, 42, .62) !important;
+            border-color: rgba(148, 163, 184, .28) !important;
+            box-shadow: 0 12px 34px rgba(2, 6, 23, .3), inset 0 1px rgba(255, 255, 255, .1) !important;
+        }
+
+        .dark .header-controls > a,
+        .dark .header-controls > button#portalToggleBtn {
+            border-color: rgba(148, 163, 184, .34) !important;
+            background: rgba(30, 41, 59, .52) !important;
+            color: #e2e8f0 !important;
+            box-shadow: 0 5px 18px rgba(2, 6, 23, .22), inset 0 1px rgba(255, 255, 255, .12) !important;
+        }
+
+        .dark .header-controls > a:hover,
+        .dark .header-controls > a:focus-visible,
+        .dark .header-controls > button#portalToggleBtn:hover,
+        .dark .header-controls > button#portalToggleBtn:focus-visible {
+            background: rgba(51, 65, 85, .72) !important;
+        }
+
+        @media (hover: none) {
+            header::before,
+            .header-controls > a::before,
+            .header-controls > button#portalToggleBtn::before { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            header,
+            header::before,
+            header::after,
+            .header-controls > a,
+            .header-controls > button#portalToggleBtn,
+            .header-controls > a::before,
+            .header-controls > button#portalToggleBtn::before {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -1127,6 +1269,15 @@
                     <p id="submissionResultMessage" class="text-xs text-blue-700 dark:text-blue-300 mt-1">Your result will appear here when the school administrator makes it available.</p>
                 </div>
 
+                <div id="submissionResultAccess" class="hidden rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Your exam was saved before the page closed. Enter your CBT password to view your released result.</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input id="submissionStudentPassword" type="password" autocomplete="current-password" class="flex-1 px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 text-sm" placeholder="CBT password">
+                        <button type="button" onclick="resumeStudentCbtResult()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold">View Result</button>
+                    </div>
+                    <p id="submissionResultAccessError" class="hidden text-xs text-red-600" role="alert"></p>
+                </div>
+
                 <div id="studentCbtResultPanel" class="hidden bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 shadow-sm space-y-4">
                     <div class="flex items-center justify-between gap-3">
                         <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-chart-column text-emerald-600"></i> Your CBT Result</h3>
@@ -1460,11 +1611,23 @@
 
             <!-- ADMIN TAB 3: STUDENT EXAM RESULTS LOGS -->
             <div id="adminSubResults" class="hidden space-y-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <input type="text" id="searchResultInput" onkeyup="filterResultsTable()"
-                        placeholder="Search by student name or class..."
-                        class="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full sm:w-64">
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+                    <label class="relative flex-1 min-w-0">
+                        <span class="sr-only">Search CBT results</span>
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="search" id="searchResultInput" oninput="filterResultsTable()"
+                            placeholder="Search student, ID, class, subject, grade..."
+                            class="pl-9 pr-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-xs w-full">
+                    </label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="toggleCbtResultToolsBtn" onclick="toggleCbtResultTools()" aria-controls="cbtResultTools" aria-expanded="false"
+                            class="px-3 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-bold rounded-lg">
+                            <i class="fa-solid fa-calendar-days mr-1"></i> Calendar &amp; Filters
+                        </button>
+                        <button onclick="loadCbtResultsTable()" title="Refresh results" aria-label="Refresh results"
+                            class="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
                         <button id="editResultsBtn" onclick="toggleResultsEditMode()"
                             class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2">
                             <i class="fa-solid fa-pen-to-square"></i> Edit Results
@@ -1474,6 +1637,87 @@
                             <i class="fa-solid fa-file-csv mr-1"></i> Export Results CSV
                         </button>
                     </div>
+                </div>
+
+                <div id="cbtResultTools" class="hidden space-y-4">
+                <div class="flex flex-wrap items-end gap-2.5 border-y border-gray-200 dark:border-gray-700 py-3">
+                    <label class="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        Class
+                        <select id="resultClassFilter" onchange="filterResultsTable()" class="h-9 min-w-36 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-2 text-xs font-semibold normal-case tracking-normal text-gray-800 dark:text-gray-100">
+                            <option value="ALL">All classes</option>
+                        </select>
+                    </label>
+                    <label class="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        Result access
+                        <select id="resultVisibilityFilter" onchange="filterResultsTable()" class="h-9 min-w-32 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-2 text-xs font-semibold normal-case tracking-normal text-gray-800 dark:text-gray-100">
+                            <option value="ALL">All results</option>
+                            <option value="VISIBLE">Visible</option>
+                            <option value="HIDDEN">Hidden</option>
+                        </select>
+                    </label>
+                    <label class="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        From
+                        <input type="date" id="resultDateFrom" onchange="handleResultDateInputChange()" class="h-9 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-2 text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    </label>
+                    <label class="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        To
+                        <input type="date" id="resultDateTo" onchange="handleResultDateInputChange()" class="h-9 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-2 text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    </label>
+                    <label class="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        Sort by
+                        <select id="resultSortOrder" onchange="filterResultsTable()" class="h-9 min-w-36 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-2 text-xs font-semibold normal-case tracking-normal text-gray-800 dark:text-gray-100">
+                            <option value="NEWEST">Newest first</option>
+                            <option value="OLDEST">Oldest first</option>
+                            <option value="SCORE_HIGH">Highest score</option>
+                            <option value="SCORE_LOW">Lowest score</option>
+                            <option value="NAME">Student name</option>
+                        </select>
+                    </label>
+                    <div class="flex flex-wrap items-center gap-1.5 pb-0.5">
+                        <button onclick="setCbtResultsDatePreset('today')" class="px-2.5 py-2 rounded-lg text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:hover:bg-blue-900/50">Today</button>
+                        <button onclick="setCbtResultsDatePreset('7days')" class="px-2.5 py-2 rounded-lg text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:hover:bg-blue-900/50">7 days</button>
+                        <button onclick="setCbtResultsDatePreset('30days')" class="px-2.5 py-2 rounded-lg text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:hover:bg-blue-900/50">30 days</button>
+                        <button onclick="clearCbtResultFilters()" class="px-2.5 py-2 rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">Clear filters</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_18rem] gap-4 items-start">
+                    <section class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4" aria-labelledby="resultsCalendarHeading">
+                        <div class="flex items-center justify-between gap-3 mb-3">
+                            <div>
+                                <h3 id="resultsCalendarHeading" class="text-sm font-extrabold text-gray-900 dark:text-white">Submission calendar</h3>
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">Choose a day to filter results</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="changeResultsCalendarMonth(-1)" title="Previous month" aria-label="Previous month" class="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"><i class="fa-solid fa-chevron-left"></i></button>
+                                <strong id="resultsCalendarMonth" class="min-w-28 text-center text-xs text-gray-800 dark:text-gray-100"></strong>
+                                <button onclick="changeResultsCalendarMonth(1)" title="Next month" aria-label="Next month" class="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-1" aria-hidden="true">
+                            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                        </div>
+                        <div id="resultsCalendarDays" class="grid grid-cols-7 gap-1"></div>
+                        <div class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <p id="resultsCalendarSelection" class="text-[11px] text-gray-500 dark:text-gray-400">No day selected</p>
+                            <button id="clearResultsCalendarDay" onclick="clearSelectedResultDay()" class="hidden text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline">Clear day</button>
+                        </div>
+                    </section>
+                    <section class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-2" aria-label="Result summary">
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-3">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Matching results</div>
+                            <div id="resultsMatchSummary" class="mt-1 text-xl font-black text-gray-900 dark:text-white">0 / 0</div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-3">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Average score</div>
+                            <div id="resultsAverageSummary" class="mt-1 text-xl font-black text-teal-700 dark:text-teal-300">--</div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-3">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Latest submission</div>
+                            <div id="resultsLatestSummary" class="mt-1 text-sm font-bold text-gray-900 dark:text-white">--</div>
+                        </div>
+                    </section>
+                </div>
                 </div>
 
                 <div id="resultsSelectionBar" class="hidden items-center justify-between gap-3 flex-wrap bg-slate-950 text-white p-3 rounded-2xl shadow-lg">
@@ -1880,7 +2124,12 @@
         let questionBank = JSON.parse(localStorage.getItem('dgc_question_bank_v2')) || defaultQuestionBank;
         let cbtResults = JSON.parse(localStorage.getItem('dgc_cbt_results_v2')) || [];
         const pendingCbtSubmissionKey = 'dgc_pending_cbt_submissions_v1';
+        const interruptedCbtSubmissionKey = 'dgc_interrupted_cbt_submission_v1';
         let resultsEditMode = false;
+        const selectedCbtResultIds = new Set();
+        let resultsCalendarMonth = new Date();
+        let selectedResultsCalendarDate = '';
+        let resultsCalendarInitialized = false;
         let currentStudentCbtPassword = '';
         let studentDataManagerPassword = localStorage.getItem('dgc_student_data_password') || 'studata';
 
@@ -1971,6 +2220,7 @@
                 idInput.addEventListener('change', triggerLookup);
                 idInput.addEventListener('blur', triggerLookup);
             }
+            restoreInterruptedCbtSubmission();
         };
 
         function savePersistentData() {
@@ -2084,7 +2334,57 @@
 
         function showDashboard() {
             if (examTimerInterval) clearInterval(examTimerInterval);
+            localStorage.removeItem(interruptedCbtSubmissionKey);
+            document.getElementById('submissionResultAccess')?.classList.add('hidden');
             showView('viewDashboard');
+        }
+
+        function restoreInterruptedCbtSubmission() {
+            const interrupted = JSON.parse(localStorage.getItem(interruptedCbtSubmissionKey) || 'null');
+            if (!interrupted?.id) return;
+
+            const result = cbtResults.find(item => item.id === interrupted.id);
+            if (!result) {
+                localStorage.removeItem(interruptedCbtSubmissionKey);
+                return;
+            }
+
+            currentCandidate = {
+                name: result.studentName,
+                studentId: result.studentId,
+                classKey: result.classKey
+            };
+            document.getElementById('submissionResultMessage').textContent = 'Your submission was saved. Verify your CBT password below to check whether your result has been released.';
+            document.getElementById('submissionStudentPassword').value = '';
+            document.getElementById('submissionResultAccess').classList.remove('hidden');
+            showView('viewSubmissionSuccess');
+        }
+
+        async function resumeStudentCbtResult() {
+            const password = document.getElementById('submissionStudentPassword').value.trim();
+            const errorMessage = document.getElementById('submissionResultAccessError');
+            errorMessage.classList.add('hidden');
+            if (!password) {
+                errorMessage.textContent = 'Enter your CBT password to continue.';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            const passwordValid = await verifyStudentPasswordOnServer(currentCandidate.studentId, password);
+            if (!passwordValid) {
+                errorMessage.textContent = 'The CBT password is incorrect. Please try again.';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            currentStudentCbtPassword = password;
+            try {
+                await retryPendingCbtSubmissions();
+                await loadStudentCbtResult();
+            } catch (err) {
+                errorMessage.textContent = 'Could not retrieve your result. Check your connection and try again.';
+                errorMessage.classList.remove('hidden');
+            }
         }
 
         function populateStudentClassDropdown() {
@@ -2524,10 +2824,21 @@
         }
 
         function shuffleQuestions(questions) {
-            const shuffled = questions.map(question => ({
-                ...question,
-                options: Array.isArray(question.options) ? [...question.options] : []
-            }));
+            const shuffled = questions.map(question => {
+                const optionEntries = (Array.isArray(question.options) ? question.options : [])
+                    .map((text, originalIndex) => ({ text, originalIndex }));
+
+                for (let optionIndex = optionEntries.length - 1; optionIndex > 0; optionIndex--) {
+                    const randomIndex = Math.floor(Math.random() * (optionIndex + 1));
+                    [optionEntries[optionIndex], optionEntries[randomIndex]] = [optionEntries[randomIndex], optionEntries[optionIndex]];
+                }
+
+                return {
+                    ...question,
+                    options: optionEntries.map(option => option.text),
+                    correctIndex: optionEntries.findIndex(option => option.originalIndex === question.correctIndex)
+                };
+            });
 
             for (let idx = shuffled.length - 1; idx > 0; idx--) {
                 const randomIdx = Math.floor(Math.random() * (idx + 1));
@@ -2891,7 +3202,32 @@
                 <div class="flex items-center justify-between py-2"><span class="text-gray-600 dark:text-gray-300">${subject}</span><strong class="text-gray-900 dark:text-white">${score.score} / ${score.max}</strong></div>
             `).join('');
             if (message) message.textContent = 'Your result has been released by the school administrator.';
+            document.getElementById('submissionResultAccess')?.classList.add('hidden');
             panel.classList.remove('hidden');
+        }
+
+        let restoringSubmittedExamResult = false;
+
+        async function restoreSubmittedExamResult() {
+            if (!examSubmissionStarted || !currentCandidate.studentId || !currentClassConfig) return;
+            showView('viewSubmissionSuccess');
+
+            if (!currentStudentCbtPassword) {
+                document.getElementById('submissionResultAccess')?.classList.remove('hidden');
+                return;
+            }
+            if (restoringSubmittedExamResult) return;
+
+            restoringSubmittedExamResult = true;
+            try {
+                await retryPendingCbtSubmissions();
+                await loadStudentCbtResult();
+            } catch (err) {
+                console.warn('Could not refresh submitted CBT result after returning to the page:', err);
+                document.getElementById('submissionResultMessage').textContent = 'Your exam was submitted. Your result could not be refreshed yet; please check your connection and return to this page again.';
+            } finally {
+                restoringSubmittedExamResult = false;
+            }
         }
 
         function submitExamOnPageExit({ preferFetch = false } = {}) {
@@ -2902,6 +3238,7 @@
 
             const record = buildCbtResultRecord();
             cbtResults.unshift(record);
+            localStorage.setItem(interruptedCbtSubmissionKey, JSON.stringify({ id: record.id }));
             markCbtAttemptCompleted(currentCandidate.studentId, currentCandidate.classKey);
             const rosterEntry = studentRoster.find(item =>
                 studentIdsMatch(item.studentId, currentCandidate.studentId) && item.classKey === currentCandidate.classKey
@@ -2911,7 +3248,7 @@
             queuePendingCbtSubmission(record);
             syncCompletedStatusOnExit(currentCandidate.studentId);
 
-            const payload = JSON.stringify(record);
+            const payload = JSON.stringify({ ...record, picture: '', questionDetails: [] });
             const requestBody = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2953,11 +3290,12 @@
         window.addEventListener('unload', submitExamOnPageExit);
         window.addEventListener('freeze', submitExamOnPageExit);
         window.addEventListener('blur', () => submitExamOnPageExit({ preferFetch: true }));
+        window.addEventListener('focus', restoreSubmittedExamResult);
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
                 submitExamOnPageExit({ preferFetch: true });
             } else if (examSubmissionStarted && !document.getElementById('viewExamPortal')?.classList.contains('hidden')) {
-                showView('viewSubmissionSuccess');
+                void restoreSubmittedExamResult();
             }
         });
 
@@ -4632,7 +4970,222 @@
             } catch (err) {
                 console.warn('MongoDB CBT results fetch failed, using local results:', err);
             }
+            if (!resultsCalendarInitialized) {
+                const latestDate = cbtResults.map(getCbtResultDate).filter(Boolean).sort((left, right) => right - left)[0];
+                if (latestDate) resultsCalendarMonth = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+                resultsCalendarInitialized = true;
+            }
+            populateCbtResultClassFilter();
+            renderResultsCalendar();
             renderCbtResultsTable();
+        }
+
+        function getCbtResultDate(result) {
+            for (const value of [result?.createdAt, result?.timestamp]) {
+                if (!value) continue;
+                const date = new Date(value);
+                if (!Number.isNaN(date.getTime())) return date;
+            }
+            return null;
+        }
+
+        function getLocalDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function getCbtResultDateKey(result) {
+            const date = getCbtResultDate(result);
+            return date ? getLocalDateKey(date) : '';
+        }
+
+        function populateCbtResultClassFilter() {
+            const select = document.getElementById('resultClassFilter');
+            if (!select) return;
+            const selectedClass = select.value || 'ALL';
+            const classes = new Map();
+            Object.entries(classConfigs).forEach(([key, config]) => classes.set(key, config.label || key));
+            cbtResults.forEach(result => {
+                const key = String(result.classKey || result.classLevel || '').trim();
+                if (key && !classes.has(key)) classes.set(key, key);
+            });
+
+            select.replaceChildren(new Option('All classes', 'ALL'));
+            classes.forEach((label, key) => select.add(new Option(label, key)));
+            select.value = classes.has(selectedClass) ? selectedClass : 'ALL';
+        }
+
+        function getCbtResultVisibility(result) {
+            const rosterMatch = studentRoster.find(item => studentIdsMatch(item.studentId, result.studentId));
+            return rosterMatch ? rosterMatch.showResult !== false : true;
+        }
+
+        function getFilteredCbtResults() {
+            const query = (document.getElementById('searchResultInput')?.value || '').trim().toLowerCase();
+            const classFilter = document.getElementById('resultClassFilter')?.value || 'ALL';
+            const visibilityFilter = document.getElementById('resultVisibilityFilter')?.value || 'ALL';
+            const dateFrom = document.getElementById('resultDateFrom')?.value || '';
+            const dateTo = document.getElementById('resultDateTo')?.value || '';
+            const sortOrder = document.getElementById('resultSortOrder')?.value || 'NEWEST';
+
+            const filtered = cbtResults.filter(result => {
+                const classKey = String(result.classKey || result.classLevel || '').trim();
+                if (classFilter !== 'ALL' && classKey !== classFilter) return false;
+
+                const visible = getCbtResultVisibility(result);
+                if (visibilityFilter === 'VISIBLE' && !visible) return false;
+                if (visibilityFilter === 'HIDDEN' && visible) return false;
+
+                const dateKey = getCbtResultDateKey(result);
+                if (selectedResultsCalendarDate && dateKey !== selectedResultsCalendarDate) return false;
+                if ((dateFrom || dateTo) && !dateKey) return false;
+                if (dateFrom && dateKey < dateFrom) return false;
+                if (dateTo && dateKey > dateTo) return false;
+
+                const subjectNames = Object.keys(result.subjectBreakdown || {}).join(' ');
+                const searchableText = `${result.studentId || ''} ${result.studentName || ''} ${result.classLevel || ''} ${classKey} ${subjectNames} ${result.grade || ''}`.toLowerCase();
+                return !query || searchableText.includes(query);
+            });
+
+            filtered.sort((left, right) => {
+                if (sortOrder === 'OLDEST') return (getCbtResultDate(left)?.getTime() || 0) - (getCbtResultDate(right)?.getTime() || 0);
+                if (sortOrder === 'SCORE_HIGH') return (Number(right.percentage) || 0) - (Number(left.percentage) || 0);
+                if (sortOrder === 'SCORE_LOW') return (Number(left.percentage) || 0) - (Number(right.percentage) || 0);
+                if (sortOrder === 'NAME') return String(left.studentName || '').localeCompare(String(right.studentName || ''));
+                return (getCbtResultDate(right)?.getTime() || 0) - (getCbtResultDate(left)?.getTime() || 0);
+            });
+            return filtered;
+        }
+
+        function renderResultsCalendar() {
+            const title = document.getElementById('resultsCalendarMonth');
+            const daysContainer = document.getElementById('resultsCalendarDays');
+            if (!title || !daysContainer) return;
+
+            const year = resultsCalendarMonth.getFullYear();
+            const month = resultsCalendarMonth.getMonth();
+            title.textContent = resultsCalendarMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+            daysContainer.replaceChildren();
+
+            const countsByDay = new Map();
+            cbtResults.forEach(result => {
+                const dateKey = getCbtResultDateKey(result);
+                if (dateKey.startsWith(`${year}-${String(month + 1).padStart(2, '0')}-`)) {
+                    countsByDay.set(dateKey, (countsByDay.get(dateKey) || 0) + 1);
+                }
+            });
+
+            const firstWeekday = new Date(year, month, 1).getDay();
+            for (let blankIndex = 0; blankIndex < firstWeekday; blankIndex++) {
+                const blank = document.createElement('span');
+                blank.setAttribute('aria-hidden', 'true');
+                daysContainer.appendChild(blank);
+            }
+
+            const dayCount = new Date(year, month + 1, 0).getDate();
+            for (let day = 1; day <= dayCount; day++) {
+                const dateKey = getLocalDateKey(new Date(year, month, day));
+                const count = countsByDay.get(dateKey) || 0;
+                const button = document.createElement('button');
+                const isSelected = dateKey === selectedResultsCalendarDate;
+                button.type = 'button';
+                button.className = `min-h-10 aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-semibold transition ${isSelected
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                    : count
+                        ? 'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50'
+                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`;
+                button.setAttribute('aria-label', `${dateKey}, ${count} result${count === 1 ? '' : 's'}`);
+                button.title = `${count} result${count === 1 ? '' : 's'}`;
+                const dayNumber = document.createElement('span');
+                dayNumber.textContent = day;
+                button.appendChild(dayNumber);
+                if (count) {
+                    const countLabel = document.createElement('span');
+                    countLabel.className = `text-[8px] leading-none ${isSelected ? 'text-blue-100' : 'text-teal-700 dark:text-teal-300'}`;
+                    countLabel.textContent = String(count);
+                    button.appendChild(countLabel);
+                }
+                button.addEventListener('click', () => selectResultsCalendarDate(dateKey));
+                daysContainer.appendChild(button);
+            }
+
+            const selectionLabel = document.getElementById('resultsCalendarSelection');
+            const clearButton = document.getElementById('clearResultsCalendarDay');
+            if (selectionLabel) selectionLabel.textContent = selectedResultsCalendarDate
+                ? `Showing ${new Date(`${selectedResultsCalendarDate}T00:00:00`).toLocaleDateString()}`
+                : 'No day selected';
+            clearButton?.classList.toggle('hidden', !selectedResultsCalendarDate);
+        }
+
+        function changeResultsCalendarMonth(offset) {
+            resultsCalendarMonth = new Date(resultsCalendarMonth.getFullYear(), resultsCalendarMonth.getMonth() + offset, 1);
+            renderResultsCalendar();
+        }
+
+        function selectResultsCalendarDate(dateKey) {
+            selectedResultsCalendarDate = dateKey;
+            document.getElementById('resultDateFrom').value = dateKey;
+            document.getElementById('resultDateTo').value = dateKey;
+            renderResultsCalendar();
+            filterResultsTable();
+        }
+
+        function clearResultsCalendarSelection() {
+            selectedResultsCalendarDate = '';
+            renderResultsCalendar();
+        }
+
+        function clearSelectedResultDay() {
+            selectedResultsCalendarDate = '';
+            document.getElementById('resultDateFrom').value = '';
+            document.getElementById('resultDateTo').value = '';
+            renderResultsCalendar();
+            filterResultsTable();
+        }
+
+        function handleResultDateInputChange() {
+            clearResultsCalendarSelection();
+            filterResultsTable();
+        }
+
+        function setCbtResultsDatePreset(preset) {
+            const today = new Date();
+            const end = getLocalDateKey(today);
+            let start = '';
+            if (preset === 'today') start = end;
+            if (preset === '7days' || preset === '30days') {
+                const daysBack = preset === '7days' ? 6 : 29;
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysBack);
+                start = getLocalDateKey(firstDay);
+            }
+            selectedResultsCalendarDate = '';
+            document.getElementById('resultDateFrom').value = start;
+            document.getElementById('resultDateTo').value = end;
+            renderResultsCalendar();
+            filterResultsTable();
+        }
+
+        function toggleCbtResultTools() {
+            const tools = document.getElementById('cbtResultTools');
+            const button = document.getElementById('toggleCbtResultToolsBtn');
+            if (!tools || !button) return;
+
+            const isExpanded = tools.classList.toggle('hidden') === false;
+            button.setAttribute('aria-expanded', String(isExpanded));
+            button.innerHTML = isExpanded
+                ? '<i class="fa-solid fa-calendar-days mr-1"></i> Hide Calendar &amp; Filters'
+                : '<i class="fa-solid fa-calendar-days mr-1"></i> Calendar &amp; Filters';
+        }
+
+        function clearCbtResultFilters() {
+            document.getElementById('searchResultInput').value = '';
+            document.getElementById('resultClassFilter').value = 'ALL';
+            document.getElementById('resultVisibilityFilter').value = 'ALL';
+            document.getElementById('resultSortOrder').value = 'NEWEST';
+            document.getElementById('resultDateFrom').value = '';
+            document.getElementById('resultDateTo').value = '';
+            selectedResultsCalendarDate = '';
+            renderResultsCalendar();
+            filterResultsTable();
         }
 
         async function toggleStudentResultVisibility(studentId) {
@@ -4715,13 +5268,25 @@
         function renderCbtResultsTable() {
             const tbody = document.getElementById('cbtResultsTableBody');
             tbody.innerHTML = '';
+            const filteredResults = getFilteredCbtResults();
+            const totalPercentage = filteredResults.reduce((total, result) => total + (Number(result.percentage) || 0), 0);
+            const averageSummary = document.getElementById('resultsAverageSummary');
+            const matchSummary = document.getElementById('resultsMatchSummary');
+            const latestSummary = document.getElementById('resultsLatestSummary');
+            if (matchSummary) matchSummary.textContent = `${filteredResults.length} / ${cbtResults.length}`;
+            if (averageSummary) averageSummary.textContent = filteredResults.length ? `${(totalPercentage / filteredResults.length).toFixed(1)}%` : '--';
+            const latestResult = [...filteredResults].sort((left, right) => (getCbtResultDate(right)?.getTime() || 0) - (getCbtResultDate(left)?.getTime() || 0))[0];
+            const latestDate = latestResult && getCbtResultDate(latestResult);
+            if (latestSummary) latestSummary.textContent = latestDate ? latestDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
 
-            if (cbtResults.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-gray-400">No student exam results logged yet.</td></tr>`;
+            if (!filteredResults.length) {
+                const message = cbtResults.length ? 'No results match these filters.' : 'No student exam results logged yet.';
+                tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-gray-400">${message}</td></tr>`;
+                updateSelectedResultsCount();
                 return;
             }
 
-            cbtResults.forEach(res => {
+            filteredResults.forEach(res => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition';
 
@@ -4733,7 +5298,7 @@
                     .join(' | ');
 
                 tr.innerHTML = `
-                    <td class="result-selection-cell ${resultsEditMode ? '' : 'hidden'} p-4"><input type="checkbox" value="${res.id}" onchange="updateSelectedResultsCount()" class="result-select h-4 w-4 accent-blue-600" aria-label="Select result for ${res.studentName}"></td>
+                    <td class="result-selection-cell ${resultsEditMode ? '' : 'hidden'} p-4"><input type="checkbox" value="${res.id}" onchange="toggleCbtResultSelection(this)" class="result-select h-4 w-4 accent-blue-600" aria-label="Select result for ${res.studentName}"></td>
                     <td class="p-4 font-mono font-bold text-gray-900 dark:text-white">${res.studentId}</td>
                     <td class="p-4 font-medium text-gray-800 dark:text-gray-200">${res.studentName}</td>
                     <td class="p-4 text-xs font-semibold text-blue-600 dark:text-blue-400">${res.classLevel}</td>
@@ -4754,6 +5319,8 @@
                         </button>
                     </td>
                 `;
+                const selectionInput = tr.querySelector('.result-select');
+                if (selectionInput) selectionInput.checked = selectedCbtResultIds.has(String(res.id));
                 tbody.appendChild(tr);
             });
             updateSelectedResultsCount();
@@ -4778,6 +5345,7 @@
                     : 'px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2';
             }
             if (!resultsEditMode) {
+                selectedCbtResultIds.clear();
                 const selectAll = document.getElementById('selectAllResults');
                 if (selectAll) selectAll.checked = false;
             }
@@ -4785,19 +5353,26 @@
         }
 
         function getSelectedCbtResults() {
-            const selectedIds = Array.from(document.querySelectorAll('.result-select:checked')).map(input => input.value);
-            return cbtResults.filter(result => selectedIds.includes(String(result.id)));
+            return cbtResults.filter(result => selectedCbtResultIds.has(String(result.id)));
         }
 
         function updateSelectedResultsCount() {
-            const selected = document.querySelectorAll('.result-select:checked').length;
             const count = document.getElementById('selectedResultsCount');
-            if (count) count.textContent = selected;
+            if (count) count.textContent = selectedCbtResultIds.size;
+        }
+
+        function toggleCbtResultSelection(input) {
+            const resultId = String(input.value);
+            if (input.checked) selectedCbtResultIds.add(resultId);
+            else selectedCbtResultIds.delete(resultId);
+            updateSelectedResultsCount();
         }
 
         function toggleAllResultSelection(checked) {
             document.querySelectorAll('.result-select').forEach(input => {
                 input.checked = checked;
+                if (checked) selectedCbtResultIds.add(String(input.value));
+                else selectedCbtResultIds.delete(String(input.value));
             });
             updateSelectedResultsCount();
         }
@@ -4859,6 +5434,7 @@
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.success) return showToast(data.message || 'Could not delete the selected results.', 'error');
 
+            selectedCbtResultIds.clear();
             closeModal();
             await loadCbtResultsTable();
             showToast(`${data.deleted} result${data.deleted === 1 ? '' : 's'} deleted permanently.`);
@@ -5025,14 +5601,7 @@
         }
 
         function filterResultsTable() {
-            const query = (document.getElementById('searchResultInput').value || '').toLowerCase();
-            const tbody = document.getElementById('cbtResultsTableBody');
-            const rows = tbody.querySelectorAll('tr');
-
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
+            renderCbtResultsTable();
         }
 
         function exportCbtResultsCSV() {
@@ -5086,6 +5655,30 @@
             }
             document.getElementById('appModal').classList.remove('hidden');
             document.getElementById('appModal').classList.add('flex');
+        }
+
+        const navigationHeader = document.querySelector('header');
+        const navigationControls = document.querySelectorAll('.header-controls > a, .header-controls > button#portalToggleBtn');
+        if (navigationHeader && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            navigationHeader.addEventListener('pointermove', event => {
+                if (event.pointerType !== 'mouse') return;
+                const bounds = navigationHeader.getBoundingClientRect();
+                navigationHeader.style.setProperty('--nav-pointer-x', `${event.clientX - bounds.left}px`);
+                navigationHeader.style.setProperty('--nav-pointer-y', `${event.clientY - bounds.top}px`);
+                navigationHeader.classList.add('is-pointer-active');
+            }, { passive: true });
+            navigationHeader.addEventListener('pointerleave', () => navigationHeader.classList.remove('is-pointer-active'));
+
+            navigationControls.forEach(control => {
+                control.addEventListener('pointermove', event => {
+                    if (event.pointerType !== 'mouse') return;
+                    const bounds = control.getBoundingClientRect();
+                    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+                    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+                    control.style.setProperty('--control-pointer-x', `${x}%`);
+                    control.style.setProperty('--control-pointer-y', `${y}%`);
+                }, { passive: true });
+            });
         }
     </script>
     <script src="password-controls.js"></script>
