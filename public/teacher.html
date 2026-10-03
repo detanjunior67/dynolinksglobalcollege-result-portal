@@ -196,6 +196,12 @@
         .side-panel h2 { color: #ffffff; }
         .account { background: #edf8f3; border: 1px solid #d1e9e4; }
         .availability-settings { background: #f5faf9; }
+        .admin-export-tools { display: flex; align-items: end; flex-wrap: wrap; gap: 9px; padding: 13px 0; }
+        .admin-export-tools label { margin: 0; }
+        .admin-export-tools input { width: auto; min-width: 150px; padding: 8px 10px; }
+        .admin-download-button { appearance: none; border: 1px solid #b8d5d1; border-radius: 9px; padding: 9px 12px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; transition: background .18s, border-color .18s, transform .18s; }
+        .admin-download-button:hover { border-color: var(--teal); background: #dcefe9; transform: translateY(-1px); }
+        .admin-download-button:disabled { cursor: wait; opacity: .7; transform: none; }
         .admin-view { border-top: 4px solid #d18a19; }
         .class-session-panel { margin-top: 22px; border-top: 4px solid #0284c7; }
         .class-session-panel h2 { font-size: 1.35rem; }
@@ -210,6 +216,8 @@
         .teacher-class-record strong { color: var(--ink); }
         .teacher-class-record span, .teacher-class-record time { color: var(--muted); font-size: .8rem; }
         .teacher-class-record time { text-align: right; }
+        .location-check { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .location-quality { color: var(--muted); font-size: .8rem; }
         .session-count { color: #0369a1; background: #e0f2fe; }
         body.admin-mode .class-session-panel,
         body.admin-mode .side-panel { display: none !important; }
@@ -238,10 +246,25 @@
         select:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.12); }
         :focus-visible { outline: 3px solid rgba(2,132,199,.45); outline-offset: 3px; }
         @media (max-width: 560px) {
+            .shell,
+            .workspace,
+            .workspace > div,
+            .admin-view,
+            .admin-section-card,
+            .availability-settings,
+            .admin-export-tools,
+            .class-session-tools,
+            .table-wrap { min-width: 0; max-width: 100%; }
+            .admin-view { width: 100%; }
+            .admin-section-card { padding: 16px; }
             .class-session-grid { grid-template-columns: 1fr; }
             .availability-settings { align-items: stretch; }
             .availability-settings > * { width: 100%; }
             .availability-settings input { width: 100%; min-width: 0; }
+            .admin-export-tools { align-items: stretch; flex-direction: column; }
+            .admin-export-tools > * { flex: 0 1 auto; width: 100%; max-width: 100%; min-width: 0; }
+            .admin-export-tools input { width: 100%; }
+            .admin-download-button { white-space: normal; }
             .admin-heading { align-items: flex-start; flex-direction: column; }
             .class-session-tools { align-items: stretch; flex-direction: column; }
             .class-session-date-picker { align-items: stretch; flex-direction: column; }
@@ -297,7 +320,7 @@
                 <img class="brand-mark" src="logo.jpg" alt="Dynolinks Global College logo">
                 <span>Dynolinks Global College<small>Teacher check-in</small></span>
             </a>
-            <button class="install-button" id="installAppButton" type="button">Install app</button>
+            <button class="install-button" id="installAppButton" type="button">Install teacher app</button>
             <span class="install-status" id="installStatus" role="status" aria-live="polite"></span>
             <a class="back-link" href="index.html">Back to home</a>
         </nav>
@@ -317,6 +340,9 @@
                         <div id="nameField">
                             <label for="teacherName">Full name</label>
                             <input id="teacherName" type="text" placeholder="e.g. Amina Yusuf" autocomplete="name" required>
+                        </div>
+                        <div class="location-check">
+                            <span class="location-quality" id="signInLocationQuality" role="status" aria-live="polite"></span>
                         </div>
                         <button class="primary" type="submit" id="signInButton">Sign in</button>
                     </form>
@@ -347,6 +373,9 @@
                         </div>
                         <label for="classStartTime" style="margin-top: 14px;">Class start time</label>
                         <input id="classStartTime" type="time" required>
+                        <div class="location-check">
+                            <span class="location-quality" id="classLocationQuality" role="status" aria-live="polite"></span>
+                        </div>
                         <button class="primary class-session-submit" type="submit">Check in to teach class</button>
                         <div class="class-session-status" id="classSessionStatus" role="status"></div>
                     </form>
@@ -374,6 +403,13 @@
                             <button type="button" id="saveAvailabilityButton">Save times</button>
                             <span class="setting-status" id="settingStatus" role="status"></span>
                         </div>
+                        <div class="admin-export-tools">
+                            <label for="loginExportDateFilter">Filter sign-ins by date</label>
+                            <input id="loginExportDateFilter" type="date">
+                            <button type="button" id="clearLoginExportDate">All dates</button>
+                            <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="csv">Download CSV</button>
+                            <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="xlsx">Download Excel</button>
+                        </div>
                         <div class="table-wrap">
                             <table>
                                 <thead><tr><th>Teacher</th><th>Last sign-in</th></tr></thead>
@@ -394,6 +430,8 @@
                                 <input id="classSessionDateFilter" type="date">
                                 <button class="class-session-date-clear" id="clearClassSessionDate" type="button">All dates</button>
                             </div>
+                            <button class="admin-download-button" type="button" data-export-kind="classSessions" data-export-format="csv">Download CSV</button>
+                            <button class="admin-download-button" type="button" data-export-kind="classSessions" data-export-format="xlsx">Download Excel</button>
                         </div>
                         <div class="table-wrap">
                             <table class="class-session-group-table">
@@ -442,12 +480,12 @@
         const installAppButton = document.getElementById('installAppButton');
         const installStatus = document.getElementById('installStatus');
         let installPrompt = null;
+        let hadServiceWorkerController = Boolean(navigator.serviceWorker?.controller);
+        let reloadingForServiceWorkerUpdate = false;
         const teacherAppInstalledKey = 'dgc_teacher_app_installed';
 
         function isTeacherAppInstalled() {
-            return window.matchMedia('(display-mode: standalone)').matches
-                || navigator.standalone === true
-                || localStorage.getItem(teacherAppInstalledKey) === '1';
+            return localStorage.getItem(teacherAppInstalledKey) === '1';
         }
 
         installAppButton.hidden = isTeacherAppInstalled();
@@ -468,6 +506,10 @@
         const classSessionDatePicker = document.getElementById('classSessionDatePicker');
         const classSessionDateFilter = document.getElementById('classSessionDateFilter');
         const clearClassSessionDate = document.getElementById('clearClassSessionDate');
+        const loginExportDateFilter = document.getElementById('loginExportDateFilter');
+        const clearLoginExportDate = document.getElementById('clearLoginExportDate');
+        const signInLocationQuality = document.getElementById('signInLocationQuality');
+        const classLocationQuality = document.getElementById('classLocationQuality');
         const adminView = document.getElementById('adminView');
         const loginTableBody = document.getElementById('loginTableBody');
         const loginCount = document.getElementById('loginCount');
@@ -477,8 +519,11 @@
         let availabilitySetting = '08:00';
         let disappearanceSetting = '17:00';
         let serverLoginRecords = [];
+        let selectedLoginExportDate = '';
         let classSessionRecords = [];
         let selectedClassSessionDate = '';
+        let selectedDeviceLocation = null;
+        let excelJsLoadPromise = null;
         let adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
         let teacherAccessPassword = '';
         const deletePasswordDialog = document.getElementById('deletePasswordDialog');
@@ -515,14 +560,46 @@
             installStatus.textContent = 'App installed.';
         });
 
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!hadServiceWorkerController) {
+                    hadServiceWorkerController = true;
+                    return;
+                }
+                if (reloadingForServiceWorkerUpdate) return;
+                reloadingForServiceWorkerUpdate = true;
+                if (teacherAccessPassword) {
+                    sessionStorage.setItem('dgc_teacher_site_unlock', teacherAccessPassword === adminLaunchPassword ? 'admin' : 'teacher');
+                }
+                window.location.reload();
+            });
+        }
+
         async function registerTeacherApp() {
             if (!('serviceWorker' in navigator)) return null;
             try {
                 const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+                try {
+                    await fetch('/api/page-access', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ target: '/teacher.html', password: teacherAccessPassword })
+                    });
+                } catch (_) {}
+                try { await registration.update(); } catch (_) {}
                 const response = await fetch('/teacher.html', { cache: 'no-store' });
                 if (response.ok && new URL(response.url).pathname === '/teacher.html') {
-                    const cache = await caches.open('dynolinks-teacher-offline-v11');
+                    const cache = await caches.open('dynolinks-teacher-offline-v13');
+                    const cachedPage = await cache.match('/teacher.html');
+                    const cachedHtml = cachedPage ? await cachedPage.clone().text() : '';
+                    const latestHtml = await response.clone().text();
                     await cache.put('/teacher.html', response.clone());
+                    if (cachedHtml && cachedHtml !== latestHtml) {
+                        sessionStorage.setItem('dgc_teacher_site_unlock', teacherAccessPassword === adminLaunchPassword ? 'admin' : 'teacher');
+                        const updatedUrl = new URL(window.location.href);
+                        if (teacherAccessPassword === adminLaunchPassword) updatedUrl.searchParams.set('admin', '1');
+                        window.location.replace(updatedUrl.href);
+                    }
                 }
                 return registration;
             } catch (error) {
@@ -645,6 +722,98 @@
             return new Date(value).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Lagos' });
         }
 
+        function getFilteredAttendanceRecords() {
+            return serverLoginRecords
+                .filter(record => !selectedLoginExportDate || getNigeriaCalendarDate(record.loggedInAt) === selectedLoginExportDate)
+                .sort((left, right) => new Date(right.loggedInAt) - new Date(left.loggedInAt));
+        }
+
+        function getFilteredClassSessionRecords() {
+            return classSessionRecords
+                .filter(record => !selectedClassSessionDate || getNigeriaCalendarDate(record.submittedAt) === selectedClassSessionDate)
+                .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
+        }
+
+        function exportLocationFields(location = {}) {
+            const hasCoordinates = location.latitude != null && location.longitude != null;
+            return [
+                location.label || (hasCoordinates ? 'Device location' : 'Location unavailable'),
+                hasCoordinates ? location.latitude : '',
+                hasCoordinates ? location.longitude : '',
+                location.accuracy ?? '',
+                hasCoordinates ? (location.cached ? 'Cached' : 'Fresh') : 'Unavailable'
+            ];
+        }
+
+        function downloadCsv(filename, headers, rows) {
+            const quote = value => {
+                const text = String(value ?? '');
+                const safeText = typeof value === 'string' && /^[\s]*[=+@-]/.test(text) ? `'${text}` : text;
+                return `"${safeText.replace(/"/g, '""')}"`;
+            };
+            const csv = [headers, ...rows].map(row => row.map(quote).join(',')).join('\r\n');
+            downloadBlob(filename, new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
+        }
+
+        function downloadBlob(filename, blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function loadExcelJS() {
+            if (window.ExcelJS) return window.ExcelJS;
+            if (!excelJsLoadPromise) {
+                excelJsLoadPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = '/node_modules/exceljs/dist/exceljs.min.js';
+                    script.onload = () => window.ExcelJS ? resolve(window.ExcelJS) : reject(new Error('Excel export could not start.'));
+                    script.onerror = () => reject(new Error('Excel export library could not be loaded.'));
+                    document.head.appendChild(script);
+                });
+            }
+            return excelJsLoadPromise;
+        }
+
+        async function exportAdminDataset(kind, format) {
+            const isAttendance = kind === 'logins';
+            const headers = isAttendance
+                ? ['Teacher', 'Signed in at (Nigeria time)', 'Attendance period', 'Location', 'Latitude', 'Longitude', 'Accuracy (m)', 'Location quality']
+                : ['Teacher', 'Class', 'Selected class time', 'Submitted at (Nigeria time)', 'Attendance period', 'Location', 'Latitude', 'Longitude', 'Accuracy (m)', 'Location quality'];
+            const records = isAttendance ? getFilteredAttendanceRecords() : getFilteredClassSessionRecords();
+            const rows = records.map(record => isAttendance
+                ? [record.name, formatDate(record.loggedInAt), record.period || '', ...exportLocationFields(record.location)]
+                : [record.name, record.className, record.classStartTime, formatDate(record.submittedAt), record.period || '', ...exportLocationFields(record.location)]);
+            const suffix = (isAttendance ? selectedLoginExportDate : selectedClassSessionDate) || 'all-dates';
+            const filename = `${isAttendance ? 'teacher-attendance' : 'teacher-class-starts'}-${suffix}`;
+
+            if (format === 'csv') {
+                downloadCsv(`${filename}.csv`, headers, rows);
+                return;
+            }
+
+            const ExcelJS = await loadExcelJS();
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Dynolinks Global College';
+            workbook.created = new Date();
+            const worksheet = workbook.addWorksheet(isAttendance ? 'Attendance' : 'Class starts');
+            worksheet.addRow(headers);
+            worksheet.addRows(rows);
+            worksheet.getRow(1).font = { bold: true };
+            worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+            worksheet.autoFilter = { from: 'A1', to: `${worksheet.getColumn(headers.length).letter}1` };
+            worksheet.columns.forEach((column, index) => {
+                column.width = Math.min(34, Math.max(14, headers[index].length + 3));
+            });
+            const buffer = await workbook.xlsx.writeBuffer();
+            downloadBlob(`${filename}.xlsx`, new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+        }
+
         async function renderTeacherClassHistory(name) {
             if (!name) {
                 teacherClassHistory.textContent = 'Sign in to see today\'s class check-ins.';
@@ -700,8 +869,8 @@
                 throw new Error(message);
             }
             const data = await response.json();
-            const records = data.logins || [];
-            serverLoginRecords = records;
+            serverLoginRecords = data.logins || [];
+            const records = getFilteredAttendanceRecords();
             const teachers = [...new Set(records.map(record => record.name))];
             loginCount.textContent = `${teachers.length} teacher${teachers.length === 1 ? '' : 's'}`;
             loginTableBody.innerHTML = teachers.length ? teachers.map((name, index) => {
@@ -869,6 +1038,33 @@
             renderClassSessionGroups();
         });
 
+        loginExportDateFilter.addEventListener('change', () => {
+            selectedLoginExportDate = loginExportDateFilter.value;
+            renderAdminLog().catch(() => {});
+        });
+
+        clearLoginExportDate.addEventListener('click', () => {
+            loginExportDateFilter.value = '';
+            selectedLoginExportDate = '';
+            renderAdminLog().catch(() => {});
+        });
+
+        document.querySelectorAll('[data-export-kind]').forEach(button => {
+            button.addEventListener('click', async () => {
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Preparing...';
+                try {
+                    await exportAdminDataset(button.dataset.exportKind, button.dataset.exportFormat);
+                } catch (error) {
+                    window.alert(error.message || 'Could not create the export.');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            });
+        });
+
         function formatSessionLocation(location = {}) {
             const latitude = Number(location.latitude);
             const longitude = Number(location.longitude);
@@ -1029,13 +1225,39 @@
                     } catch (_) {}
                     finish(location);
                 };
-                navigator.geolocation.getCurrentPosition(savePosition, () => finish(cachedLocation || { label: 'Device location unavailable' }), {
+                navigator.geolocation.getCurrentPosition(savePosition, error => {
+                    const label = error.code === 1
+                        ? 'Location permission denied. Enable location access for this site in browser settings.'
+                        : 'Device location unavailable';
+                    finish(cachedLocation || { label });
+                }, {
                     enableHighAccuracy: true,
                     timeout: navigator.onLine ? 5000 : 8000,
                     maximumAge: navigator.onLine ? 60000 : 10 * 60 * 1000
                 });
             });
         }
+
+        function describeLocationQuality(location) {
+            if (location?.latitude != null && location?.longitude != null) {
+                const source = location.cached ? 'Cached' : 'Fresh';
+                const accuracy = Number.isFinite(Number(location.accuracy)) ? ` (${Math.round(Number(location.accuracy))}m accuracy)` : '';
+                return `${source} device location${accuracy}`;
+            }
+            if (location?.label?.includes('permission denied')) return 'Permission denied. Allow location in browser settings.';
+            if (location?.label?.includes('accuracy is too low')) return 'Device location accuracy is too low.';
+            return location?.label || 'Device location unavailable';
+        }
+
+        function updateLocationQuality(location) {
+            selectedDeviceLocation = location;
+            const message = describeLocationQuality(location);
+            signInLocationQuality.textContent = message;
+            classLocationQuality.textContent = message;
+        }
+
+        const savedDeviceLocation = getCachedDeviceLocation();
+        if (savedDeviceLocation) updateLocationQuality(savedDeviceLocation);
 
         teacherForm.addEventListener('submit', async event => {
             event.preventDefault();
@@ -1050,7 +1272,10 @@
             localStorage.setItem(teacherNameKey, name);
             signInButton.disabled = true;
             signInButton.textContent = 'Saving attendance...';
-            const location = await getLocation();
+            signInLocationQuality.textContent = 'Checking device location...';
+            classLocationQuality.textContent = 'Checking device location...';
+            const location = selectedDeviceLocation || await getLocation();
+            updateLocationQuality(location);
             const payload = {
                 name,
                 location,
@@ -1075,6 +1300,7 @@
             formStatus.textContent = result.queued
                 ? 'Check-in saved on this phone. It will upload automatically when internet returns.'
                 : `Signed in at ${formatDate(new Date())}.`;
+            if (location.latitude == null) formStatus.textContent += ` ${location.label}`;
             showCheckedInTeacher(name);
             if (result.queued) panelCopy.textContent = 'Your check-in is saved on this phone and will upload automatically when internet returns.';
             await renderTeacherClassHistory(name);
@@ -1095,7 +1321,10 @@
                 return;
             }
             classSessionStatus.textContent = 'Saving class start...';
-            const location = await getLocation();
+            signInLocationQuality.textContent = 'Checking device location...';
+            classLocationQuality.textContent = 'Checking device location...';
+            const location = selectedDeviceLocation || await getLocation();
+            updateLocationQuality(location);
             const payload = {
                 name,
                 className,
@@ -1120,6 +1349,7 @@
             classSessionStatus.textContent = result.queued
                 ? 'Class start saved on this phone. It will upload automatically when internet returns.'
                 : `Class start recorded at ${formatDate(new Date())}.`;
+            if (location.latitude == null) classSessionStatus.textContent += ` ${location.label}`;
             classSessionForm.reset();
             classSessionTeacher.value = name;
             await renderTeacherClassHistory(name);

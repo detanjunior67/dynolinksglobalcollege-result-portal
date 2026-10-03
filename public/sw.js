@@ -1,6 +1,6 @@
 const APP_CACHE_PREFIX = 'dynolinks-portal-cache';
 const APP_CACHE_NAME = `${APP_CACHE_PREFIX}-${Date.now()}`;
-const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v11';
+const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v13';
 importScripts('/teacher-offline.js');
 
 self.addEventListener('install', (event) => {
@@ -21,7 +21,8 @@ self.addEventListener('install', (event) => {
       '/dgc-loader.css',
       '/device-detector.js',
       '/password-controls.js',
-      '/teacher-offline.js'
+      '/teacher-offline.js',
+      '/node_modules/exceljs/dist/exceljs.min.js'
     ]))
   );
   self.skipWaiting();
@@ -43,7 +44,9 @@ self.addEventListener('activate', (event) => {
       caches.delete('dynolinks-teacher-offline-v7'),
       caches.delete('dynolinks-teacher-offline-v8'),
       caches.delete('dynolinks-teacher-offline-v9'),
-      caches.delete('dynolinks-teacher-offline-v10')
+      caches.delete('dynolinks-teacher-offline-v10'),
+      caches.delete('dynolinks-teacher-offline-v11'),
+      caches.delete('dynolinks-teacher-offline-v12')
     ]))
       .then(() => self.clients.claim())
   );
@@ -69,16 +72,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith((async () => {
       const teacherCache = await caches.open(TEACHER_CACHE_NAME);
       const cached = await teacherCache.match('/teacher.html');
-      if (cached && cached.ok && new URL(cached.url).pathname === '/teacher.html') return cached;
-      if (cached) await teacherCache.delete('/teacher.html');
+      const validCachedPage = cached?.ok && new URL(cached.url).pathname === '/teacher.html' ? cached : null;
+      if (cached && !validCachedPage) await teacherCache.delete('/teacher.html');
       try {
         const response = await fetch(event.request, { cache: 'no-store' });
         if (response.ok && new URL(response.url).pathname === '/teacher.html') {
           await teacherCache.put('/teacher.html', response.clone());
           return response;
         }
+        if (validCachedPage) return validCachedPage;
         return Response.redirect(new URL('/?protected=teacher&returnTo=%2Fteacher.html', self.location.origin), 302);
       } catch (_) {
+        if (validCachedPage) return validCachedPage;
         return new Response('Teacher check-in is not available offline yet. Open this page online once to prepare it for offline use.', {
           status: 503,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
