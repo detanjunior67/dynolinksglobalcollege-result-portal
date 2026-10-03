@@ -17,9 +17,10 @@ const app = express();
 const PAGE_ACCESS_COOKIE = 'dgc_page_access';
 const PAGE_ACCESS_SECRET = process.env.PAGE_ACCESS_SECRET || process.env.ADMIN_PASSWORD || 'dynolinks-page-access';
 const PAGE_ACCESS_TTL_SECONDS = 60 * 15;
+const TEACHER_PAGE_PASSWORD = process.env.TEACHER_PAGE_PASSWORD || 'checkme';
 const protectedPageAccess = {
     '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
-    '/teacher.html': { scope: 'teacher', passwords: [process.env.TEACHER_PAGE_PASSWORD || 'checkme', 'admincheck'] }
+    '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] }
 };
 
 function createPageAccessToken(scope) {
@@ -713,6 +714,7 @@ const TeacherLoginSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     period: { type: String, required: true },
     loggedInAt: { type: Date, default: Date.now },
+    clientRequestId: { type: String, unique: true, sparse: true },
     location: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
@@ -732,12 +734,21 @@ const TeacherClassSessionSchema = new mongoose.Schema({
     classStartTime: { type: String, required: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
     period: { type: String, required: true },
     submittedAt: { type: Date, default: Date.now },
+    clientRequestId: { type: String, unique: true, sparse: true },
     location: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
 TeacherClassSessionSchema.index({ period: 1, name: 1, submittedAt: -1 });
 const TeacherClassSession = mongoose.model('TeacherClassSession', TeacherClassSessionSchema);
 const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
+
+function requireTeacherAppAccess(req, res, next) {
+    const password = req.headers['x-teacher-page-password'];
+    if (password !== TEACHER_PAGE_PASSWORD && password !== TEACHER_ADMIN_PASSWORD) {
+        return res.status(401).json({ success: false, message: 'Invalid teacher access password.' });
+    }
+    next();
+}
 
 function requireTeacherAdmin(req, res, next) {
     const password = req.headers['x-teacher-admin-password'] || req.body?.password;
@@ -821,9 +832,25 @@ app.post('/api/teacher/logins', async (req, res) => {
     try {
         const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
         if (name.length < 3) return res.status(400).json({ success: false, message: 'A full teacher name is required.' });
+        const clientRequestId = String(req.body?.clientRequestId || '').trim();
+        if (clientRequestId.length > 100) return res.status(400).json({ success: false, message: 'Invalid check-in request ID.' });
+        if (clientRequestId) {
+            const existingLogin = await TeacherLogin.findOne({ clientRequestId }).lean();
+            if (existingLogin) return res.json({ success: true, login: existingLogin, duplicate: true });
+        }
+        const submittedAt = req.body?.occurredAt ? new Date(req.body.occurredAt) : new Date();
+        if (Number.isNaN(submittedAt.getTime())) return res.status(400).json({ success: false, message: 'Invalid check-in time.' });
         const settings = await getTeacherSettings();
-        const period = getTeacherPeriod(new Date(), settings.appearTime);
-        const login = await TeacherLogin.create({ name, period, loggedInAt: new Date(), location: req.body?.location || {} });
+        const period = getTeacherPeriod(submittedAt, settings.appearTime);
+        let login;
+        try {
+            login = await TeacherLogin.create({ name, period, loggedInAt: submittedAt, clientRequestId: clientRequestId || undefined, location: req.body?.location || {} });
+        } catch (err) {
+            if (err.code !== 11000 || !clientRequestId) throw err;
+            login = await TeacherLogin.findOne({ clientRequestId }).lean();
+            if (login) return res.json({ success: true, login, duplicate: true });
+            throw err;
+        }
         await TeacherReset.deleteOne({ name });
         res.status(201).json({ success: true, login });
     } catch (err) {
@@ -840,13 +867,44 @@ app.post('/api/teacher/class-sessions', async (req, res) => {
         if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
         if (!className) return res.status(400).json({ success: false, message: 'Please select a class.' });
         if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(classStartTime)) return res.status(400).json({ success: false, message: 'Please provide a valid class start time.' });
+        const clientRequestId = String(req.body?.clientRequestId || '').trim();
+        if (clientRequestId.length > 100) return res.status(400).json({ success: false, message: 'Invalid class-start request ID.' });
+        if (clientRequestId) {
+            const existingSession = await TeacherClassSession.findOne({ clientRequestId }).lean();
+            if (existingSession) return res.json({ success: true, session: existingSession, duplicate: true });
+        }
+        const submittedAt = req.body?.occurredAt ? new Date(req.body.occurredAt) : new Date();
+        if (Number.isNaN(submittedAt.getTime())) return res.status(400).json({ success: false, message: 'Invalid class-start time.' });
         const settings = await getTeacherSettings();
-        const period = getTeacherPeriod(new Date(), settings.appearTime);
-        const session = await TeacherClassSession.create({ name, className, classStartTime, period, submittedAt: new Date(), location: req.body?.location || {} });
+        const period = getTeacherPeriod(submittedAt, settings.appearTime);
+        let session;
+        try {
+            session = await TeacherClassSession.create({ name, className, classStartTime, period, submittedAt, clientRequestId: clientRequestId || undefined, location: req.body?.location || {} });
+        } catch (err) {
+            if (err.code !== 11000 || !clientRequestId) throw err;
+            session = await TeacherClassSession.findOne({ clientRequestId }).lean();
+            if (session) return res.json({ success: true, session, duplicate: true });
+            throw err;
+        }
         res.status(201).json({ success: true, session });
     } catch (err) {
         console.error('Save teacher class session error:', err.message);
         res.status(500).json({ success: false, message: 'Could not save class start.' });
+    }
+});
+
+app.get('/api/teacher/class-sessions/today', requireTeacherAppAccess, async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store');
+        const name = String(req.query.name || '').trim().replace(/\s+/g, ' ');
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        const settings = await getTeacherSettings();
+        const period = getTeacherPeriod(new Date(), settings.appearTime);
+        const sessions = await TeacherClassSession.find({ name, period }).sort({ submittedAt: -1 }).lean();
+        res.json({ success: true, period, sessions });
+    } catch (err) {
+        console.error('Load teacher class check-ins error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load today\'s class check-ins.' });
     }
 });
 

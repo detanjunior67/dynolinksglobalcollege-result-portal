@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Check-in | Dynolinks Global College</title>
+    <link rel="manifest" href="/teacher-manifest.json">
+    <meta name="theme-color" content="#0f766e">
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,6 +49,15 @@
         .brand small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; margin-top: 2px; }
         .back-link, button { font: inherit; cursor: pointer; }
         .back-link { color: var(--teal-dark); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+        .install-button { border: 1px solid #c8dcda; border-radius: 999px; padding: 9px 14px; color: #0f766e; background: #fff; font-weight: 700; }
+        .install-button:hover { background: #edf7f5; }
+        .install-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .launch-gate { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: #f4f8f7; }
+        .launch-gate[hidden] { display: none; }
+        .launch-card { width: min(100%, 420px); padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: white; box-shadow: var(--shadow); }
+        .launch-card h1 { font-size: 2rem; line-height: 1.1; margin: 0 0 10px; }
+        .launch-card p { color: var(--muted); line-height: 1.55; }
+        .launch-error { min-height: 20px; color: #b42318; font-size: .84rem; font-weight: 700; }
 
         .intro { max-width: 720px; margin-bottom: 34px; animation: rise 0.6s ease both; }
         .eyebrow { color: var(--coral); font-weight: 700; font-size: 0.77rem; letter-spacing: 0.14em; text-transform: uppercase; }
@@ -191,6 +202,14 @@
         .class-session-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .class-session-submit { margin-top: 14px; }
         .class-session-status { min-height: 20px; margin-top: 10px; color: #0f766e; font-size: .82rem; font-weight: 700; }
+        .teacher-class-history { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+        .teacher-class-history h3 { margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; }
+        .teacher-class-history-list { display: grid; gap: 8px; }
+        .teacher-class-record { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 11px 0; border-bottom: 1px solid var(--line); }
+        .teacher-class-record > div { display: grid; gap: 3px; }
+        .teacher-class-record strong { color: var(--ink); }
+        .teacher-class-record span, .teacher-class-record time { color: var(--muted); font-size: .8rem; }
+        .teacher-class-record time { text-align: right; }
         .session-count { color: #0369a1; background: #e0f2fe; }
         body.admin-mode .class-session-panel,
         body.admin-mode .side-panel { display: none !important; }
@@ -198,6 +217,19 @@
         .admin-view { background: transparent; border: 0; box-shadow: none; padding: 0; }
         .admin-section-card { padding: clamp(20px, 3vw, 32px); border: 1px solid #d9e7e4; border-radius: 22px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(17,63,70,.08); }
         .admin-section-card + .admin-section-card { margin-top: 24px; }
+        .class-session-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .class-session-calendar-button, .class-session-date-clear { border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; color: var(--teal-dark); background: white; font: inherit; font-size: .84rem; font-weight: 700; }
+        .class-session-calendar-button:hover, .class-session-date-clear:hover { background: #edf7f5; }
+        .class-session-date-picker { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #f8fcfa; }
+        .class-session-date-picker[hidden] { display: none; }
+        .class-session-date-picker label { margin: 0; white-space: nowrap; }
+        .class-session-date-picker input { width: auto; padding: 8px 10px; }
+        .class-session-group-table > tbody > tr > td { white-space: normal; }
+        .class-session-teacher-toggle { padding: 0; border: 0; color: var(--teal-dark); background: transparent; font: inherit; font-weight: 700; text-align: left; text-decoration: underline; text-decoration-color: rgba(15,118,110,.3); text-underline-offset: 3px; }
+        .class-session-teacher-toggle:hover { color: var(--coral); }
+        .class-session-detail-cell { padding: 0 10px 14px !important; }
+        .class-session-record-table { margin-top: 8px; }
+        .class-session-record-table th, .class-session-record-table td { white-space: nowrap; }
         .topbar > * { min-width: 0; }
         .brand { min-width: 0; }
         .brand span { min-width: 0; overflow-wrap: anywhere; }
@@ -211,6 +243,9 @@
             .availability-settings > * { width: 100%; }
             .availability-settings input { width: 100%; min-width: 0; }
             .admin-heading { align-items: flex-start; flex-direction: column; }
+            .class-session-tools { align-items: stretch; flex-direction: column; }
+            .class-session-date-picker { align-items: stretch; flex-direction: column; }
+            .class-session-date-picker input { width: 100%; }
             .login-detail { align-items: flex-start; flex-direction: column; gap: 4px; }
             .password-actions { flex-direction: column-reverse; }
         }
@@ -232,6 +267,7 @@
             .brand { font-size: .82rem; gap: 8px; }
             .brand small { font-size: .66rem; }
             .back-link { padding: 8px 10px; font-size: .78rem; }
+            .install-button { padding: 8px 10px; font-size: .78rem; }
             h1 { font-size: clamp(2.25rem, 14vw, 3.5rem); }
             .intro p { font-size: 1rem; }
             .panel { padding: 20px; }
@@ -244,12 +280,25 @@
     </style>
 </head>
 <body>
-    <main class="shell">
+    <section class="launch-gate" id="launchGate" aria-labelledby="launchTitle">
+        <form class="launch-card" id="launchForm">
+            <div class="eyebrow">Staff access</div>
+            <h1 id="launchTitle">Unlock teacher check-in</h1>
+            <p>Enter your teacher password, or the administrator password to open the attendance dashboard.</p>
+            <label for="launchPassword">Password</label>
+            <input id="launchPassword" type="password" autocomplete="current-password" required autofocus>
+            <div class="launch-error" id="launchError" role="alert"></div>
+            <button class="primary" type="submit">Open app</button>
+        </form>
+    </section>
+    <main class="shell" id="teacherApp" hidden>
         <nav class="topbar" aria-label="Teacher portal navigation">
             <a class="brand" href="index.html">
                 <img class="brand-mark" src="logo.jpg" alt="Dynolinks Global College logo">
                 <span>Dynolinks Global College<small>Teacher check-in</small></span>
             </a>
+            <button class="install-button" id="installAppButton" type="button">Install app</button>
+            <span class="install-status" id="installStatus" role="status" aria-live="polite"></span>
             <a class="back-link" href="index.html">Back to home</a>
         </nav>
 
@@ -301,6 +350,10 @@
                         <button class="primary class-session-submit" type="submit">Check in to teach class</button>
                         <div class="class-session-status" id="classSessionStatus" role="status"></div>
                     </form>
+                    <section class="teacher-class-history" aria-labelledby="teacherClassHistoryTitle">
+                        <h3 id="teacherClassHistoryTitle">Today's classes</h3>
+                        <div id="teacherClassHistory" class="teacher-class-history-list" aria-live="polite">Sign in to see today's class check-ins.</div>
+                    </section>
                 </div>
 
                 <div class="panel admin-view" id="adminView">
@@ -334,9 +387,17 @@
                             <h2>Class starts</h2>
                             <span class="count session-count" id="sessionCount">0 records</span>
                         </div>
+                        <div class="class-session-tools">
+                            <button class="class-session-calendar-button" id="classSessionCalendarButton" type="button" aria-expanded="false" aria-controls="classSessionDatePicker">Calendar</button>
+                            <div class="class-session-date-picker" id="classSessionDatePicker" hidden>
+                                <label for="classSessionDateFilter">Filter by submission date</label>
+                                <input id="classSessionDateFilter" type="date">
+                                <button class="class-session-date-clear" id="clearClassSessionDate" type="button">All dates</button>
+                            </div>
+                        </div>
                         <div class="table-wrap">
-                            <table>
-                                <thead><tr><th>Teacher</th><th>Class</th><th>Class time</th><th>Submitted at</th><th>Action</th></tr></thead>
+                            <table class="class-session-group-table">
+                                <thead><tr><th>Teacher</th><th>Records</th></tr></thead>
                                 <tbody id="classSessionTableBody"></tbody>
                             </table>
                         </div>
@@ -368,8 +429,28 @@
         </form>
     </div>
 
+    <script src="/teacher-offline.js"></script>
     <script>
         const teacherNameKey = 'dgc_teacher_name';
+        const teacherLaunchPassword = 'checkme';
+        const adminLaunchPassword = 'admincheck';
+        const launchGate = document.getElementById('launchGate');
+        const launchForm = document.getElementById('launchForm');
+        const launchPassword = document.getElementById('launchPassword');
+        const launchError = document.getElementById('launchError');
+        const teacherApp = document.getElementById('teacherApp');
+        const installAppButton = document.getElementById('installAppButton');
+        const installStatus = document.getElementById('installStatus');
+        let installPrompt = null;
+        const teacherAppInstalledKey = 'dgc_teacher_app_installed';
+
+        function isTeacherAppInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches
+                || navigator.standalone === true
+                || localStorage.getItem(teacherAppInstalledKey) === '1';
+        }
+
+        installAppButton.hidden = isTeacherAppInstalled();
         const teacherForm = document.getElementById('teacherForm');
         const teacherName = document.getElementById('teacherName');
         const nameField = document.getElementById('nameField');
@@ -380,8 +461,13 @@
         const classSessionForm = document.getElementById('classSessionForm');
         const classSessionTeacher = document.getElementById('classSessionTeacher');
         const classSessionStatus = document.getElementById('classSessionStatus');
+        const teacherClassHistory = document.getElementById('teacherClassHistory');
         const classSessionTableBody = document.getElementById('classSessionTableBody');
         const sessionCount = document.getElementById('sessionCount');
+        const classSessionCalendarButton = document.getElementById('classSessionCalendarButton');
+        const classSessionDatePicker = document.getElementById('classSessionDatePicker');
+        const classSessionDateFilter = document.getElementById('classSessionDateFilter');
+        const clearClassSessionDate = document.getElementById('clearClassSessionDate');
         const adminView = document.getElementById('adminView');
         const loginTableBody = document.getElementById('loginTableBody');
         const loginCount = document.getElementById('loginCount');
@@ -391,7 +477,10 @@
         let availabilitySetting = '08:00';
         let disappearanceSetting = '17:00';
         let serverLoginRecords = [];
+        let classSessionRecords = [];
+        let selectedClassSessionDate = '';
         let adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
+        let teacherAccessPassword = '';
         const deletePasswordDialog = document.getElementById('deletePasswordDialog');
         const deletePasswordForm = document.getElementById('deletePasswordForm');
         const deleteAdminPassword = document.getElementById('deleteAdminPassword');
@@ -399,6 +488,67 @@
         let deletePasswordResolver = null;
         let attendanceDates = new Set();
         let attendanceMonth = new Date();
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            installPrompt = event;
+        });
+
+        installAppButton.addEventListener('click', async () => {
+            if (!installPrompt) {
+                installStatus.textContent = 'Use your browser menu and choose Install app or Add to Home Screen.';
+                return;
+            }
+            installPrompt.prompt();
+            const choice = await installPrompt.userChoice;
+            installStatus.textContent = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
+            if (choice.outcome === 'accepted') {
+                localStorage.setItem(teacherAppInstalledKey, '1');
+                installAppButton.hidden = true;
+            }
+            installPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            localStorage.setItem(teacherAppInstalledKey, '1');
+            installAppButton.hidden = true;
+            installStatus.textContent = 'App installed.';
+        });
+
+        async function registerTeacherApp() {
+            if (!('serviceWorker' in navigator)) return null;
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+                const response = await fetch('/teacher.html', { cache: 'no-store' });
+                if (response.ok && new URL(response.url).pathname === '/teacher.html') {
+                    const cache = await caches.open('dynolinks-teacher-offline-v10');
+                    await cache.put('/teacher.html', response.clone());
+                }
+                return registration;
+            } catch (error) {
+                console.warn('Teacher offline support could not be prepared:', error);
+                return null;
+            }
+        }
+
+        async function syncTeacherCheckins() {
+            try {
+                const result = await TeacherOfflineQueue.syncPending();
+                const savedName = localStorage.getItem(teacherNameKey);
+                if (result.synced && savedName) {
+                    formStatus.textContent = `${result.synced} saved record${result.synced === 1 ? '' : 's'} uploaded.`;
+                }
+                if (savedName) await renderTeacherClassHistory(savedName);
+                return result;
+            } catch (error) {
+                console.warn('Teacher check-ins are still waiting to sync:', error);
+                return null;
+            }
+        }
+
+        window.addEventListener('online', () => {
+            syncTeacherCheckins();
+        });
 
         function requestDeletePassword() {
             return new Promise(resolve => {
@@ -446,6 +596,10 @@
             const data = await response.json();
             availabilitySetting = data.appearTime || availabilitySetting;
             disappearanceSetting = data.disappearTime || disappearanceSetting;
+            localStorage.setItem('dgc_teacher_schedule', JSON.stringify({
+                appearTime: availabilitySetting,
+                disappearTime: disappearanceSetting
+            }));
         }
 
         function timeToMinutes(value) {
@@ -489,6 +643,51 @@
 
         function formatDate(value) {
             return new Date(value).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Lagos' });
+        }
+
+        async function renderTeacherClassHistory(name) {
+            if (!name) {
+                teacherClassHistory.textContent = 'Sign in to see today\'s class check-ins.';
+                return;
+            }
+
+            teacherClassHistory.innerHTML = '<p class="empty">Loading today\'s classes...</p>';
+            const pending = await TeacherOfflineQueue.getPending();
+            const attendancePeriod = getNigeriaAttendancePeriod();
+            const queuedSessions = pending
+                .filter(item => item.endpoint === '/api/teacher/class-sessions'
+                    && item.payload.name === name
+                    && getNigeriaAttendancePeriod(new Date(item.payload.occurredAt)) === attendancePeriod)
+                .map(item => ({ ...item.payload, submittedAt: item.payload.occurredAt, _queued: true }));
+            let serverSessions = [];
+            let loadMessage = '';
+
+            if (navigator.onLine) {
+                try {
+                    const response = await fetch(`/api/teacher/class-sessions/today?name=${encodeURIComponent(name)}`, {
+                        headers: { 'x-teacher-page-password': teacherAccessPassword },
+                        cache: 'no-store'
+                    });
+                    if (!response.ok) throw new Error('Could not load class check-ins.');
+                    const data = await response.json();
+                    serverSessions = data.sessions || [];
+                } catch (_) {
+                    loadMessage = 'Showing saved check-ins from this device. Connect to load synced records.';
+                }
+            }
+
+            const sessions = [...serverSessions, ...queuedSessions]
+                .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
+            if (!sessions.length) {
+                teacherClassHistory.innerHTML = `<p class="empty">${loadMessage || 'No class check-ins recorded today.'}</p>`;
+                return;
+            }
+
+            teacherClassHistory.innerHTML = `${loadMessage ? `<p class="helper">${escapeHtml(loadMessage)}</p>` : ''}${sessions.map(session => `
+                <article class="teacher-class-record">
+                    <div><strong>${escapeHtml(session.className)}</strong><span>Class time ${escapeHtml(session.classStartTime)}</span></div>
+                </article>
+            `).join('')}`;
         }
 
         async function renderAdminLog() {
@@ -588,20 +787,101 @@
                 throw new Error('The server returned a page instead of class-session data. Redeploy the updated server.');
             }
             const data = await response.json();
-            const sessions = data.sessions || [];
+            classSessionRecords = data.sessions || [];
+            renderClassSessionGroups();
+        }
+
+        function getNigeriaCalendarDate(value) {
+            return new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Africa/Lagos', year: 'numeric', month: '2-digit', day: '2-digit'
+            }).format(new Date(value));
+        }
+
+        function renderClassSessionGroups() {
+            const sessions = classSessionRecords
+                .filter(session => !selectedClassSessionDate || getNigeriaCalendarDate(session.submittedAt) === selectedClassSessionDate)
+                .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
             sessionCount.textContent = `${sessions.length} record${sessions.length === 1 ? '' : 's'}`;
-            classSessionTableBody.innerHTML = sessions.length ? sessions.map(session => `
-                <tr>
-                    <td>${escapeHtml(session.name)}</td>
-                    <td>${escapeHtml(session.className)}</td>
-                    <td>${escapeHtml(session.classStartTime)}</td>
-                    <td>${formatDate(session.submittedAt)}</td>
-                    <td><button class="delete-login" type="button" data-session-id="${escapeHtml(session._id)}">Delete</button></td>
-                </tr>
-            `).join('') : '<tr><td class="empty" colspan="5">No class starts recorded yet.</td></tr>';
+            const groups = new Map();
+            sessions.forEach(session => {
+                if (!groups.has(session.name)) groups.set(session.name, []);
+                groups.get(session.name).push(session);
+            });
+
+            classSessionTableBody.innerHTML = groups.size ? [...groups.entries()]
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([name, teacherSessions], index) => {
+                    const detailId = `class-session-details-${index}`;
+                    const recordRows = teacherSessions.map(session => `
+                        <tr>
+                            <td>${escapeHtml(session.className)}</td>
+                            <td>${escapeHtml(session.classStartTime)}</td>
+                            <td>${formatDate(session.submittedAt)}</td>
+                            <td>${formatSessionLocation(session.location)}</td>
+                            <td><button class="delete-login" type="button" data-session-id="${escapeHtml(session._id)}">Delete</button></td>
+                        </tr>
+                    `).join('');
+                    return `
+                        <tr>
+                            <td><button class="class-session-teacher-toggle" type="button" data-class-session-teacher="${index}" aria-controls="${detailId}" aria-expanded="false">${escapeHtml(name)}</button></td>
+                            <td>${teacherSessions.length} record${teacherSessions.length === 1 ? '' : 's'}</td>
+                        </tr>
+                        <tr id="${detailId}" hidden><td class="class-session-detail-cell" colspan="2">
+                            <div class="table-wrap"><table class="class-session-record-table">
+                                <thead><tr><th>Class</th><th>Class time</th><th>Submitted at</th><th>Location</th><th>Action</th></tr></thead>
+                                <tbody>${recordRows}</tbody>
+                            </table></div>
+                        </td></tr>`;
+                }).join('') : '<tr><td class="empty" colspan="2">No class starts match this date.</td></tr>';
+
+            classSessionTableBody.querySelectorAll('[data-class-session-teacher]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const details = document.getElementById(button.getAttribute('aria-controls'));
+                    details.hidden = !details.hidden;
+                    button.setAttribute('aria-expanded', String(!details.hidden));
+                });
+            });
             classSessionTableBody.querySelectorAll('[data-session-id]').forEach(button => {
                 button.addEventListener('click', () => deleteClassSession(button.dataset.sessionId));
             });
+        }
+
+        classSessionCalendarButton.addEventListener('click', () => {
+            const opening = classSessionDatePicker.hidden;
+            classSessionDatePicker.hidden = !opening;
+            classSessionCalendarButton.setAttribute('aria-expanded', String(opening));
+            if (opening) {
+                classSessionDateFilter.focus();
+                if (typeof classSessionDateFilter.showPicker === 'function') {
+                    try { classSessionDateFilter.showPicker(); } catch (_) {}
+                }
+            }
+        });
+
+        classSessionDateFilter.addEventListener('change', () => {
+            selectedClassSessionDate = classSessionDateFilter.value;
+            renderClassSessionGroups();
+        });
+
+        clearClassSessionDate.addEventListener('click', () => {
+            classSessionDateFilter.value = '';
+            selectedClassSessionDate = '';
+            renderClassSessionGroups();
+        });
+
+        function formatSessionLocation(location = {}) {
+            const latitude = Number(location.latitude);
+            const longitude = Number(location.longitude);
+            if (location.latitude != null && location.longitude != null
+                && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+                && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180) {
+                const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                const accuracy = location.accuracy != null && Number.isFinite(Number(location.accuracy))
+                    ? ` <small>(accuracy ${Math.round(Number(location.accuracy))}m)</small>`
+                    : '';
+                return `<a href="${mapUrl}" target="_blank" rel="noopener">View map</a><br><small>${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracy}</small>`;
+            }
+            return escapeHtml(location.label || 'Location unavailable');
         }
 
         async function deleteClassSession(sessionId) {
@@ -716,11 +996,7 @@
         async function getLocation() {
             if (!navigator.geolocation) return { label: 'Device location unavailable' };
             return new Promise(resolve => {
-                if (!navigator.geolocation) {
-                    resolve({ label: 'Device location unavailable' });
-                    return;
-                }
-                const savePosition = async position => {
+                const savePosition = position => {
                     const { latitude, longitude } = position.coords;
                     const accuracy = position.coords.accuracy;
                     if (!Number.isFinite(accuracy) || accuracy > 1000) {
@@ -729,8 +1005,11 @@
                     }
                     resolve({ label: 'Device location', latitude, longitude, accuracy, approximate: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` });
                 };
-                const useFallback = () => navigator.geolocation.getCurrentPosition(savePosition, () => resolve({ label: 'Device location unavailable' }), { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
-                navigator.geolocation.getCurrentPosition(savePosition, useFallback, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+                navigator.geolocation.getCurrentPosition(savePosition, () => resolve({ label: 'Device location unavailable' }), {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 60000
+                });
             });
         }
 
@@ -748,19 +1027,33 @@
             signInButton.disabled = true;
             signInButton.textContent = 'Saving attendance...';
             const location = await getLocation();
-            const response = await fetch('/api/teacher/logins', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, location })
-            });
-            if (!response.ok) {
+            const payload = {
+                name,
+                location,
+                clientRequestId: crypto.randomUUID(),
+                occurredAt: new Date().toISOString()
+            };
+            let result;
+            try {
+                result = await TeacherOfflineQueue.submit('/api/teacher/logins', payload);
+            } catch (_) {
                 signInButton.disabled = false;
                 signInButton.textContent = 'Check in';
                 formStatus.textContent = 'Could not save your check-in. Please try again.';
                 return;
             }
-            formStatus.textContent = `Signed in at ${formatDate(new Date())}.`;
+            if (result.queued) {
+                try {
+                    const registration = await navigator.serviceWorker?.ready;
+                    if (registration?.sync) await registration.sync.register('teacher-attendance-sync');
+                } catch (_) {}
+            }
+            formStatus.textContent = result.queued
+                ? 'Check-in saved on this phone. It will upload automatically when internet returns.'
+                : `Signed in at ${formatDate(new Date())}.`;
             showCheckedInTeacher(name);
+            if (result.queued) panelCopy.textContent = 'Your check-in is saved on this phone and will upload automatically when internet returns.';
+            await renderTeacherClassHistory(name);
             if (adminView.classList.contains('is-visible')) renderAdminLog().catch(() => {});
         });
 
@@ -779,18 +1072,33 @@
             }
             classSessionStatus.textContent = 'Saving class start...';
             const location = await getLocation();
-            const response = await fetch('/api/teacher/class-sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, className, classStartTime, location })
-            });
-            if (!response.ok) {
+            const payload = {
+                name,
+                className,
+                classStartTime,
+                location,
+                clientRequestId: crypto.randomUUID(),
+                occurredAt: new Date().toISOString()
+            };
+            let result;
+            try {
+                result = await TeacherOfflineQueue.submit('/api/teacher/class-sessions', payload);
+            } catch (_) {
                 classSessionStatus.textContent = 'Could not save the class start. Please try again.';
                 return;
             }
-            classSessionStatus.textContent = `Class start recorded at ${formatDate(new Date())}.`;
+            if (result.queued) {
+                try {
+                    const registration = await navigator.serviceWorker?.ready;
+                    if (registration?.sync) await registration.sync.register('teacher-attendance-sync');
+                } catch (_) {}
+            }
+            classSessionStatus.textContent = result.queued
+                ? 'Class start saved on this phone. It will upload automatically when internet returns.'
+                : `Class start recorded at ${formatDate(new Date())}.`;
             classSessionForm.reset();
             classSessionTeacher.value = name;
+            await renderTeacherClassHistory(name);
             if (adminView.classList.contains('is-visible')) renderClassSessions().catch(() => {});
         });
 
@@ -827,6 +1135,10 @@
             }
             availabilitySetting = availabilityTime.value;
             disappearanceSetting = disappearanceTime.value;
+            localStorage.setItem('dgc_teacher_schedule', JSON.stringify({
+                appearTime: availabilitySetting,
+                disappearTime: disappearanceSetting
+            }));
             settingStatus.textContent = `Saved: ${formatAvailabilityTime()} to ${formatDisappearanceTime()} Nigeria time.`;
             renderAdminLog().catch(() => {});
             const savedName = localStorage.getItem(teacherNameKey);
@@ -843,6 +1155,11 @@
 
         async function initializeTeacherPage() {
             try {
+                const savedSchedule = JSON.parse(localStorage.getItem('dgc_teacher_schedule') || '{}');
+                availabilitySetting = savedSchedule.appearTime || availabilitySetting;
+                disappearanceSetting = savedSchedule.disappearTime || disappearanceSetting;
+            } catch (_) {}
+            try {
                 await loadTeacherConfig();
             } catch (error) {
                 formStatus.textContent = `Using default schedule. ${error.message}`;
@@ -851,21 +1168,77 @@
             availabilityTime.value = getAvailabilityTime();
             disappearanceTime.value = getDisappearanceTime();
             if (savedName) {
-                const statusResponse = await fetch(`/api/teacher/status?name=${encodeURIComponent(savedName)}`);
-                const status = statusResponse.ok ? await statusResponse.json() : { checkedIn: false };
+                const queued = (await TeacherOfflineQueue.getPending()).some(item => item.payload.name === savedName);
+                let status = { checkedIn: false };
+                if (!queued && navigator.onLine) {
+                    try {
+                        const statusResponse = await fetch(`/api/teacher/status?name=${encodeURIComponent(savedName)}`);
+                        if (statusResponse.ok) status = await statusResponse.json();
+                    } catch (_) {}
+                }
                 if (status.reset) {
                     localStorage.removeItem(teacherNameKey);
                     showAvailableGuest();
                     formStatus.textContent = 'Your previous sign-in was removed by an administrator. Please sign in again.';
-                } else if (status.checkedIn) showCheckedInTeacher(savedName);
+                } else if (status.checkedIn || queued) {
+                    showCheckedInTeacher(savedName);
+                    if (queued) {
+                        panelCopy.textContent = 'Your check-in is saved on this phone and is waiting to upload when internet returns.';
+                        formStatus.textContent = 'A saved check-in is waiting to upload when internet returns.';
+                    }
+                }
                 else if (isCheckInAvailable()) showReturningTeacher(savedName);
                 else showUnavailableTeacher(savedName);
+                await renderTeacherClassHistory(savedName);
             } else if (!isCheckInAvailable()) {
                 showUnavailableGuest();
             }
-            if (new URLSearchParams(window.location.search).get('admin') === '1') openAdminView();
+            return registerTeacherApp();
         }
-        initializeTeacherPage();
+
+        async function unlockTeacherApp(isAdmin) {
+            launchGate.hidden = true;
+            teacherApp.hidden = false;
+            teacherAccessPassword = isAdmin ? adminLaunchPassword : teacherLaunchPassword;
+            if (isAdmin) {
+                adminPassword = adminLaunchPassword;
+                sessionStorage.setItem('dgc_teacher_admin_password', adminPassword);
+            } else {
+                adminPassword = '';
+                sessionStorage.removeItem('dgc_teacher_admin_password');
+            }
+            const registration = await initializeTeacherPage();
+            await syncTeacherCheckins();
+            if (isAdmin) openAdminView();
+            if (registration?.sync) {
+                registration.sync.register('teacher-attendance-sync').catch(() => {});
+            }
+        }
+
+        launchForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const password = launchPassword.value.trim();
+            const adminRequested = new URLSearchParams(window.location.search).get('admin') === '1';
+            if (password !== teacherLaunchPassword && password !== adminLaunchPassword) {
+                launchError.textContent = 'Incorrect password.';
+                launchPassword.select();
+                return;
+            }
+            if (adminRequested && password !== adminLaunchPassword) {
+                launchError.textContent = 'Enter the administrator password to continue.';
+                launchPassword.select();
+                return;
+            }
+            const isAdmin = password === adminLaunchPassword;
+            await unlockTeacherApp(isAdmin);
+        });
+
+        const websiteUnlockRole = sessionStorage.getItem('dgc_teacher_site_unlock');
+        if (websiteUnlockRole === 'teacher' || websiteUnlockRole === 'admin') {
+            sessionStorage.removeItem('dgc_teacher_site_unlock');
+            launchPassword.value = websiteUnlockRole === 'admin' ? adminLaunchPassword : teacherLaunchPassword;
+            launchForm.requestSubmit();
+        }
     </script>
     <script src="password-controls.js"></script>
 </body>

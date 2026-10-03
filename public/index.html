@@ -5048,6 +5048,9 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || !data.success) throw new Error(data.message || 'Incorrect password.');
                 if (password === 'admincheck') sessionStorage.setItem('dgc_teacher_admin_password', password);
+                if (target === '/teacher.html') {
+                    sessionStorage.setItem('dgc_teacher_site_unlock', password === 'admincheck' ? 'admin' : 'teacher');
+                }
                 window.location.href = `${data.redirectTo}${password === 'admincheck' ? '?admin=1' : ''}`;
             }).catch((err) => {
                 error.textContent = err instanceof TypeError
