@@ -1,6 +1,6 @@
 const APP_CACHE_PREFIX = 'dynolinks-portal-cache';
 const APP_CACHE_NAME = `${APP_CACHE_PREFIX}-${Date.now()}`;
-const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v10';
+const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v11';
 importScripts('/teacher-offline.js');
 
 self.addEventListener('install', (event) => {
@@ -42,7 +42,8 @@ self.addEventListener('activate', (event) => {
       caches.delete('dynolinks-teacher-offline-v6'),
       caches.delete('dynolinks-teacher-offline-v7'),
       caches.delete('dynolinks-teacher-offline-v8'),
-      caches.delete('dynolinks-teacher-offline-v9')
+      caches.delete('dynolinks-teacher-offline-v9'),
+      caches.delete('dynolinks-teacher-offline-v10')
     ]))
       .then(() => self.clients.claim())
   );

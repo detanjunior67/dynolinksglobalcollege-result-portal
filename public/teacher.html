@@ -521,7 +521,7 @@
                 const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
                 const response = await fetch('/teacher.html', { cache: 'no-store' });
                 if (response.ok && new URL(response.url).pathname === '/teacher.html') {
-                    const cache = await caches.open('dynolinks-teacher-offline-v10');
+                    const cache = await caches.open('dynolinks-teacher-offline-v11');
                     await cache.put('/teacher.html', response.clone());
                 }
                 return registration;
@@ -879,7 +879,8 @@
                 const accuracy = location.accuracy != null && Number.isFinite(Number(location.accuracy))
                     ? ` <small>(accuracy ${Math.round(Number(location.accuracy))}m)</small>`
                     : '';
-                return `<a href="${mapUrl}" target="_blank" rel="noopener">View map</a><br><small>${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracy}</small>`;
+                const cached = location.cached ? ' <small>(cached device location)</small>' : '';
+                return `<a href="${mapUrl}" target="_blank" rel="noopener">View map</a><br><small>${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracy}${cached}</small>`;
             }
             return escapeHtml(location.label || 'Location unavailable');
         }
@@ -993,22 +994,45 @@
             return `${normalizedHour}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
         }
 
+        function getCachedDeviceLocation() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('dgc_last_device_location') || 'null');
+                if (!saved || Date.now() - saved.capturedAt > 6 * 60 * 60 * 1000) return null;
+                return { ...saved.location, label: 'Cached device location', cached: true };
+            } catch (_) {
+                return null;
+            }
+        }
+
         async function getLocation() {
-            if (!navigator.geolocation) return { label: 'Device location unavailable' };
+            const cachedLocation = getCachedDeviceLocation();
+            if (!navigator.geolocation) return cachedLocation || { label: 'Device location unavailable' };
+            if (!navigator.onLine && cachedLocation) return cachedLocation;
             return new Promise(resolve => {
+                let completed = false;
+                const finish = location => {
+                    if (completed) return;
+                    completed = true;
+                    resolve(location);
+                };
                 const savePosition = position => {
                     const { latitude, longitude } = position.coords;
                     const accuracy = position.coords.accuracy;
                     if (!Number.isFinite(accuracy) || accuracy > 1000) {
-                        resolve({ label: 'Device location accuracy is too low', accuracy });
+                        finish(cachedLocation || { label: 'Device location accuracy is too low', accuracy });
                         return;
                     }
-                    resolve({ label: 'Device location', latitude, longitude, accuracy, approximate: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` });
+                    const capturedAt = Date.now();
+                    const location = { label: 'Device location', latitude, longitude, accuracy, approximate: false, cached: false, mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}` };
+                    try {
+                        localStorage.setItem('dgc_last_device_location', JSON.stringify({ location, capturedAt }));
+                    } catch (_) {}
+                    finish(location);
                 };
-                navigator.geolocation.getCurrentPosition(savePosition, () => resolve({ label: 'Device location unavailable' }), {
+                navigator.geolocation.getCurrentPosition(savePosition, () => finish(cachedLocation || { label: 'Device location unavailable' }), {
                     enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 60000
+                    timeout: navigator.onLine ? 5000 : 8000,
+                    maximumAge: navigator.onLine ? 60000 : 10 * 60 * 1000
                 });
             });
         }
