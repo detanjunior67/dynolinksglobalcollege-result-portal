@@ -196,9 +196,14 @@
         .side-panel h2 { color: #ffffff; }
         .account { background: #edf8f3; border: 1px solid #d1e9e4; }
         .availability-settings { background: #f5faf9; }
-        .admin-export-tools { display: flex; align-items: end; flex-wrap: wrap; gap: 9px; padding: 13px 0; }
-        .admin-export-tools label { margin: 0; }
-        .admin-export-tools input { width: auto; min-width: 150px; padding: 8px 10px; }
+        .admin-export-tools { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 13px 0; }
+        .admin-export-filter,
+        .admin-export-downloads { display: flex; align-items: center; gap: 9px; }
+        .admin-export-filter { flex-wrap: wrap; }
+        .admin-export-filter label { margin: 0; }
+        .admin-export-tools input { width: auto; min-width: 150px; min-height: 40px; padding: 8px 10px; }
+        .admin-export-date-clear { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; color: var(--teal-dark); background: white; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+        .admin-export-date-clear:hover { background: #edf7f5; }
         .admin-download-button { appearance: none; border: 1px solid #b8d5d1; border-radius: 9px; padding: 9px 12px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; transition: background .18s, border-color .18s, transform .18s; }
         .admin-download-button:hover { border-color: var(--teal); background: #dcefe9; transform: translateY(-1px); }
         .admin-download-button:disabled { cursor: wait; opacity: .7; transform: none; }
@@ -216,8 +221,6 @@
         .teacher-class-record strong { color: var(--ink); }
         .teacher-class-record span, .teacher-class-record time { color: var(--muted); font-size: .8rem; }
         .teacher-class-record time { text-align: right; }
-        .location-check { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-        .location-quality { color: var(--muted); font-size: .8rem; }
         .session-count { color: #0369a1; background: #e0f2fe; }
         body.admin-mode .class-session-panel,
         body.admin-mode .side-panel { display: none !important; }
@@ -225,13 +228,18 @@
         .admin-view { background: transparent; border: 0; box-shadow: none; padding: 0; }
         .admin-section-card { padding: clamp(20px, 3vw, 32px); border: 1px solid #d9e7e4; border-radius: 22px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(17,63,70,.08); }
         .admin-section-card + .admin-section-card { margin-top: 24px; }
-        .class-session-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .class-session-calendar-button, .class-session-date-clear { border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; color: var(--teal-dark); background: white; font: inherit; font-size: .84rem; font-weight: 700; }
-        .class-session-calendar-button:hover, .class-session-date-clear:hover { background: #edf7f5; }
-        .class-session-date-picker { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #f8fcfa; }
+        .class-session-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        .class-session-calendar-button { display: inline-flex; align-items: center; gap: 9px; min-height: 40px; border: 1px solid #b8d5d1; border-radius: 10px; padding: 8px 13px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; transition: background .18s, border-color .18s, color .18s; }
+        .class-session-calendar-button::before { content: ''; width: 15px; height: 15px; flex: 0 0 15px; border: 1.5px solid currentColor; border-radius: 3px; background: linear-gradient(currentColor,currentColor) 0 4px / 100% 1px no-repeat, radial-gradient(circle,currentColor 1px,transparent 1.2px) 3px 7px / 5px 5px repeat; }
+        .class-session-calendar-button:hover { border-color: var(--teal); background: #dcefe9; }
+        .class-session-calendar-button[aria-expanded="true"] { border-color: var(--teal-dark); color: white; background: var(--teal-dark); }
+        .class-session-date-clear { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; color: var(--teal-dark); background: white; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+        .class-session-date-clear:hover { background: #edf7f5; }
+        .class-session-date-picker { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; flex: 1 0 100%; gap: 12px; padding: 14px; border: 1px solid var(--line); border-left: 3px solid #d18a19; border-radius: 10px; background: #f8fcfa; }
         .class-session-date-picker[hidden] { display: none; }
-        .class-session-date-picker label { margin: 0; white-space: nowrap; }
-        .class-session-date-picker input { width: auto; padding: 8px 10px; }
+        .class-session-date-field { display: grid; gap: 6px; min-width: 0; }
+        .class-session-date-picker label { margin: 0; color: var(--muted); font-size: .75rem; font-weight: 700; }
+        .class-session-date-picker input { width: 100%; min-height: 40px; padding: 8px 10px; border-radius: 9px; }
         .class-session-group-table > tbody > tr > td { white-space: normal; }
         .class-session-teacher-toggle { padding: 0; border: 0; color: var(--teal-dark); background: transparent; font: inherit; font-weight: 700; text-align: left; text-decoration: underline; text-decoration-color: rgba(15,118,110,.3); text-underline-offset: 3px; }
         .class-session-teacher-toggle:hover { color: var(--coral); }
@@ -262,9 +270,11 @@
             .availability-settings > * { width: 100%; }
             .availability-settings input { width: 100%; min-width: 0; }
             .admin-export-tools { align-items: stretch; flex-direction: column; }
-            .admin-export-tools > * { flex: 0 1 auto; width: 100%; max-width: 100%; min-width: 0; }
-            .admin-export-tools input { width: 100%; }
-            .admin-download-button { white-space: normal; }
+            .admin-export-filter { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: 100%; }
+            .admin-export-filter label { grid-column: 1 / -1; }
+            .admin-export-filter input { width: 100%; min-width: 0; }
+            .admin-export-downloads { width: 100%; }
+            .admin-export-downloads .admin-download-button { flex: 1; white-space: nowrap; }
             .admin-heading { align-items: flex-start; flex-direction: column; }
             .class-session-tools { align-items: stretch; flex-direction: column; }
             .class-session-date-picker { align-items: stretch; flex-direction: column; }
@@ -341,9 +351,6 @@
                             <label for="teacherName">Full name</label>
                             <input id="teacherName" type="text" placeholder="e.g. Amina Yusuf" autocomplete="name" required>
                         </div>
-                        <div class="location-check">
-                            <span class="location-quality" id="signInLocationQuality" role="status" aria-live="polite"></span>
-                        </div>
                         <button class="primary" type="submit" id="signInButton">Sign in</button>
                     </form>
                     <div class="status" id="formStatus" role="status"></div>
@@ -373,9 +380,6 @@
                         </div>
                         <label for="classStartTime" style="margin-top: 14px;">Class start time</label>
                         <input id="classStartTime" type="time" required>
-                        <div class="location-check">
-                            <span class="location-quality" id="classLocationQuality" role="status" aria-live="polite"></span>
-                        </div>
                         <button class="primary class-session-submit" type="submit">Check in to teach class</button>
                         <div class="class-session-status" id="classSessionStatus" role="status"></div>
                     </form>
@@ -404,11 +408,15 @@
                             <span class="setting-status" id="settingStatus" role="status"></span>
                         </div>
                         <div class="admin-export-tools">
-                            <label for="loginExportDateFilter">Filter sign-ins by date</label>
-                            <input id="loginExportDateFilter" type="date">
-                            <button type="button" id="clearLoginExportDate">All dates</button>
-                            <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="csv">Download CSV</button>
-                            <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="xlsx">Download Excel</button>
+                            <div class="admin-export-filter">
+                                <label for="loginExportDateFilter">Filter sign-ins by date</label>
+                                <input id="loginExportDateFilter" type="date">
+                                <button class="admin-export-date-clear" type="button" id="clearLoginExportDate">All dates</button>
+                            </div>
+                            <div class="admin-export-downloads">
+                                <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="csv">Download CSV</button>
+                                <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="xlsx">Download Excel</button>
+                            </div>
                         </div>
                         <div class="table-wrap">
                             <table>
@@ -424,10 +432,12 @@
                             <span class="count session-count" id="sessionCount">0 records</span>
                         </div>
                         <div class="class-session-tools">
-                            <button class="class-session-calendar-button" id="classSessionCalendarButton" type="button" aria-expanded="false" aria-controls="classSessionDatePicker">Calendar</button>
+                                            <button class="class-session-calendar-button" id="classSessionCalendarButton" type="button" aria-expanded="false" aria-controls="classSessionDatePicker">Calendar</button>
                             <div class="class-session-date-picker" id="classSessionDatePicker" hidden>
-                                <label for="classSessionDateFilter">Filter by submission date</label>
-                                <input id="classSessionDateFilter" type="date">
+                                                <div class="class-session-date-field">
+                                                    <label for="classSessionDateFilter">Show class starts for</label>
+                                                    <input id="classSessionDateFilter" type="date">
+                                                </div>
                                 <button class="class-session-date-clear" id="clearClassSessionDate" type="button">All dates</button>
                             </div>
                             <button class="admin-download-button" type="button" data-export-kind="classSessions" data-export-format="csv">Download CSV</button>
@@ -508,8 +518,6 @@
         const clearClassSessionDate = document.getElementById('clearClassSessionDate');
         const loginExportDateFilter = document.getElementById('loginExportDateFilter');
         const clearLoginExportDate = document.getElementById('clearLoginExportDate');
-        const signInLocationQuality = document.getElementById('signInLocationQuality');
-        const classLocationQuality = document.getElementById('classLocationQuality');
         const adminView = document.getElementById('adminView');
         const loginTableBody = document.getElementById('loginTableBody');
         const loginCount = document.getElementById('loginCount');
@@ -1238,22 +1246,8 @@
             });
         }
 
-        function describeLocationQuality(location) {
-            if (location?.latitude != null && location?.longitude != null) {
-                const source = location.cached ? 'Cached' : 'Fresh';
-                const accuracy = Number.isFinite(Number(location.accuracy)) ? ` (${Math.round(Number(location.accuracy))}m accuracy)` : '';
-                return `${source} device location${accuracy}`;
-            }
-            if (location?.label?.includes('permission denied')) return 'Permission denied. Allow location in browser settings.';
-            if (location?.label?.includes('accuracy is too low')) return 'Device location accuracy is too low.';
-            return location?.label || 'Device location unavailable';
-        }
-
         function updateLocationQuality(location) {
             selectedDeviceLocation = location;
-            const message = describeLocationQuality(location);
-            signInLocationQuality.textContent = message;
-            classLocationQuality.textContent = message;
         }
 
         const savedDeviceLocation = getCachedDeviceLocation();
@@ -1272,8 +1266,6 @@
             localStorage.setItem(teacherNameKey, name);
             signInButton.disabled = true;
             signInButton.textContent = 'Saving attendance...';
-            signInLocationQuality.textContent = 'Checking device location...';
-            classLocationQuality.textContent = 'Checking device location...';
             const location = selectedDeviceLocation || await getLocation();
             updateLocationQuality(location);
             const payload = {
@@ -1300,7 +1292,6 @@
             formStatus.textContent = result.queued
                 ? 'Check-in saved on this phone. It will upload automatically when internet returns.'
                 : `Signed in at ${formatDate(new Date())}.`;
-            if (location.latitude == null) formStatus.textContent += ` ${location.label}`;
             showCheckedInTeacher(name);
             if (result.queued) panelCopy.textContent = 'Your check-in is saved on this phone and will upload automatically when internet returns.';
             await renderTeacherClassHistory(name);
@@ -1321,8 +1312,6 @@
                 return;
             }
             classSessionStatus.textContent = 'Saving class start...';
-            signInLocationQuality.textContent = 'Checking device location...';
-            classLocationQuality.textContent = 'Checking device location...';
             const location = selectedDeviceLocation || await getLocation();
             updateLocationQuality(location);
             const payload = {
@@ -1349,7 +1338,6 @@
             classSessionStatus.textContent = result.queued
                 ? 'Class start saved on this phone. It will upload automatically when internet returns.'
                 : `Class start recorded at ${formatDate(new Date())}.`;
-            if (location.latitude == null) classSessionStatus.textContent += ` ${location.label}`;
             classSessionForm.reset();
             classSessionTeacher.value = name;
             await renderTeacherClassHistory(name);
