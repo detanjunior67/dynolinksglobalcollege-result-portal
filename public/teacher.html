@@ -202,8 +202,11 @@
         .admin-export-filter { flex-wrap: wrap; }
         .admin-export-filter label { margin: 0; }
         .admin-export-tools input { width: auto; min-width: 150px; min-height: 40px; padding: 8px 10px; }
-        .admin-export-date-clear { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; color: var(--teal-dark); background: white; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
-        .admin-export-date-clear:hover { background: #edf7f5; }
+        .admin-export-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+        .admin-export-preset { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; color: var(--teal-dark); background: white; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+        .admin-export-preset:hover { background: #edf7f5; }
+        .admin-export-preset[aria-pressed="true"] { border-color: var(--teal-dark); color: white; background: var(--teal-dark); }
+        .admin-export-match-count { flex: 1 0 100%; color: var(--muted); font-size: .78rem; }
         .admin-download-button { appearance: none; border: 1px solid #b8d5d1; border-radius: 9px; padding: 9px 12px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; transition: background .18s, border-color .18s, transform .18s; }
         .admin-download-button:hover { border-color: var(--teal); background: #dcefe9; transform: translateY(-1px); }
         .admin-download-button:disabled { cursor: wait; opacity: .7; transform: none; }
@@ -221,6 +224,59 @@
         .teacher-class-record strong { color: var(--ink); }
         .teacher-class-record span, .teacher-class-record time { color: var(--muted); font-size: .8rem; }
         .teacher-class-record time { text-align: right; }
+        .class-session-end-button { justify-self: start; border: 1px solid #b8d5d1; border-radius: 8px; padding: 6px 10px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .class-session-end-button:hover { background: #dcefe9; }
+        .class-session-end-button:disabled { cursor: wait; opacity: .7; }
+        .offline-sync-status { margin: 12px 0; padding: 9px 11px; border-left: 3px solid #0f766e; color: #115e59; background: #edf8f3; font-size: .8rem; font-weight: 700; }
+        .offline-sync-status[data-state="offline"] { border-color: #b45309; color: #92400e; background: #fff7ed; }
+        .teacher-report-disclosure { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+        .teacher-report-disclosure summary { color: var(--teal-dark); font-size: .88rem; font-weight: 700; cursor: pointer; }
+        .teacher-report-form { display: grid; gap: 10px; margin-top: 12px; }
+        .teacher-report-form textarea { min-height: 88px; resize: vertical; }
+        .teacher-report-status { min-height: 20px; color: var(--teal-dark); font-size: .8rem; font-weight: 700; }
+        .teacher-report-history { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+        .teacher-report-history h3 { margin: 0; color: var(--ink); font-size: .9rem; }
+        .teacher-report-history-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .8rem; }
+        .teacher-report-history-item p { margin: 4px 0 0; color: var(--muted); white-space: pre-wrap; }
+        .teacher-report-history-status { align-self: flex-start; color: var(--teal-dark); font-weight: 700; white-space: nowrap; }
+        .teacher-report-history-status[data-status="queued"] { color: #92400e; }
+        .teacher-report-history-status[data-status="rejected"] { color: #991b1b; }
+        .teacher-checkin-reports { display: grid; gap: 10px; }
+        .teacher-checkin-report { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .teacher-checkin-report p { margin: 4px 0 0; color: var(--muted); font-size: .84rem; white-space: pre-wrap; }
+        .teacher-checkin-report-actions { display: flex; align-items: center; gap: 6px; }
+        .teacher-checkin-report-actions button { border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; background: white; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .teacher-checkin-report-actions [data-report-action="approve"] { color: #166534; }
+        .teacher-checkin-report-actions [data-report-action="reject"] { color: #991b1b; }
+        .teacher-announcement-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 1px solid #b8d5d1; border-radius: 9px; padding: 8px 11px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+        .teacher-announcement-button[hidden] { display: none; }
+        body.admin-mode .teacher-announcement-button { display: none; }
+        .announcement-unread-count { display: inline-grid; min-width: 21px; height: 21px; padding: 0 5px; place-items: center; border-radius: 11px; color: white; background: #b42318; font-size: .72rem; }
+        .teacher-announcement-dialog { width: min(600px, calc(100% - 32px)); max-height: min(80vh, 720px); margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: white; box-shadow: 0 24px 70px rgba(8,24,39,.28); }
+        .teacher-announcement-dialog::backdrop { background: rgba(8,24,39,.62); }
+        .teacher-announcement-dialog-content { display: grid; gap: 14px; max-height: inherit; overflow: auto; padding: 22px; }
+        .teacher-announcement-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .teacher-announcement-dialog-header h2 { margin: 0; font-size: 1.35rem; }
+        .teacher-announcement-dialog-header button { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; color: var(--teal-dark); background: white; font: inherit; cursor: pointer; }
+        .teacher-announcement-list { display: grid; gap: 12px; }
+        .teacher-announcement-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .teacher-announcement-item h3 { margin: 0 0 5px; font-size: 1rem; }
+        .teacher-announcement-item p { margin: 0; line-height: 1.5; white-space: pre-wrap; }
+        .teacher-announcement-item time { display: block; margin-top: 7px; color: var(--muted); font-size: .75rem; }
+        .admin-announcement-form { display: grid; gap: 12px; }
+        .admin-announcement-form textarea { min-height: 95px; resize: vertical; }
+        .admin-announcement-duration { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+        .admin-announcement-duration label { min-width: 120px; margin: 0; }
+        .admin-announcement-duration input,
+        .admin-announcement-duration select { min-height: 40px; padding: 8px 10px; }
+        .admin-announcement-duration input { width: 110px; }
+        .admin-announcement-duration select { width: 130px; }
+        .admin-announcement-list { display: grid; gap: 12px; margin-top: 18px; }
+        .admin-announcement-item { padding: 12px 0; border-top: 1px solid var(--line); }
+        .admin-announcement-item-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .admin-announcement-item p { margin: 8px 0; white-space: pre-wrap; }
+        .admin-announcement-meta { color: var(--muted); font-size: .78rem; }
+        .admin-announcement-readers { color: var(--teal-dark); font-size: .82rem; }
         .session-count { color: #0369a1; background: #e0f2fe; }
         body.admin-mode .class-session-panel,
         body.admin-mode .side-panel { display: none !important; }
@@ -275,6 +331,9 @@
             .admin-export-filter input { width: 100%; min-width: 0; }
             .admin-export-downloads { width: 100%; }
             .admin-export-downloads .admin-download-button { flex: 1; white-space: nowrap; }
+            .admin-announcement-duration label { flex: 1; }
+            .teacher-checkin-report { grid-template-columns: 1fr; }
+            .teacher-announcement-dialog-content { padding: 18px; }
             .admin-heading { align-items: flex-start; flex-direction: column; }
             .class-session-tools { align-items: stretch; flex-direction: column; }
             .class-session-date-picker { align-items: stretch; flex-direction: column; }
@@ -330,6 +389,9 @@
                 <img class="brand-mark" src="logo.jpg" alt="Dynolinks Global College logo">
                 <span>Dynolinks Global College<small>Teacher check-in</small></span>
             </a>
+            <button class="teacher-announcement-button" id="teacherAnnouncementButton" type="button" hidden>
+                <span>Announcements</span><span class="announcement-unread-count" id="teacherAnnouncementUnreadCount" hidden>0</span>
+            </button>
             <button class="install-button" id="installAppButton" type="button">Install teacher app</button>
             <span class="install-status" id="installStatus" role="status" aria-live="polite"></span>
             <a class="back-link" href="index.html">Back to home</a>
@@ -354,11 +416,41 @@
                         <button class="primary" type="submit" id="signInButton">Sign in</button>
                     </form>
                     <div class="status" id="formStatus" role="status"></div>
+                    <details class="teacher-report-disclosure">
+                        <summary>Report a missed check-in</summary>
+                        <form class="teacher-report-form" id="teacherCheckinReportForm">
+                            <div>
+                                <label for="teacherCheckinReportName">Teacher name</label>
+                                <input id="teacherCheckinReportName" type="text" autocomplete="name" required>
+                            </div>
+                            <div class="class-session-grid">
+                                <div>
+                                    <label for="missedCheckinDate">Missed date (Nigeria time)</label>
+                                    <input id="missedCheckinDate" type="date" required>
+                                </div>
+                                <div>
+                                    <label for="missedCheckinTime">Missed time (Nigeria time)</label>
+                                    <input id="missedCheckinTime" type="time" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="missedCheckinReason">Reason</label>
+                                <textarea id="missedCheckinReason" minlength="5" maxlength="1000" required placeholder="Explain what happened"></textarea>
+                            </div>
+                            <button class="primary" type="submit">Submit report</button>
+                            <div class="teacher-report-status" id="teacherCheckinReportStatus" role="status"></div>
+                        </form>
+                        <section class="teacher-report-history" aria-labelledby="teacherCheckinReportHistoryTitle">
+                            <h3 id="teacherCheckinReportHistoryTitle">My reports</h3>
+                            <div id="teacherCheckinReportHistory" aria-live="polite">Enter your name to view report status.</div>
+                        </section>
+                    </details>
                 </div>
 
                 <div class="panel class-session-panel" id="classSessionPanel">
                     <h2>Start a class</h2>
                     <p class="panel-copy">Choose the class you are about to teach. </p>
+                    <div class="offline-sync-status" id="teacherOfflineSyncStatus" role="status" aria-live="polite">Checking saved records...</div>
                     <form id="classSessionForm">
                         <div class="class-session-grid">
                             <div>
@@ -377,10 +469,16 @@
                                     <option>SS 3</option>
                                 </select>
                             </div>
+                            <div>
+                                <label for="classSessionSubject">Subject</label>
+                                <select id="classSessionSubject" required disabled>
+                                    <option value="">Select class first</option>
+                                </select>
+                            </div>
                         </div>
                         <label for="classStartTime" style="margin-top: 14px;">Class start time</label>
                         <input id="classStartTime" type="time" required>
-                        <button class="primary class-session-submit" type="submit">Check in to teach class</button>
+                        <button class="primary class-session-submit" type="submit">Start class</button>
                         <div class="class-session-status" id="classSessionStatus" role="status"></div>
                     </form>
                     <section class="teacher-class-history" aria-labelledby="teacherClassHistoryTitle">
@@ -390,6 +488,44 @@
                 </div>
 
                 <div class="panel admin-view" id="adminView">
+                    <div class="admin-section-card">
+                        <div class="admin-heading">
+                            <h2>Announcements</h2>
+                            <button class="class-session-calendar-button" id="refreshTeacherAnnouncements" type="button">Refresh</button>
+                        </div>
+                        <form class="admin-announcement-form" id="adminAnnouncementForm">
+                            <div>
+                                <label for="adminAnnouncementTitle">Title</label>
+                                <input id="adminAnnouncementTitle" type="text" maxlength="120" placeholder="Optional title">
+                            </div>
+                            <div>
+                                <label for="adminAnnouncementMessage">Message</label>
+                                <textarea id="adminAnnouncementMessage" maxlength="3000" required placeholder="Write an announcement for teachers"></textarea>
+                            </div>
+                            <div class="admin-announcement-duration">
+                                <label for="adminAnnouncementDuration">Show for
+                                    <input id="adminAnnouncementDuration" type="number" min="1" max="365" value="1" required>
+                                </label>
+                                <label for="adminAnnouncementUnit">Duration unit
+                                    <select id="adminAnnouncementUnit">
+                                        <option value="hours">Hours</option>
+                                        <option value="days" selected>Days</option>
+                                        <option value="months">Months</option>
+                                    </select>
+                                </label>
+                                <button class="primary" type="submit">Publish announcement</button>
+                            </div>
+                            <div class="setting-status" id="adminAnnouncementStatus" role="status"></div>
+                        </form>
+                        <div class="admin-announcement-list" id="adminAnnouncementList" aria-live="polite">No announcements loaded.</div>
+                    </div>
+                    <div class="admin-section-card">
+                        <div class="admin-heading">
+                            <h2>Missed check-in reports</h2>
+                            <span class="count" id="teacherCheckinReportCount">0 pending</span>
+                        </div>
+                        <div class="teacher-checkin-reports" id="teacherCheckinReports" aria-live="polite">Loading reports...</div>
+                    </div>
                     <div class="admin-section-card">
                         <div class="admin-heading">
                             <h2>Teacher sign-ins</h2>
@@ -411,12 +547,18 @@
                             <div class="admin-export-filter">
                                 <label for="loginExportDateFilter">Filter sign-ins by date</label>
                                 <input id="loginExportDateFilter" type="date">
-                                <button class="admin-export-date-clear" type="button" id="clearLoginExportDate">All dates</button>
+                                <div class="admin-export-presets" role="group" aria-label="Sign-in date presets">
+                                    <button class="admin-export-preset" type="button" data-login-date-range="today" aria-pressed="false">Today</button>
+                                    <button class="admin-export-preset" type="button" data-login-date-range="week" aria-pressed="false">This week</button>
+                                    <button class="admin-export-preset" type="button" data-login-date-range="month" aria-pressed="false">This month</button>
+                                    <button class="admin-export-preset" type="button" data-login-date-range="all" aria-pressed="true">All dates</button>
+                                </div>
                             </div>
                             <div class="admin-export-downloads">
                                 <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="csv">Download CSV</button>
                                 <button class="admin-download-button" type="button" data-export-kind="logins" data-export-format="xlsx">Download Excel</button>
                             </div>
+                            <span class="admin-export-match-count" id="loginExportMatchCount" aria-live="polite">0 sign-ins match this filter</span>
                         </div>
                         <div class="table-wrap">
                             <table>
@@ -463,6 +605,16 @@
         </section>
     </main>
 
+    <dialog class="teacher-announcement-dialog" id="teacherAnnouncementDialog" aria-labelledby="teacherAnnouncementTitle">
+        <div class="teacher-announcement-dialog-content">
+            <div class="teacher-announcement-dialog-header">
+                <h2 id="teacherAnnouncementTitle">Announcements</h2>
+                <button id="closeTeacherAnnouncements" type="button">Close</button>
+            </div>
+            <div class="teacher-announcement-list" id="teacherAnnouncementList" aria-live="polite"></div>
+        </div>
+    </dialog>
+
     <div class="password-dialog" id="deletePasswordDialog" role="dialog" aria-modal="true" aria-labelledby="deletePasswordTitle">
         <form class="password-card" id="deletePasswordForm">
             <h2 id="deletePasswordTitle">Confirm administrator access</h2>
@@ -480,6 +632,7 @@
     <script src="/teacher-offline.js"></script>
     <script>
         const teacherNameKey = 'dgc_teacher_name';
+        const teacherCheckinReportTokensKey = 'dgc_teacher_checkin_report_tokens:';
         const teacherLaunchPassword = 'checkme';
         const adminLaunchPassword = 'admincheck';
         const launchGate = document.getElementById('launchGate');
@@ -507,9 +660,31 @@
         const signInButton = document.getElementById('signInButton');
         const formStatus = document.getElementById('formStatus');
         const classSessionForm = document.getElementById('classSessionForm');
+        const classSessionClass = document.getElementById('classSessionClass');
+        const classSessionSubject = document.getElementById('classSessionSubject');
         const classSessionTeacher = document.getElementById('classSessionTeacher');
         const classSessionStatus = document.getElementById('classSessionStatus');
         const teacherClassHistory = document.getElementById('teacherClassHistory');
+        const teacherOfflineSyncStatus = document.getElementById('teacherOfflineSyncStatus');
+        const teacherCheckinReportForm = document.getElementById('teacherCheckinReportForm');
+        const teacherCheckinReportStatus = document.getElementById('teacherCheckinReportStatus');
+        const teacherCheckinReportName = document.getElementById('teacherCheckinReportName');
+        const teacherCheckinReportHistory = document.getElementById('teacherCheckinReportHistory');
+        const teacherCheckinReports = document.getElementById('teacherCheckinReports');
+        const teacherCheckinReportCount = document.getElementById('teacherCheckinReportCount');
+        const teacherAnnouncementButton = document.getElementById('teacherAnnouncementButton');
+        const teacherAnnouncementUnreadCount = document.getElementById('teacherAnnouncementUnreadCount');
+        const teacherAnnouncementDialog = document.getElementById('teacherAnnouncementDialog');
+        const teacherAnnouncementList = document.getElementById('teacherAnnouncementList');
+        const closeTeacherAnnouncements = document.getElementById('closeTeacherAnnouncements');
+        const adminAnnouncementForm = document.getElementById('adminAnnouncementForm');
+        const adminAnnouncementTitle = document.getElementById('adminAnnouncementTitle');
+        const adminAnnouncementMessage = document.getElementById('adminAnnouncementMessage');
+        const adminAnnouncementDuration = document.getElementById('adminAnnouncementDuration');
+        const adminAnnouncementUnit = document.getElementById('adminAnnouncementUnit');
+        const adminAnnouncementStatus = document.getElementById('adminAnnouncementStatus');
+        const adminAnnouncementList = document.getElementById('adminAnnouncementList');
+        const refreshTeacherAnnouncements = document.getElementById('refreshTeacherAnnouncements');
         const classSessionTableBody = document.getElementById('classSessionTableBody');
         const sessionCount = document.getElementById('sessionCount');
         const classSessionCalendarButton = document.getElementById('classSessionCalendarButton');
@@ -517,19 +692,33 @@
         const classSessionDateFilter = document.getElementById('classSessionDateFilter');
         const clearClassSessionDate = document.getElementById('clearClassSessionDate');
         const loginExportDateFilter = document.getElementById('loginExportDateFilter');
-        const clearLoginExportDate = document.getElementById('clearLoginExportDate');
+        const loginExportPresets = document.querySelectorAll('[data-login-date-range]');
+        const loginExportMatchCount = document.getElementById('loginExportMatchCount');
         const adminView = document.getElementById('adminView');
         const loginTableBody = document.getElementById('loginTableBody');
         const loginCount = document.getElementById('loginCount');
         const availabilityTime = document.getElementById('availabilityTime');
         const disappearanceTime = document.getElementById('disappearanceTime');
         const settingStatus = document.getElementById('settingStatus');
+        const TEACHER_JSS_SUBJECTS = [
+            'Maths', 'English', 'Basic Science', 'Basic Technology', 'Creative Arts',
+            'Home Economics', 'Business Studies', 'Religious Studies', 'Social Studies', 'Agricultural Science',
+            'Nigerian Language', 'French', 'Physical and Health Education', 'Civic Education', 'Information Technology',
+            'History', 'Discovery'
+        ];
+        const TEACHER_SSS_SUBJECTS = [...new Set([
+            'Maths', 'English', 'Chemistry', 'Physics', 'Biology', 'Agricultural Science', 'Marketing', 'Civic Education', 'Economics', 'Discovery',
+            'Literature in English', 'Religious Studies', 'Agric', 'Government', 'Civic',
+            'Commerce', 'Accounting', 'Lit in English'
+        ])];
         let availabilitySetting = '08:00';
         let disappearanceSetting = '17:00';
         let serverLoginRecords = [];
         let selectedLoginExportDate = '';
+        let selectedLoginExportRange = 'all';
         let classSessionRecords = [];
         let selectedClassSessionDate = '';
+        let activeTeacherAnnouncements = [];
         let selectedDeviceLocation = null;
         let excelJsLoadPromise = null;
         let adminPassword = sessionStorage.getItem('dgc_teacher_admin_password') || '';
@@ -616,24 +805,54 @@
             }
         }
 
+        async function updateTeacherOfflineStatus() {
+            if (!teacherOfflineSyncStatus) return;
+            try {
+                const pendingCount = (await TeacherOfflineQueue.getPending()).length;
+                const online = navigator.onLine;
+                teacherOfflineSyncStatus.dataset.state = online ? 'online' : 'offline';
+                if (!online) {
+                    teacherOfflineSyncStatus.textContent = pendingCount
+                        ? `Offline · ${pendingCount} saved item${pendingCount === 1 ? '' : 's'} waiting to sync`
+                        : 'Offline · New check-ins will be saved on this device';
+                } else {
+                    teacherOfflineSyncStatus.textContent = pendingCount
+                        ? `Online · ${pendingCount} saved item${pendingCount === 1 ? '' : 's'} waiting to sync`
+                        : 'Online · All saved items are synced';
+                }
+            } catch (_) {
+                teacherOfflineSyncStatus.dataset.state = 'offline';
+                teacherOfflineSyncStatus.textContent = 'Saved-item status is unavailable on this device';
+            }
+        }
+
         async function syncTeacherCheckins() {
             try {
                 const result = await TeacherOfflineQueue.syncPending();
+                await updateTeacherOfflineStatus();
                 const savedName = localStorage.getItem(teacherNameKey);
+                const reportName = savedName || teacherCheckinReportName.value.trim();
                 if (result.synced && savedName) {
                     formStatus.textContent = `${result.synced} saved record${result.synced === 1 ? '' : 's'} uploaded.`;
                 }
                 if (savedName) await renderTeacherClassHistory(savedName);
+                if (reportName) await renderMyCheckinReportHistory(reportName);
                 return result;
             } catch (error) {
                 console.warn('Teacher check-ins are still waiting to sync:', error);
+                await updateTeacherOfflineStatus();
+                const reportName = localStorage.getItem(teacherNameKey) || teacherCheckinReportName.value.trim();
+                if (reportName) await renderMyCheckinReportHistory(reportName);
                 return null;
             }
         }
 
         window.addEventListener('online', () => {
             syncTeacherCheckins();
+            const savedName = localStorage.getItem(teacherNameKey);
+            if (savedName) loadTeacherAnnouncements(savedName, true);
         });
+        window.addEventListener('offline', updateTeacherOfflineStatus);
 
         function requestDeletePassword() {
             return new Promise(resolve => {
@@ -692,6 +911,18 @@
             return hour * 60 + minute;
         }
 
+        function populateClassSessionSubjects() {
+            const className = classSessionClass.value;
+            const subjects = /^JSS/i.test(className)
+                ? TEACHER_JSS_SUBJECTS
+                : /^SS/i.test(className) ? TEACHER_SSS_SUBJECTS : [];
+            classSessionSubject.replaceChildren(new Option('Select subject', ''));
+            subjects.forEach(subject => classSessionSubject.add(new Option(subject, subject)));
+            classSessionSubject.disabled = !subjects.length;
+        }
+
+        classSessionClass.addEventListener('change', populateClassSessionSubjects);
+
         function formatAvailabilityTime() {
             const [hour, minute] = getAvailabilityTime().split(':').map(Number);
             const normalizedHour = hour % 12 || 12;
@@ -730,10 +961,48 @@
             return new Date(value).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Lagos' });
         }
 
+        function getSessionDurationMinutes(session, now = Date.now()) {
+            const startedAt = new Date(session.submittedAt).getTime();
+            const endedAt = session.endedAt ? new Date(session.endedAt).getTime() : now;
+            if (!Number.isFinite(startedAt) || !Number.isFinite(endedAt) || endedAt < startedAt) return null;
+            return Math.floor((endedAt - startedAt) / 60000);
+        }
+
+        function formatSessionDuration(minutes) {
+            if (minutes == null) return 'Unavailable';
+            if (minutes < 1) return 'Less than 1 min';
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return hours ? `${hours} hr ${remainingMinutes} min` : `${remainingMinutes} min`;
+        }
+
         function getFilteredAttendanceRecords() {
+            const range = getLoginExportDateRange();
             return serverLoginRecords
-                .filter(record => !selectedLoginExportDate || getNigeriaCalendarDate(record.loggedInAt) === selectedLoginExportDate)
+                .filter(record => {
+                    const recordDate = getNigeriaCalendarDate(record.loggedInAt);
+                    if (selectedLoginExportDate) return recordDate === selectedLoginExportDate;
+                    return !range || (recordDate >= range.start && recordDate <= range.end);
+                })
                 .sort((left, right) => new Date(right.loggedInAt) - new Date(left.loggedInAt));
+        }
+
+        function getLoginExportDateRange() {
+            const today = getNigeriaCalendarDate(new Date());
+            if (selectedLoginExportRange === 'today') return { start: today, end: today };
+            if (selectedLoginExportRange === 'week') {
+                const todayUtc = new Date(`${today}T00:00:00Z`);
+                const mondayOffset = (todayUtc.getUTCDay() + 6) % 7;
+                const monday = new Date(todayUtc.getTime() - mondayOffset * 86400000);
+                const sunday = new Date(monday.getTime() + 6 * 86400000);
+                return { start: monday.toISOString().slice(0, 10), end: sunday.toISOString().slice(0, 10) };
+            }
+            if (selectedLoginExportRange === 'month') {
+                const [year, month] = today.split('-').map(Number);
+                const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+                return { start: `${today.slice(0, 7)}-01`, end: `${today.slice(0, 7)}-${String(lastDay).padStart(2, '0')}` };
+            }
+            return null;
         }
 
         function getFilteredClassSessionRecords() {
@@ -792,12 +1061,14 @@
             const isAttendance = kind === 'logins';
             const headers = isAttendance
                 ? ['Teacher', 'Signed in at (Nigeria time)', 'Attendance period', 'Location', 'Latitude', 'Longitude', 'Accuracy (m)', 'Location quality']
-                : ['Teacher', 'Class', 'Selected class time', 'Submitted at (Nigeria time)', 'Attendance period', 'Location', 'Latitude', 'Longitude', 'Accuracy (m)', 'Location quality'];
+                : ['Teacher', 'Class', 'Subject', 'Selected class time', 'Started at (Nigeria time)', 'Ended at (Nigeria time)', 'Duration (minutes)', 'Session status', 'Attendance period', 'Location', 'Latitude', 'Longitude', 'Accuracy (m)', 'Location quality'];
             const records = isAttendance ? getFilteredAttendanceRecords() : getFilteredClassSessionRecords();
             const rows = records.map(record => isAttendance
                 ? [record.name, formatDate(record.loggedInAt), record.period || '', ...exportLocationFields(record.location)]
-                : [record.name, record.className, record.classStartTime, formatDate(record.submittedAt), record.period || '', ...exportLocationFields(record.location)]);
-            const suffix = (isAttendance ? selectedLoginExportDate : selectedClassSessionDate) || 'all-dates';
+                : [record.name, record.className, record.subject || '', record.classStartTime, formatDate(record.submittedAt), record.endedAt ? formatDate(record.endedAt) : '', getSessionDurationMinutes(record), record.endedAt ? 'Completed' : 'Still open', record.period || '', ...exportLocationFields(record.location)]);
+            const suffix = isAttendance
+                ? selectedLoginExportDate || (selectedLoginExportRange === 'all' ? 'all-dates' : `this-${selectedLoginExportRange}`)
+                : selectedClassSessionDate || 'all-dates';
             const filename = `${isAttendance ? 'teacher-attendance' : 'teacher-class-starts'}-${suffix}`;
 
             if (format === 'csv') {
@@ -831,11 +1102,20 @@
             teacherClassHistory.innerHTML = '<p class="empty">Loading today\'s classes...</p>';
             const pending = await TeacherOfflineQueue.getPending();
             const attendancePeriod = getNigeriaAttendancePeriod();
+            const queuedEndTimes = new Map(pending
+                .filter(item => item.endpoint === '/api/teacher/class-sessions/end' && item.payload.name === name)
+                .map(item => [item.payload.startClientRequestId, item.payload.endedAt]));
             const queuedSessions = pending
                 .filter(item => item.endpoint === '/api/teacher/class-sessions'
                     && item.payload.name === name
                     && getNigeriaAttendancePeriod(new Date(item.payload.occurredAt)) === attendancePeriod)
-                .map(item => ({ ...item.payload, submittedAt: item.payload.occurredAt, _queued: true }));
+                .map(item => ({
+                    ...item.payload,
+                    submittedAt: item.payload.occurredAt,
+                    endedAt: queuedEndTimes.get(item.payload.clientRequestId),
+                    _endQueued: queuedEndTimes.has(item.payload.clientRequestId),
+                    _queued: true
+                }));
             let serverSessions = [];
             let loadMessage = '';
 
@@ -853,7 +1133,12 @@
                 }
             }
 
-            const sessions = [...serverSessions, ...queuedSessions]
+            const sessions = [
+                ...serverSessions.map(session => queuedEndTimes.has(session.clientRequestId)
+                    ? { ...session, endedAt: queuedEndTimes.get(session.clientRequestId), _endQueued: true }
+                    : session),
+                ...queuedSessions
+            ]
                 .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
             if (!sessions.length) {
                 teacherClassHistory.innerHTML = `<p class="empty">${loadMessage || 'No class check-ins recorded today.'}</p>`;
@@ -862,9 +1147,71 @@
 
             teacherClassHistory.innerHTML = `${loadMessage ? `<p class="helper">${escapeHtml(loadMessage)}</p>` : ''}${sessions.map(session => `
                 <article class="teacher-class-record">
-                    <div><strong>${escapeHtml(session.className)}</strong><span>Class time ${escapeHtml(session.classStartTime)}</span></div>
+                    <div>
+                        <strong>${escapeHtml(session.className)}</strong>
+                        <span>Class time ${escapeHtml(session.classStartTime)}</span>
+                        <span>Started at ${formatDate(session.submittedAt)}</span>
+                        ${session.endedAt ? `<span>${session._endQueued ? 'End saved on this phone' : 'Ended at'} ${formatDate(session.endedAt)}</span>` : ''}
+                        <span class="${session.endedAt ? '' : 'session-open-flag'}">${session.endedAt ? 'Duration' : 'Still open · elapsed'}: ${formatSessionDuration(getSessionDurationMinutes(session))}</span>
+                        ${session._queued && !session.endedAt ? '<span>Start saved on this phone</span>' : ''}
+                        ${!session.endedAt && session.clientRequestId ? `<button class="class-session-end-button" type="button" data-end-class="${escapeHtml(session.clientRequestId)}">End class</button>` : ''}
+                    </div>
                 </article>
             `).join('')}`;
+
+            teacherClassHistory.querySelectorAll('[data-end-class]').forEach(button => {
+                button.addEventListener('click', () => endClassSession(button.dataset.endClass, button));
+            });
+        }
+
+        async function endClassSession(startClientRequestId, button) {
+            const name = localStorage.getItem(teacherNameKey) || '';
+            const payload = {
+                name,
+                startClientRequestId,
+                clientRequestId: crypto.randomUUID(),
+                endedAt: new Date().toISOString()
+            };
+            button.disabled = true;
+            button.textContent = 'Saving...';
+            classSessionStatus.textContent = 'Recording class end...';
+
+            try {
+                const pending = await TeacherOfflineQueue.getPending();
+                const startIsQueued = pending.some(item => item.endpoint === '/api/teacher/class-sessions'
+                    && item.payload.clientRequestId === startClientRequestId);
+                let result;
+                if (startIsQueued) {
+                    await TeacherOfflineQueue.enqueue(payload, '/api/teacher/class-sessions/end');
+                    result = { queued: true };
+                    if (navigator.onLine) {
+                        try {
+                            await TeacherOfflineQueue.syncPending();
+                            result.queued = (await TeacherOfflineQueue.getPending())
+                                .some(item => item.payload.clientRequestId === payload.clientRequestId);
+                        } catch (_) {}
+                    }
+                } else {
+                    result = await TeacherOfflineQueue.submit('/api/teacher/class-sessions/end', payload);
+                }
+                if (result.queued) {
+                    try {
+                        const registration = await navigator.serviceWorker?.ready;
+                        if (registration?.sync) await registration.sync.register('teacher-attendance-sync');
+                    } catch (_) {}
+                }
+                classSessionStatus.textContent = result.queued
+                    ? 'Class end saved on this phone. It will upload automatically when internet returns.'
+                    : `Class ended at ${formatDate(payload.endedAt)}.`;
+                await updateTeacherOfflineStatus();
+                await renderTeacherClassHistory(name);
+                if (adminView.classList.contains('is-visible')) renderClassSessions().catch(() => {});
+            } catch (error) {
+                console.error('Could not record teacher class end:', error);
+                classSessionStatus.textContent = error.message || 'Could not record the class end. Please try again.';
+                button.disabled = false;
+                button.textContent = 'End class';
+            }
         }
 
         async function renderAdminLog() {
@@ -879,6 +1226,7 @@
             const data = await response.json();
             serverLoginRecords = data.logins || [];
             const records = getFilteredAttendanceRecords();
+            loginExportMatchCount.textContent = `${records.length} sign-in${records.length === 1 ? '' : 's'} match this filter`;
             const teachers = [...new Set(records.map(record => record.name))];
             loginCount.textContent = `${teachers.length} teacher${teachers.length === 1 ? '' : 's'}`;
             loginTableBody.innerHTML = teachers.length ? teachers.map((name, index) => {
@@ -911,7 +1259,254 @@
                 button.addEventListener('click', () => deleteTeacher(button.dataset.teacherName));
             });
             await renderClassSessions();
+            await renderTeacherCheckinReports();
         }
+
+        async function renderTeacherCheckinReports() {
+            try {
+                const response = await fetch('/api/teacher/checkin-reports', {
+                    headers: { 'x-teacher-admin-password': adminPassword }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not load reports (${response.status}).`);
+                const reports = data.reports || [];
+                const pendingCount = reports.filter(report => report.status === 'pending').length;
+                teacherCheckinReportCount.textContent = `${pendingCount} pending`;
+                teacherCheckinReports.innerHTML = reports.length ? reports.map(report => `
+                    <article class="teacher-checkin-report">
+                        <div>
+                            <strong>${escapeHtml(report.name)}</strong>
+                            <p>${formatDate(report.missedAt)} · ${escapeHtml(report.status)}</p>
+                            <p>${escapeHtml(report.reason)}</p>
+                        </div>
+                        ${report.status === 'pending' ? `<div class="teacher-checkin-report-actions">
+                            <button type="button" data-checkin-report-id="${escapeHtml(report._id)}" data-report-action="approve">Approve</button>
+                            <button type="button" data-checkin-report-id="${escapeHtml(report._id)}" data-report-action="reject">Reject</button>
+                        </div>` : ''}
+                    </article>
+                `).join('') : '<p class="empty">No missed check-in reports yet.</p>';
+                teacherCheckinReports.querySelectorAll('[data-checkin-report-id]').forEach(button => {
+                    button.addEventListener('click', () => reviewTeacherCheckinReport(button));
+                });
+            } catch (error) {
+                teacherCheckinReportCount.textContent = 'Unavailable';
+                teacherCheckinReports.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        async function reviewTeacherCheckinReport(button) {
+            const action = button.dataset.reportAction;
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/teacher/checkin-reports/${encodeURIComponent(button.dataset.checkinReportId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'x-teacher-admin-password': adminPassword },
+                    body: JSON.stringify({ action })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not ${action} report (${response.status}).`);
+                await renderAdminLog();
+            } catch (error) {
+                teacherCheckinReports.insertAdjacentHTML('afterbegin', `<p class="empty">${escapeHtml(error.message)}</p>`);
+                button.disabled = false;
+            }
+        }
+
+        async function renderMyCheckinReportHistory(name) {
+            const normalizedName = String(name || '').trim().replace(/\s+/g, ' ');
+            if (!normalizedName) {
+                teacherCheckinReportHistory.textContent = 'Enter your name to view report status.';
+                return;
+            }
+
+            let lookupTokens = [];
+            try {
+                lookupTokens = JSON.parse(localStorage.getItem(`${teacherCheckinReportTokensKey}${normalizedName.toLowerCase()}`) || '[]');
+                if (!Array.isArray(lookupTokens)) lookupTokens = [];
+            } catch (_) {}
+            let pending = [];
+            try { pending = await TeacherOfflineQueue.getPending(); } catch (_) {}
+            const queuedReports = pending.filter(item => item.endpoint === '/api/teacher/checkin-reports'
+                && item.payload.name === normalizedName);
+            queuedReports.forEach(item => {
+                if (item.payload.lookupToken && !lookupTokens.includes(item.payload.lookupToken)) lookupTokens.push(item.payload.lookupToken);
+            });
+            let reports = [];
+            let loadMessage = '';
+            if (navigator.onLine && lookupTokens.length) {
+                try {
+                    const response = await fetch('/api/teacher/checkin-reports/mine', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-teacher-page-password': teacherAccessPassword },
+                        body: JSON.stringify({ tokens: lookupTokens }),
+                        cache: 'no-store'
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.message || `Could not load report status (${response.status}).`);
+                    reports = data.reports || [];
+                } catch (_) {
+                    loadMessage = 'Previously submitted reports could not be refreshed.';
+                }
+            }
+
+            const reportsByRequestId = new Map(reports.map(report => [report.lookupToken || report._id, report]));
+            queuedReports.forEach(item => {
+                const reportKey = item.payload.lookupToken || item.payload.clientRequestId;
+                if (!reportsByRequestId.has(reportKey)) {
+                    reportsByRequestId.set(reportKey, {
+                        ...item.payload,
+                        status: 'queued'
+                    });
+                }
+            });
+            const reportList = [...reportsByRequestId.values()]
+                .sort((left, right) => new Date(right.missedAt) - new Date(left.missedAt));
+            if (!reportList.length) {
+                teacherCheckinReportHistory.innerHTML = `<p class="empty">${loadMessage || 'No reports submitted yet.'}</p>`;
+                return;
+            }
+
+            const statusLabels = { queued: 'Waiting to sync', pending: 'Pending review', approved: 'Approved', rejected: 'Rejected' };
+            teacherCheckinReportHistory.innerHTML = `${loadMessage ? `<p class="empty">${escapeHtml(loadMessage)}</p>` : ''}${reportList.map(report => `
+                <article class="teacher-report-history-item">
+                    <div><strong>${formatDate(report.missedAt)}</strong><p>${escapeHtml(report.reason)}</p></div>
+                    <span class="teacher-report-history-status" data-status="${escapeHtml(report.status)}">${escapeHtml(statusLabels[report.status] || report.status)}</span>
+                </article>
+            `).join('')}`;
+        }
+
+        function renderTeacherAnnouncementList() {
+            teacherAnnouncementList.innerHTML = activeTeacherAnnouncements.length
+                ? activeTeacherAnnouncements.map(announcement => `
+                    <article class="teacher-announcement-item">
+                        <h3>${escapeHtml(announcement.title || 'College announcement')}</h3>
+                        <p>${escapeHtml(announcement.message)}</p>
+                        <time>Available until ${formatDate(announcement.expiresAt)}</time>
+                    </article>
+                `).join('')
+                : '<p class="empty">There are no active announcements.</p>';
+        }
+
+        function updateTeacherAnnouncementUnreadCount() {
+            const unreadCount = activeTeacherAnnouncements.filter(announcement => !announcement.seen).length;
+            teacherAnnouncementUnreadCount.textContent = String(unreadCount);
+            teacherAnnouncementUnreadCount.hidden = unreadCount === 0;
+        }
+
+        async function markTeacherAnnouncementSeen(announcement, teacherName) {
+            try {
+                const response = await fetch(`/api/teacher/announcements/${encodeURIComponent(announcement._id)}/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-teacher-page-password': teacherAccessPassword },
+                    body: JSON.stringify({ teacherName })
+                });
+                if (!response.ok) return;
+                announcement.seen = true;
+                updateTeacherAnnouncementUnreadCount();
+            } catch (_) {}
+        }
+
+        async function loadTeacherAnnouncements(teacherName, notifyOnOpen = false, forceOpen = false) {
+            const normalizedName = String(teacherName || '').trim().replace(/\s+/g, ' ');
+            if (normalizedName.length < 3 || teacherAccessPassword === adminLaunchPassword) {
+                teacherAnnouncementButton.hidden = true;
+                return;
+            }
+            try {
+                const response = await fetch(`/api/teacher/announcements?teacherName=${encodeURIComponent(normalizedName)}`, {
+                    headers: { 'x-teacher-page-password': teacherAccessPassword },
+                    cache: 'no-store'
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not load announcements (${response.status}).`);
+                activeTeacherAnnouncements = data.announcements || [];
+                teacherAnnouncementButton.hidden = activeTeacherAnnouncements.length === 0;
+                updateTeacherAnnouncementUnreadCount();
+                renderTeacherAnnouncementList();
+
+                const unread = activeTeacherAnnouncements.filter(announcement => !announcement.seen);
+                if (forceOpen || (notifyOnOpen && unread.length)) {
+                    if (!teacherAnnouncementDialog.open) teacherAnnouncementDialog.showModal();
+                    await Promise.all(unread.map(announcement => markTeacherAnnouncementSeen(announcement, normalizedName)));
+                }
+            } catch (error) {
+                console.warn('Teacher announcements could not be loaded:', error);
+            }
+        }
+
+        async function renderAdminAnnouncements() {
+            const response = await fetch('/api/admin/teacher-announcements', {
+                headers: { 'x-teacher-admin-password': adminPassword },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Could not load announcements (${response.status}).`);
+            const announcements = data.announcements || [];
+            if (!announcements.length) {
+                adminAnnouncementList.innerHTML = '<p class="empty">No announcements published yet.</p>';
+                return;
+            }
+            adminAnnouncementList.innerHTML = announcements.map(announcement => {
+                const readers = [...new Set((announcement.readBy || []).map(receipt => receipt.teacherName))];
+                const isExpired = new Date(announcement.expiresAt) <= new Date();
+                return `
+                    <article class="admin-announcement-item">
+                        <div class="admin-announcement-item-header">
+                            <strong>${escapeHtml(announcement.title || 'College announcement')}</strong>
+                            <span class="count">${isExpired ? 'Expired' : 'Active'}</span>
+                        </div>
+                        <p>${escapeHtml(announcement.message)}</p>
+                        <div class="admin-announcement-meta">Expires ${formatDate(announcement.expiresAt)} · Duration ${announcement.durationValue} ${escapeHtml(announcement.durationUnit)}</div>
+                        <div class="admin-announcement-readers">Seen by ${readers.length}: ${readers.length ? readers.map(escapeHtml).join(', ') : 'No teachers yet'}</div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        teacherAnnouncementButton.addEventListener('click', () => {
+            loadTeacherAnnouncements(localStorage.getItem(teacherNameKey), false, true);
+        });
+        closeTeacherAnnouncements.addEventListener('click', () => teacherAnnouncementDialog.close());
+        teacherAnnouncementDialog.addEventListener('click', event => {
+            if (event.target === teacherAnnouncementDialog) teacherAnnouncementDialog.close();
+        });
+        refreshTeacherAnnouncements.addEventListener('click', () => {
+            renderAdminAnnouncements().catch(error => {
+                adminAnnouncementList.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+            });
+        });
+        adminAnnouncementUnit.addEventListener('change', () => {
+            adminAnnouncementDuration.max = ({ hours: 8760, days: 365, months: 60 })[adminAnnouncementUnit.value];
+            if (Number(adminAnnouncementDuration.value) > Number(adminAnnouncementDuration.max)) {
+                adminAnnouncementDuration.value = adminAnnouncementDuration.max;
+            }
+        });
+        adminAnnouncementForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            adminAnnouncementStatus.textContent = 'Publishing announcement...';
+            try {
+                const response = await fetch('/api/admin/teacher-announcements', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-teacher-admin-password': adminPassword },
+                    body: JSON.stringify({
+                        title: adminAnnouncementTitle.value.trim(),
+                        message: adminAnnouncementMessage.value.trim(),
+                        durationValue: Number(adminAnnouncementDuration.value),
+                        durationUnit: adminAnnouncementUnit.value
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not publish announcement (${response.status}).`);
+                adminAnnouncementStatus.textContent = 'Announcement published.';
+                adminAnnouncementForm.reset();
+                adminAnnouncementDuration.max = '365';
+                adminAnnouncementDuration.value = '1';
+                adminAnnouncementUnit.value = 'days';
+                await renderAdminAnnouncements();
+            } catch (error) {
+                adminAnnouncementStatus.textContent = error.message || 'Could not publish announcement.';
+            }
+        });
 
         async function toggleAttendanceCalendar(button) {
             const name = decodeURIComponent(button.dataset.attendanceName);
@@ -992,8 +1587,12 @@
                     const recordRows = teacherSessions.map(session => `
                         <tr>
                             <td>${escapeHtml(session.className)}</td>
+                            <td>${escapeHtml(session.subject || 'Not specified')}</td>
                             <td>${escapeHtml(session.classStartTime)}</td>
                             <td>${formatDate(session.submittedAt)}</td>
+                            <td>${session.endedAt ? formatDate(session.endedAt) : '<strong class="session-open-flag">Still open</strong>'}</td>
+                            <td>${formatSessionDuration(getSessionDurationMinutes(session))}</td>
+                            <td>${session.endedAt ? 'Completed' : '<strong class="session-open-flag">Needs end time</strong>'}</td>
                             <td>${formatSessionLocation(session.location)}</td>
                             <td><button class="delete-login" type="button" data-session-id="${escapeHtml(session._id)}">Delete</button></td>
                         </tr>
@@ -1005,7 +1604,7 @@
                         </tr>
                         <tr id="${detailId}" hidden><td class="class-session-detail-cell" colspan="2">
                             <div class="table-wrap"><table class="class-session-record-table">
-                                <thead><tr><th>Class</th><th>Class time</th><th>Submitted at</th><th>Location</th><th>Action</th></tr></thead>
+                                <thead><tr><th>Class</th><th>Subject</th><th>Class time</th><th>Started at</th><th>Ended at</th><th>Duration</th><th>Status</th><th>Location</th><th>Action</th></tr></thead>
                                 <tbody>${recordRows}</tbody>
                             </table></div>
                         </td></tr>`;
@@ -1048,14 +1647,24 @@
 
         loginExportDateFilter.addEventListener('change', () => {
             selectedLoginExportDate = loginExportDateFilter.value;
+            selectedLoginExportRange = selectedLoginExportDate ? 'custom' : 'all';
+            loginExportPresets.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.loginDateRange === selectedLoginExportRange)));
             renderAdminLog().catch(() => {});
         });
 
-        clearLoginExportDate.addEventListener('click', () => {
-            loginExportDateFilter.value = '';
-            selectedLoginExportDate = '';
-            renderAdminLog().catch(() => {});
+        loginExportPresets.forEach(button => {
+            button.addEventListener('click', () => {
+                selectedLoginExportRange = button.dataset.loginDateRange;
+                selectedLoginExportDate = '';
+                loginExportDateFilter.value = '';
+                loginExportPresets.forEach(preset => preset.setAttribute('aria-pressed', String(preset === button)));
+                renderAdminLog().catch(() => {});
+            });
         });
+
+        if (loginExportMatchCount) {
+            loginExportMatchCount.textContent = `${getFilteredAttendanceRecords().length} sign-ins match this filter`;
+        }
 
         document.querySelectorAll('[data-export-kind]').forEach(button => {
             button.addEventListener('click', async () => {
@@ -1264,6 +1873,8 @@
             }
 
             localStorage.setItem(teacherNameKey, name);
+            teacherCheckinReportName.value = name;
+            teacherCheckinReportName.readOnly = true;
             signInButton.disabled = true;
             signInButton.textContent = 'Saving attendance...';
             const location = selectedDeviceLocation || await getLocation();
@@ -1293,22 +1904,74 @@
                 ? 'Check-in saved on this phone. It will upload automatically when internet returns.'
                 : `Signed in at ${formatDate(new Date())}.`;
             showCheckedInTeacher(name);
+            await loadTeacherAnnouncements(name, true);
             if (result.queued) panelCopy.textContent = 'Your check-in is saved on this phone and will upload automatically when internet returns.';
+            await updateTeacherOfflineStatus();
             await renderTeacherClassHistory(name);
             if (adminView.classList.contains('is-visible')) renderAdminLog().catch(() => {});
+        });
+
+        teacherCheckinReportForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const name = teacherCheckinReportName.value.trim() || teacherName.value.trim();
+            const missedDate = document.getElementById('missedCheckinDate').value;
+            const missedTime = document.getElementById('missedCheckinTime').value;
+            const reason = document.getElementById('missedCheckinReason').value.trim();
+            const missedAt = new Date(`${missedDate}T${missedTime}:00+01:00`);
+            if (name.length < 3 || !missedDate || !missedTime || Number.isNaN(missedAt.getTime())) {
+                teacherCheckinReportStatus.textContent = 'Enter your name and the missed date and time.';
+                return;
+            }
+            teacherCheckinReportStatus.textContent = 'Submitting report...';
+            try {
+                const lookupToken = crypto.randomUUID();
+                const tokenStorageKey = `${teacherCheckinReportTokensKey}${name.toLowerCase()}`;
+                let savedTokens = [];
+                try {
+                    savedTokens = JSON.parse(localStorage.getItem(tokenStorageKey) || '[]');
+                    if (!Array.isArray(savedTokens)) savedTokens = [];
+                } catch (_) {}
+                localStorage.setItem(tokenStorageKey, JSON.stringify([...new Set([...savedTokens, lookupToken])].slice(-50)));
+                const result = await TeacherOfflineQueue.submit('/api/teacher/checkin-reports', {
+                    name,
+                    missedAt: missedAt.toISOString(),
+                    reason,
+                    clientRequestId: crypto.randomUUID(),
+                    lookupToken
+                });
+                if (result.queued) {
+                    try {
+                        const registration = await navigator.serviceWorker?.ready;
+                        if (registration?.sync) await registration.sync.register('teacher-attendance-sync');
+                    } catch (_) {}
+                }
+                teacherCheckinReportStatus.textContent = result.queued
+                    ? 'Report saved on this phone. It will send when internet returns.'
+                    : 'Report sent to the administrator for review.';
+                teacherCheckinReportForm.reset();
+                const savedName = localStorage.getItem(teacherNameKey) || '';
+                teacherCheckinReportName.value = savedName || name;
+                teacherCheckinReportName.readOnly = Boolean(savedName);
+                document.getElementById('missedCheckinDate').value = getNigeriaCalendarDate(new Date());
+                await updateTeacherOfflineStatus();
+                await renderMyCheckinReportHistory(name);
+            } catch (error) {
+                teacherCheckinReportStatus.textContent = error.message || 'Could not submit the report.';
+            }
         });
 
         classSessionForm.addEventListener('submit', async event => {
             event.preventDefault();
             const name = localStorage.getItem(teacherNameKey) || '';
-            const className = document.getElementById('classSessionClass').value;
+            const className = classSessionClass.value;
+            const subject = classSessionSubject.value;
             const classStartTime = document.getElementById('classStartTime').value;
             if (!name) {
                 classSessionStatus.textContent = 'Sign in as a teacher first.';
                 return;
             }
-            if (!className || !classStartTime) {
-                classSessionStatus.textContent = 'Select a class and class start time.';
+            if (!className || !subject || !classStartTime) {
+                classSessionStatus.textContent = 'Select a class, subject, and class start time.';
                 return;
             }
             classSessionStatus.textContent = 'Saving class start...';
@@ -1317,6 +1980,7 @@
             const payload = {
                 name,
                 className,
+                subject,
                 classStartTime,
                 location,
                 clientRequestId: crypto.randomUUID(),
@@ -1338,7 +2002,10 @@
             classSessionStatus.textContent = result.queued
                 ? 'Class start saved on this phone. It will upload automatically when internet returns.'
                 : `Class start recorded at ${formatDate(new Date())}.`;
+            await updateTeacherOfflineStatus();
             classSessionForm.reset();
+            classSessionSubject.replaceChildren(new Option('Select class first', ''));
+            classSessionSubject.disabled = true;
             classSessionTeacher.value = name;
             await renderTeacherClassHistory(name);
             if (adminView.classList.contains('is-visible')) renderClassSessions().catch(() => {});
@@ -1358,6 +2025,9 @@
             disappearanceTime.value = getDisappearanceTime();
             document.body.classList.add('admin-mode');
             adminView.classList.add('is-visible');
+            renderAdminAnnouncements().catch(error => {
+                adminAnnouncementList.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+            });
             renderAdminLog().catch(error => {
                 loginTableBody.innerHTML = `<tr><td class="empty" colspan="2">${escapeHtml(error.message)}</td></tr>`;
             });
@@ -1395,7 +2065,7 @@
             }
         });
 
-        async function initializeTeacherPage() {
+        async function initializeTeacherPage(isAdmin = false) {
             try {
                 const savedSchedule = JSON.parse(localStorage.getItem('dgc_teacher_schedule') || '{}');
                 availabilitySetting = savedSchedule.appearTime || availabilitySetting;
@@ -1407,6 +2077,14 @@
                 formStatus.textContent = `Using default schedule. ${error.message}`;
             }
             const savedName = localStorage.getItem(teacherNameKey);
+            teacherCheckinReportName.value = savedName || '';
+            teacherCheckinReportName.readOnly = Boolean(savedName);
+            document.getElementById('missedCheckinDate').value = getNigeriaCalendarDate(new Date());
+            populateClassSessionSubjects();
+            await updateTeacherOfflineStatus();
+            await renderMyCheckinReportHistory(savedName || teacherCheckinReportName.value);
+            if (savedName && !isAdmin) await loadTeacherAnnouncements(savedName, true);
+            else teacherAnnouncementButton.hidden = true;
             availabilityTime.value = getAvailabilityTime();
             disappearanceTime.value = getDisappearanceTime();
             if (savedName) {
@@ -1420,6 +2098,8 @@
                 }
                 if (status.reset) {
                     localStorage.removeItem(teacherNameKey);
+                    teacherCheckinReportName.value = '';
+                    teacherCheckinReportName.readOnly = false;
                     showAvailableGuest();
                     formStatus.textContent = 'Your previous sign-in was removed by an administrator. Please sign in again.';
                 } else if (status.checkedIn || queued) {
@@ -1449,7 +2129,7 @@
                 adminPassword = '';
                 sessionStorage.removeItem('dgc_teacher_admin_password');
             }
-            const registration = await initializeTeacherPage();
+            const registration = await initializeTeacherPage(isAdmin);
             await syncTeacherCheckins();
             if (isAdmin) openAdminView();
             if (registration?.sync) {

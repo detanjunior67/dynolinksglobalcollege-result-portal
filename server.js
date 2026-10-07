@@ -78,7 +78,7 @@ app.use(compression({ threshold: 1024 }));
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
@@ -731,15 +731,46 @@ const TeacherReset = mongoose.model('TeacherReset', TeacherResetSchema);
 const TeacherClassSessionSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     className: { type: String, required: true, trim: true },
+    subject: { type: String, trim: true, default: '' },
     classStartTime: { type: String, required: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
     period: { type: String, required: true },
     submittedAt: { type: Date, default: Date.now },
+    endedAt: { type: Date },
     clientRequestId: { type: String, unique: true, sparse: true },
     location: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
 TeacherClassSessionSchema.index({ period: 1, name: 1, submittedAt: -1 });
 const TeacherClassSession = mongoose.model('TeacherClassSession', TeacherClassSessionSchema);
+
+const TeacherCheckinReportSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    missedAt: { type: Date, required: true },
+    reason: { type: String, required: true, trim: true, maxlength: 1000 },
+    clientRequestId: { type: String, unique: true, sparse: true },
+    lookupToken: { type: String, unique: true, sparse: true },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    reviewedAt: { type: Date },
+    loginId: { type: mongoose.Schema.Types.ObjectId }
+}, { timestamps: true });
+
+TeacherCheckinReportSchema.index({ status: 1, createdAt: -1 });
+const TeacherCheckinReport = mongoose.model('TeacherCheckinReport', TeacherCheckinReportSchema);
+
+const TeacherAnnouncementSchema = new mongoose.Schema({
+    title: { type: String, trim: true, maxlength: 120, default: '' },
+    message: { type: String, required: true, trim: true, maxlength: 3000 },
+    durationValue: { type: Number, required: true, min: 1 },
+    durationUnit: { type: String, enum: ['hours', 'days', 'months'], required: true },
+    expiresAt: { type: Date, required: true },
+    readBy: [{
+        teacherName: { type: String, required: true, trim: true },
+        seenAt: { type: Date, required: true }
+    }]
+}, { timestamps: true });
+
+TeacherAnnouncementSchema.index({ expiresAt: 1 });
+const TeacherAnnouncement = mongoose.model('TeacherAnnouncement', TeacherAnnouncementSchema);
 const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
 
 function requireTeacherAppAccess(req, res, next) {
@@ -863,6 +894,7 @@ app.post('/api/teacher/class-sessions', async (req, res) => {
     try {
         const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
         const className = String(req.body?.className || '').trim();
+        const subject = String(req.body?.subject || '').trim();
         const classStartTime = String(req.body?.classStartTime || '').trim();
         if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
         if (!className) return res.status(400).json({ success: false, message: 'Please select a class.' });
@@ -879,7 +911,7 @@ app.post('/api/teacher/class-sessions', async (req, res) => {
         const period = getTeacherPeriod(submittedAt, settings.appearTime);
         let session;
         try {
-            session = await TeacherClassSession.create({ name, className, classStartTime, period, submittedAt, clientRequestId: clientRequestId || undefined, location: req.body?.location || {} });
+            session = await TeacherClassSession.create({ name, className, subject, classStartTime, period, submittedAt, clientRequestId: clientRequestId || undefined, location: req.body?.location || {} });
         } catch (err) {
             if (err.code !== 11000 || !clientRequestId) throw err;
             session = await TeacherClassSession.findOne({ clientRequestId }).lean();
@@ -890,6 +922,227 @@ app.post('/api/teacher/class-sessions', async (req, res) => {
     } catch (err) {
         console.error('Save teacher class session error:', err.message);
         res.status(500).json({ success: false, message: 'Could not save class start.' });
+    }
+});
+
+app.post('/api/teacher/class-sessions/end', async (req, res) => {
+    try {
+        const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+        const startClientRequestId = String(req.body?.startClientRequestId || '').trim();
+        const endedAt = req.body?.endedAt ? new Date(req.body.endedAt) : new Date();
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!startClientRequestId || startClientRequestId.length > 100) return res.status(400).json({ success: false, message: 'Invalid class-session ID.' });
+        if (Number.isNaN(endedAt.getTime())) return res.status(400).json({ success: false, message: 'Invalid class end time.' });
+        const session = await TeacherClassSession.findOne({ clientRequestId: startClientRequestId, name });
+        if (!session) return res.status(404).json({ success: false, message: 'Started class not found.' });
+        const duplicate = Boolean(session.endedAt);
+        if (!duplicate) {
+            session.endedAt = endedAt;
+            await session.save();
+        }
+        res.json({ success: true, session, duplicate });
+    } catch (err) {
+        console.error('Save teacher class end error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save class end.' });
+    }
+});
+
+app.post('/api/teacher/checkin-reports', async (req, res) => {
+    try {
+        const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+        const reason = String(req.body?.reason || '').trim();
+        const clientRequestId = String(req.body?.clientRequestId || '').trim();
+        const lookupToken = String(req.body?.lookupToken || '').trim();
+        const missedAt = req.body?.missedAt ? new Date(req.body.missedAt) : null;
+        if (name.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!missedAt || Number.isNaN(missedAt.getTime())) return res.status(400).json({ success: false, message: 'Choose the date and time you missed.' });
+        if (missedAt > new Date()) return res.status(400).json({ success: false, message: 'A missed check-in cannot be in the future.' });
+        if (reason.length < 5 || reason.length > 1000) return res.status(400).json({ success: false, message: 'Please enter a reason between 5 and 1000 characters.' });
+        if (clientRequestId.length > 100) return res.status(400).json({ success: false, message: 'Invalid report request ID.' });
+        if (lookupToken.length > 100) return res.status(400).json({ success: false, message: 'Invalid report lookup token.' });
+        if (clientRequestId) {
+            const existingReport = await TeacherCheckinReport.findOne({ clientRequestId }).lean();
+            if (existingReport) {
+                if (lookupToken && existingReport.lookupToken && existingReport.lookupToken !== lookupToken) {
+                    return res.status(409).json({ success: false, message: 'This report request ID is already in use.' });
+                }
+                return res.json({ success: true, duplicate: true });
+            }
+        }
+        let report;
+        try {
+            report = await TeacherCheckinReport.create({ name, missedAt, reason, clientRequestId: clientRequestId || undefined, lookupToken: lookupToken || undefined });
+        } catch (err) {
+            if (err.code !== 11000 || !clientRequestId) throw err;
+            report = await TeacherCheckinReport.findOne({ clientRequestId }).lean();
+            if (report) return res.json({ success: true, report, duplicate: true });
+            throw err;
+        }
+        res.status(201).json({ success: true, report });
+    } catch (err) {
+        console.error('Create teacher check-in report error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not submit the missed check-in report.' });
+    }
+});
+
+app.get('/api/teacher/checkin-reports', requireTeacherAdmin, async (req, res) => {
+    try {
+        const reports = await TeacherCheckinReport.find().sort({ status: 1, createdAt: -1 }).limit(200).lean();
+        res.json({ success: true, reports });
+    } catch (err) {
+        console.error('Load teacher check-in reports error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load missed check-in reports.' });
+    }
+});
+
+app.post('/api/teacher/checkin-reports/mine', requireTeacherAppAccess, async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store');
+        const submittedTokens = Array.isArray(req.body?.tokens) ? req.body.tokens : String(req.body?.tokens || '').split(',');
+        const lookupTokens = [...new Set(submittedTokens.map(token => String(token).trim()).filter(Boolean))].slice(0, 50);
+        if (!lookupTokens.length || lookupTokens.some(token => token.length > 100)) {
+            return res.status(400).json({ success: false, message: 'Valid report lookup tokens are required.' });
+        }
+        const reports = await TeacherCheckinReport.find({ lookupToken: { $in: lookupTokens } }).sort({ createdAt: -1 }).lean();
+        res.json({ success: true, reports });
+    } catch (err) {
+        console.error('Load teacher check-in report history error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load your missed check-in reports.' });
+    }
+});
+
+app.patch('/api/teacher/checkin-reports/:id', requireTeacherAdmin, async (req, res) => {
+    try {
+        const action = String(req.body?.action || '').trim();
+        if (!['approve', 'reject'].includes(action)) return res.status(400).json({ success: false, message: 'Choose approve or reject.' });
+        const report = await TeacherCheckinReport.findById(req.params.id);
+        if (!report) return res.status(404).json({ success: false, message: 'Missed check-in report not found.' });
+        if (report.status !== 'pending') return res.json({ success: true, report, duplicate: true });
+
+        if (action === 'approve') {
+            const settings = await getTeacherSettings();
+            const period = getTeacherPeriod(report.missedAt, settings.appearTime);
+            const clientRequestId = `correction:${report._id}`;
+            let login = await TeacherLogin.findOne({ clientRequestId });
+            if (!login) {
+                try {
+                    login = await TeacherLogin.create({
+                        name: report.name,
+                        period,
+                        loggedInAt: report.missedAt,
+                        clientRequestId
+                    });
+                } catch (err) {
+                    if (err.code !== 11000) throw err;
+                    login = await TeacherLogin.findOne({ clientRequestId });
+                    if (!login) throw err;
+                }
+            }
+            report.loginId = login._id;
+            await TeacherReset.deleteOne({ name: report.name });
+        }
+
+        report.status = action === 'approve' ? 'approved' : 'rejected';
+        report.reviewedAt = new Date();
+        await report.save();
+        res.json({ success: true, report });
+    } catch (err) {
+        console.error('Review teacher check-in report error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not review the missed check-in report.' });
+    }
+});
+
+function getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt = new Date()) {
+    const expiresAt = new Date(createdAt);
+    if (durationUnit === 'hours') {
+        expiresAt.setTime(expiresAt.getTime() + durationValue * 60 * 60 * 1000);
+    } else if (durationUnit === 'days') {
+        expiresAt.setTime(expiresAt.getTime() + durationValue * 24 * 60 * 60 * 1000);
+    } else {
+        const originalDay = expiresAt.getUTCDate();
+        expiresAt.setUTCDate(1);
+        expiresAt.setUTCMonth(expiresAt.getUTCMonth() + durationValue);
+        const lastDay = new Date(Date.UTC(expiresAt.getUTCFullYear(), expiresAt.getUTCMonth() + 1, 0)).getUTCDate();
+        expiresAt.setUTCDate(Math.min(originalDay, lastDay));
+    }
+    return expiresAt;
+}
+
+app.get('/api/admin/teacher-announcements', requireTeacherAdmin, async (req, res) => {
+    try {
+        const announcements = await TeacherAnnouncement.find().sort({ createdAt: -1 }).limit(100).lean();
+        res.json({ success: true, announcements });
+    } catch (err) {
+        console.error('Load teacher announcements error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load announcements.' });
+    }
+});
+
+app.post('/api/admin/teacher-announcements', requireTeacherAdmin, async (req, res) => {
+    try {
+        const title = String(req.body?.title || '').trim();
+        const message = String(req.body?.message || '').trim();
+        const durationValue = Number(req.body?.durationValue);
+        const durationUnit = String(req.body?.durationUnit || '').trim();
+        const durationLimit = { hours: 8760, days: 365, months: 60 }[durationUnit];
+        if (!message || message.length > 3000) return res.status(400).json({ success: false, message: 'Enter an announcement of up to 3000 characters.' });
+        if (title.length > 120) return res.status(400).json({ success: false, message: 'Titles must be 120 characters or fewer.' });
+        if (!durationLimit || !Number.isInteger(durationValue) || durationValue < 1 || durationValue > durationLimit) {
+            return res.status(400).json({ success: false, message: 'Choose a valid announcement duration.' });
+        }
+        const createdAt = new Date();
+        const announcement = await TeacherAnnouncement.create({
+            title,
+            message,
+            durationValue,
+            durationUnit,
+            expiresAt: getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt)
+        });
+        res.status(201).json({ success: true, announcement });
+    } catch (err) {
+        console.error('Create teacher announcement error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not publish announcement.' });
+    }
+});
+
+app.get('/api/teacher/announcements', requireTeacherAppAccess, async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store');
+        const teacherName = String(req.query.teacherName || '').trim().replace(/\s+/g, ' ');
+        if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        const announcements = await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean();
+        res.json({
+            success: true,
+            announcements: announcements.map(announcement => ({
+                _id: announcement._id,
+                title: announcement.title,
+                message: announcement.message,
+                expiresAt: announcement.expiresAt,
+                seen: announcement.readBy.some(receipt => receipt.teacherName.toLowerCase() === teacherName.toLowerCase())
+            }))
+        });
+    } catch (err) {
+        console.error('Load active teacher announcements error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load announcements.' });
+    }
+});
+
+app.post('/api/teacher/announcements/:id/read', requireTeacherAppAccess, async (req, res) => {
+    try {
+        const teacherName = String(req.body?.teacherName || '').trim().replace(/\s+/g, ' ');
+        if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        const announcement = await TeacherAnnouncement.findOne({ _id: req.params.id, expiresAt: { $gt: new Date() } });
+        if (!announcement) return res.status(404).json({ success: false, message: 'Announcement not found or expired.' });
+        const hasSeen = announcement.readBy.some(receipt => receipt.teacherName.toLowerCase() === teacherName.toLowerCase());
+        if (!hasSeen) {
+            announcement.readBy.push({ teacherName, seenAt: new Date() });
+            await announcement.save();
+        }
+        res.json({ success: true, seen: true, alreadySeen: hasSeen });
+    } catch (err) {
+        console.error('Record teacher announcement read error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not record announcement view.' });
     }
 });
 

@@ -1,7 +1,7 @@
 (function (scope) {
     const DATABASE_NAME = 'dgc-teacher-offline';
     const STORE_NAME = 'checkins';
-    const ALLOWED_ENDPOINTS = new Set(['/api/teacher/logins', '/api/teacher/class-sessions']);
+    const ALLOWED_ENDPOINTS = new Set(['/api/teacher/logins', '/api/teacher/class-sessions', '/api/teacher/class-sessions/end', '/api/teacher/checkin-reports']);
     let databasePromise;
 
     function openDatabase() {
@@ -54,8 +54,17 @@
             await enqueue(payload, endpoint);
             return { queued: true };
         }
-        if (!response.ok) throw new Error(`Teacher submission failed (${response.status}).`);
+        if (!response.ok) throw await getSubmissionError(response, 'Teacher submission failed');
         return { queued: false };
+    }
+
+    async function getSubmissionError(response, action) {
+        let message = `${action} (${response.status}).`;
+        try {
+            const data = await response.json();
+            if (data.message) message = data.message;
+        } catch (_) {}
+        return new Error(message);
     }
 
     async function remove(clientRequestId) {
@@ -70,7 +79,7 @@
 
     async function syncPending() {
         if (scope.window && !scope.navigator.onLine) return { synced: 0, remaining: (await getPending()).length };
-        const pending = await getPending();
+        const pending = (await getPending()).sort((left, right) => (left.queuedAt || 0) - (right.queuedAt || 0));
         let synced = 0;
         for (const item of pending) {
             const endpoint = item.endpoint || '/api/teacher/logins';
@@ -80,7 +89,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item.payload)
             });
-            if (!response.ok) throw new Error(`Teacher submission sync failed (${response.status}).`);
+            if (!response.ok) throw await getSubmissionError(response, 'Teacher submission sync failed');
             await remove(item.clientRequestId);
             synced += 1;
         }
