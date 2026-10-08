@@ -11,44 +11,6 @@ const webPush = require('web-push');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
-
-function ensureVapidKeys() {
-    const envPath = path.join(__dirname, '.env');
-    const hasPublicKey = Boolean(process.env.VAPID_PUBLIC_KEY);
-    const hasPrivateKey = Boolean(process.env.VAPID_PRIVATE_KEY);
-    if (hasPublicKey && hasPrivateKey) return;
-
-    const existingLines = (() => {
-        try {
-            return fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
-        } catch (_) {
-            return [];
-        }
-    })();
-    const envEntries = {};
-    for (const line of existingLines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
-        const separatorIndex = trimmed.indexOf('=');
-        const key = trimmed.slice(0, separatorIndex).trim();
-        const value = trimmed.slice(separatorIndex + 1).trim();
-        envEntries[key] = value;
-    }
-
-    if (!envEntries.VAPID_PUBLIC_KEY || !envEntries.VAPID_PRIVATE_KEY) {
-        const generated = webPush.generateVAPIDKeys();
-        envEntries.VAPID_PUBLIC_KEY = generated.publicKey;
-        envEntries.VAPID_PRIVATE_KEY = generated.privateKey;
-        const nextLines = [...Object.entries(envEntries)].map(([key, value]) => `${key}=${value}`);
-        fs.writeFileSync(envPath, `${nextLines.join('\n')}\n`, 'utf8');
-        process.env.VAPID_PUBLIC_KEY = generated.publicKey;
-        process.env.VAPID_PRIVATE_KEY = generated.privateKey;
-        console.log('Generated new VAPID browser push keys and saved them to .env');
-    }
-}
-
-ensureVapidKeys();
-
 const { google } = require('googleapis');
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
@@ -618,7 +580,18 @@ try {
     throw new Error('MONGO_URI is not a valid MongoDB connection string.');
 }
 
-mongoose.connect(MONGO_URI)
+const mongoConnectOptions = {
+    serverSelectionTimeoutMS: 20000,
+    retryWrites: true,
+    maxPoolSize: 10
+};
+
+async function ensureMongoReady() {
+    if (mongoose.connection.readyState === 1) return;
+    await mongoose.connect(MONGO_URI, mongoConnectOptions);
+}
+
+mongoose.connect(MONGO_URI, mongoConnectOptions)
     .then(() => console.log('Connected to Cloud MongoDB Database Successfully!'))
     .catch(err => console.error('MongoDB Connection Error Detailed:', err.message));
 
@@ -955,9 +928,7 @@ function requireCbtPageAccess(req, res, next) {
 }
 
 async function getTeacherSettings() {
-    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
-        throw new Error('Teacher settings database is not connected. Check MONGO_URI and the MongoDB deployment.');
-    }
+    await ensureMongoReady();
     return TeacherSettings.findOneAndUpdate(
         { key: 'default' },
         { $setOnInsert: { key: 'default', appearTime: '08:00', disappearTime: '17:00' } },
@@ -3830,9 +3801,20 @@ app.get('*', (req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Dynolinks Portal Server running on port ${PORT}`);
-});
+
+async function startServer() {
+    try {
+        await ensureMongoReady();
+        app.listen(PORT, () => {
+            console.log(`Dynolinks Portal Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Server startup failed because MongoDB was not ready:', error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 // POST multiple CBT questions in one database operation
 app.post('/api/questions/bulk', async (req, res) => {

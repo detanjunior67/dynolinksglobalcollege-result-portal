@@ -2401,10 +2401,6 @@
 
         launchForm.addEventListener('submit', async event => {
             event.preventDefault();
-            if (isTeacherAppInstalled()) {
-                await unlockTeacherApp(false);
-                return;
-            }
             const password = launchPassword.value.trim();
             const adminRequested = new URLSearchParams(window.location.search).get('admin') === '1';
             if (password !== teacherLaunchPassword && password !== adminLaunchPassword) {
@@ -2422,9 +2418,7 @@
         });
 
         const websiteUnlockRole = sessionStorage.getItem('dgc_teacher_site_unlock');
-        if (isTeacherAppInstalled()) {
-            void unlockTeacherApp(false);
-        } else if (websiteUnlockRole === 'teacher' || websiteUnlockRole === 'admin') {
+        if (websiteUnlockRole === 'teacher' || websiteUnlockRole === 'admin') {
             sessionStorage.removeItem('dgc_teacher_site_unlock');
             launchPassword.value = websiteUnlockRole === 'admin' ? adminLaunchPassword : teacherLaunchPassword;
             launchForm.requestSubmit();

@@ -2454,17 +2454,8 @@
             const modal = document.getElementById('cbtNotificationPromptModal');
             if (!modal) return;
             const permission = 'Notification' in window ? Notification.permission : 'unsupported';
-            const storedState = localStorage.getItem(cbtNotificationStateKey);
-            if (permission !== 'default' && storedState !== 'dismissed') {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                modal.style.display = 'none';
-                return;
-            }
-            if (permission !== 'default' && storedState === 'dismissed') {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                modal.style.display = 'none';
+            if (permission === 'granted') {
+                hideCbtNotificationPrompt();
                 return;
             }
             modal.classList.remove('hidden');
@@ -2498,15 +2489,13 @@
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
             const permission = Notification.permission;
             const previousState = localStorage.getItem(cbtNotificationStateKey);
-            if (permission !== 'default') {
-                if (!previousState || previousState === 'dismissed') {
-                    localStorage.setItem(cbtNotificationStateKey, permission === 'granted' ? 'granted' : 'denied');
-                }
+            if (permission === 'granted') {
+                localStorage.setItem(cbtNotificationStateKey, 'granted');
+                hideCbtNotificationPrompt();
                 updateCbtNotificationButtonState();
                 return;
             }
             if (!forcePrompt && previousState === 'granted') return;
-            if (!forcePrompt && previousState === 'denied') return;
             showCbtNotificationPrompt();
             updateCbtNotificationButtonState();
         }
@@ -2673,16 +2662,18 @@
                 await enableCbtPushNotifications();
             } catch (error) {
                 const message = error?.message || 'Could not enable notifications';
-                localStorage.setItem(cbtNotificationStateKey, 'denied');
+                localStorage.removeItem(cbtNotificationStateKey);
                 updateCbtNotificationButtonState();
                 showToast(message, 'error');
+                showCbtNotificationPrompt();
             }
         });
 
         document.getElementById('cbtNotificationLaterButton')?.addEventListener('click', () => {
-            localStorage.setItem(cbtNotificationStateKey, 'dismissed');
+            localStorage.removeItem(cbtNotificationStateKey);
             hideCbtNotificationPrompt();
             updateCbtNotificationButtonState();
+            requestCbtNotificationsPermissionIfNeeded(true);
         });
 
         document.getElementById('cbtNotificationToggleButton')?.addEventListener('click', () => {
