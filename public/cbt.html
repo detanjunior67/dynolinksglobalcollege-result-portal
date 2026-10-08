@@ -2413,6 +2413,15 @@
             if (!response.ok) throw new Error(data.message || `Could not save browser notifications (${response.status}).`);
         }
 
+        async function getExistingCbtPushSubscription() {
+            try {
+                const registration = await navigator.serviceWorker.getRegistration('/');
+                return registration ? await registration.pushManager.getSubscription() : null;
+            } catch (_) {
+                return null;
+            }
+        }
+
         async function enableCbtPushNotifications() {
             if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
                 throw new Error('Your browser does not support browser notifications.');
@@ -2440,12 +2449,7 @@
                 });
             }
 
-            try {
-                await saveCbtPushSubscription(subscription);
-            } catch (error) {
-                await subscription.unsubscribe();
-                throw error;
-            }
+            await saveCbtPushSubscription(subscription);
 
             localStorage.setItem(cbtNotificationStateKey, 'granted');
             updateCbtNotificationButtonState();
@@ -2456,11 +2460,6 @@
         function showCbtNotificationPrompt() {
             const modal = document.getElementById('cbtNotificationPromptModal');
             if (!modal) return;
-            const permission = 'Notification' in window ? Notification.permission : 'unsupported';
-            if (permission === 'granted') {
-                hideCbtNotificationPrompt();
-                return;
-            }
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             modal.style.display = 'flex';
@@ -2478,35 +2477,44 @@
             modal.style.justifyContent = '';
         }
 
-        function updateCbtNotificationButtonState() {
+        async function updateCbtNotificationButtonState() {
             const button = document.getElementById('cbtNotificationToggleButton');
             if (!button) return;
             const permission = 'Notification' in window ? Notification.permission : 'unsupported';
             const previousState = localStorage.getItem(cbtNotificationStateKey);
-            const notificationsEnabled = permission === 'granted' || previousState === 'granted';
+            const subscription = permission === 'granted' ? await getExistingCbtPushSubscription() : null;
+            const notificationsEnabled = permission === 'granted' && Boolean(subscription) && previousState === 'granted';
             button.hidden = notificationsEnabled;
             button.textContent = 'Enable notifications';
         }
 
-        function requestCbtNotificationsPermissionIfNeeded(forcePrompt = false) {
+        async function requestCbtNotificationsPermissionIfNeeded(forcePrompt = false) {
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
             const permission = Notification.permission;
             const previousState = localStorage.getItem(cbtNotificationStateKey);
             if (permission === 'granted') {
-                localStorage.setItem(cbtNotificationStateKey, 'granted');
-                hideCbtNotificationPrompt();
-                updateCbtNotificationButtonState();
-                return;
+                const subscription = await getExistingCbtPushSubscription();
+                if (subscription) {
+                    try {
+                        await saveCbtPushSubscription(subscription);
+                        localStorage.setItem(cbtNotificationStateKey, 'granted');
+                        hideCbtNotificationPrompt();
+                        await updateCbtNotificationButtonState();
+                        return;
+                    } catch (error) {
+                        console.warn('Could not sync the existing CBT notification subscription:', error);
+                    }
+                }
             }
-            if (!forcePrompt && (previousState === 'granted' || previousState === 'dismissed')) return;
+            if (!forcePrompt && previousState === 'dismissed') return;
             showCbtNotificationPrompt();
-            updateCbtNotificationButtonState();
+            void updateCbtNotificationButtonState();
         }
 
-        function maybeRequestCbtNotificationsAfterLogin() {
+        async function maybeRequestCbtNotificationsAfterLogin() {
             const hasCandidateSession = Boolean(currentCandidate && currentCandidate.studentId && currentCandidate.classKey);
             if (!hasCandidateSession) return;
-            requestCbtNotificationsPermissionIfNeeded(true);
+            await requestCbtNotificationsPermissionIfNeeded(true);
         }
 
         async function verifyStudentPasswordOnServer(studentId, password) {
@@ -3015,7 +3023,6 @@
             }
             currentStudentCbtPassword = studentPassword;
             currentCandidate = { name, studentId, classKey };
-            maybeRequestCbtNotificationsAfterLogin();
 
             const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId) && (r.classKey === classKey || normalizeClassKey(r.classKey) === classKey)) || (savedProfile ? {
                 studentId: savedProfile.student_id,
@@ -3058,6 +3065,7 @@
                 picture: candidatePicture
             };
 
+            void maybeRequestCbtNotificationsAfterLogin();
             startStudentAnnouncementPolling();
             void loadStudentAnnouncements(true);
 
