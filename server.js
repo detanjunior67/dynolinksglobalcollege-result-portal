@@ -7,10 +7,22 @@ try {
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const sharp = require('sharp');
+const webPush = require('web-push');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 const { google } = require('googleapis');
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+let WEB_PUSH_CONFIGURED = false;
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    try {
+        webPush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:infodynolinks@gmail.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+        WEB_PUSH_CONFIGURED = true;
+    } catch (err) {
+        console.error('Web Push is disabled because VAPID configuration is invalid:', err.message);
+    }
+}
 
 const app = express();
 
@@ -18,9 +30,11 @@ const PAGE_ACCESS_COOKIE = 'dgc_page_access';
 const PAGE_ACCESS_SECRET = process.env.PAGE_ACCESS_SECRET || process.env.ADMIN_PASSWORD || 'dynolinks-page-access';
 const PAGE_ACCESS_TTL_SECONDS = 60 * 15;
 const TEACHER_PAGE_PASSWORD = process.env.TEACHER_PAGE_PASSWORD || 'checkme';
+const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
 const protectedPageAccess = {
     '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
-    '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] }
+    '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] },
+    '/announcement-admin.html': { scope: 'announcement-admin', passwords: [process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce', TEACHER_ADMIN_PASSWORD] }
 };
 
 function createPageAccessToken(scope) {
@@ -760,18 +774,54 @@ const TeacherCheckinReport = mongoose.model('TeacherCheckinReport', TeacherCheck
 const TeacherAnnouncementSchema = new mongoose.Schema({
     title: { type: String, trim: true, maxlength: 120, default: '' },
     message: { type: String, required: true, trim: true, maxlength: 3000 },
+    audienceMode: { type: String, enum: ['teachers', 'all', 'custom'], default: 'teachers' },
+    targetClassKeys: { type: [String], default: [] },
+    targetTeacherNames: { type: [String], default: [] },
     durationValue: { type: Number, required: true, min: 1 },
     durationUnit: { type: String, enum: ['hours', 'days', 'months'], required: true },
     expiresAt: { type: Date, required: true },
+    archivedAt: { type: Date, default: null },
     readBy: [{
         teacherName: { type: String, required: true, trim: true },
+        seenAt: { type: Date, required: true }
+    }],
+    cbtReadBy: [{
+        deviceId: { type: String, required: true, trim: true },
+        classKeys: { type: [String], default: [] },
         seenAt: { type: Date, required: true }
     }]
 }, { timestamps: true });
 
 TeacherAnnouncementSchema.index({ expiresAt: 1 });
 const TeacherAnnouncement = mongoose.model('TeacherAnnouncement', TeacherAnnouncementSchema);
-const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
+
+const TeacherPushSubscriptionSchema = new mongoose.Schema({
+    audienceType: { type: String, enum: ['teacher', 'student'], default: 'teacher' },
+    teacherName: { type: String, trim: true, default: '' },
+    deviceId: { type: String, trim: true, default: '' },
+    classKeys: { type: [String], default: [] },
+    audiences: [{
+        audienceType: { type: String, enum: ['teacher', 'student'], required: true },
+        teacherName: { type: String, trim: true, default: '' },
+        deviceId: { type: String, trim: true, default: '' },
+        classKeys: { type: [String], default: [] }
+    }],
+    endpoint: { type: String, required: true, unique: true },
+    subscription: { type: mongoose.Schema.Types.Mixed, required: true },
+    lastSeenAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+TeacherPushSubscriptionSchema.index({ teacherName: 1 });
+const TeacherPushSubscription = mongoose.model('TeacherPushSubscription', TeacherPushSubscriptionSchema);
+
+const CbtAnnouncementDeviceSchema = new mongoose.Schema({
+    deviceId: { type: String, required: true, unique: true },
+    classKeys: { type: [String], default: [] },
+    lastStudentId: { type: String, default: '' },
+    lastSeenAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const CbtAnnouncementDevice = mongoose.model('CbtAnnouncementDevice', CbtAnnouncementDeviceSchema);
 
 function requireTeacherAppAccess(req, res, next) {
     const password = req.headers['x-teacher-page-password'];
@@ -782,10 +832,87 @@ function requireTeacherAppAccess(req, res, next) {
 }
 
 function requireTeacherAdmin(req, res, next) {
-    const password = req.headers['x-teacher-admin-password'] || req.body?.password;
-    if (password !== TEACHER_ADMIN_PASSWORD) {
-        return res.status(401).json({ success: false, message: 'Invalid teacher admin password.' });
+    const password = String(req.headers['x-teacher-admin-password'] || req.body?.password || '').trim();
+    const normalizedPassword = password.toLowerCase();
+    const allowedPasswords = new Set([
+        String(TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
+        String(process.env.TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
+    ]);
+    if (allowedPasswords.has(normalizedPassword)) {
+        return next();
     }
+    return res.status(401).json({ success: false, message: 'Invalid teacher admin password.' });
+}
+
+function requireAnnouncementAdmin(req, res, next) {
+    const password = String(req.headers['x-teacher-admin-password'] || req.headers['x-announcement-admin-password'] || req.body?.password || '').trim();
+    const normalizedPassword = password.toLowerCase();
+    const allowedPasswords = new Set([
+        String(TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
+        String(process.env.TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
+        String(process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce').trim().toLowerCase(),
+        'announce',
+        'admincheck'
+    ]);
+    if (allowedPasswords.has(normalizedPassword) || hasPageAccess(req, 'announcement-admin')) return next();
+    return res.status(401).json({ success: false, message: 'Announcement administrator access is required.' });
+}
+
+function normalizeAnnouncementClassKey(value) {
+    const compact = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (/^SS[1-3]$/.test(compact)) return `SSS${compact.slice(2)}`;
+    if (/^JSS[1-3]$/.test(compact) || /^SSS[1-3]$/.test(compact)) return compact;
+    return '';
+}
+
+function getAnnouncementClassOptions(classConfigs = {}) {
+    const configured = Object.entries(classConfigs).map(([key, value]) => ({
+        key: normalizeAnnouncementClassKey(key),
+        label: String(value?.label || key)
+    })).filter(item => item.key);
+    if (configured.length) return [...new Map(configured.map(item => [item.key, item])).values()];
+    return ['JSS1', 'JSS2', 'JSS3', 'SSS1', 'SSS2', 'SSS3'].map(key => ({ key, label: key }));
+}
+
+const CBT_STUDENT_COOKIE = 'dgc_cbt_student_session';
+const CBT_STUDENT_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
+function createCbtStudentSession(student, deviceId, classKeys) {
+    const payload = Buffer.from(JSON.stringify({
+        studentId: String(student.student_id || '').trim().toUpperCase(),
+        deviceId,
+        classKeys,
+        expiresAt: Date.now() + CBT_STUDENT_SESSION_TTL_MS
+    })).toString('base64url');
+    const signature = crypto.createHmac('sha256', PAGE_ACCESS_SECRET).update(payload).digest('base64url');
+    return `${payload}.${signature}`;
+}
+
+function getCbtStudentSession(req) {
+    const token = (req.headers.cookie || '').split(';').map(part => part.trim())
+        .find(part => part.startsWith(`${CBT_STUDENT_COOKIE}=`))?.split('=').slice(1).join('=');
+    if (!token) return null;
+    const [payload, signature] = token.split('.');
+    if (!payload || !signature) return null;
+    const expected = crypto.createHmac('sha256', PAGE_ACCESS_SECRET).update(payload).digest('base64url');
+    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+    try {
+        const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return session.studentId && session.deviceId && Array.isArray(session.classKeys) && session.classKeys.length && session.expiresAt > Date.now() ? session : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function requireCbtStudentSession(req, res, next) {
+    const session = getCbtStudentSession(req);
+    if (!session) return res.status(401).json({ success: false, message: 'Log in to the CBT exam section first.' });
+    req.cbtStudent = session;
+    next();
+}
+
+function requireCbtPageAccess(req, res, next) {
+    if (!hasPageAccess(req, 'cbt')) return res.status(401).json({ success: false, message: 'CBT section access is required.' });
     next();
 }
 
@@ -918,6 +1045,9 @@ app.post('/api/teacher/class-sessions', async (req, res) => {
             if (session) return res.json({ success: true, session, duplicate: true });
             throw err;
         }
+        void sendTeacherClassSessionPush(session).catch(err => {
+            console.error('Teacher class-start push delivery failed in background:', err.message);
+        });
         res.status(201).json({ success: true, session });
     } catch (err) {
         console.error('Save teacher class session error:', err.message);
@@ -1068,9 +1198,33 @@ function getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt = n
     return expiresAt;
 }
 
-app.get('/api/admin/teacher-announcements', requireTeacherAdmin, async (req, res) => {
+app.get('/api/admin/announcement-recipients', requireAnnouncementAdmin, async (req, res) => {
     try {
-        const announcements = await TeacherAnnouncement.find().sort({ createdAt: -1 }).limit(100).lean();
+        const [cbtConfig, loginNames, sessionNames, subscribedNames] = await Promise.all([
+            CbtConfig.findOne({ key: 'default' }).lean(),
+            TeacherLogin.distinct('name'),
+            TeacherClassSession.distinct('name'),
+            TeacherPushSubscription.distinct('teacherName', { audienceType: 'teacher' })
+        ]);
+        const classOptions = getAnnouncementClassOptions(cbtConfig?.classConfigs || {});
+        const teacherNames = [...new Set([...loginNames, ...sessionNames, ...subscribedNames]
+            .map(name => String(name || '').trim().replace(/\s+/g, ' ')).filter(name => name.length >= 3))]
+            .sort((left, right) => left.localeCompare(right));
+        res.json({ success: true, classes: classOptions, teachers: teacherNames });
+    } catch (err) {
+        console.error('Load announcement recipients error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load recipient lists.' });
+    }
+});
+
+app.get('/api/admin/teacher-announcements', requireAnnouncementAdmin, async (req, res) => {
+    try {
+        const now = new Date();
+        await TeacherAnnouncement.updateMany(
+            { expiresAt: { $lte: now }, archivedAt: null },
+            { $set: { archivedAt: now } }
+        );
+        const announcements = await TeacherAnnouncement.find().sort({ createdAt: -1 }).lean();
         res.json({ success: true, announcements });
     } catch (err) {
         console.error('Load teacher announcements error:', err.message);
@@ -1078,39 +1232,301 @@ app.get('/api/admin/teacher-announcements', requireTeacherAdmin, async (req, res
     }
 });
 
-app.post('/api/admin/teacher-announcements', requireTeacherAdmin, async (req, res) => {
+app.post('/api/admin/teacher-announcements', requireAnnouncementAdmin, async (req, res) => {
     try {
         const title = String(req.body?.title || '').trim();
         const message = String(req.body?.message || '').trim();
         const durationValue = Number(req.body?.durationValue);
         const durationUnit = String(req.body?.durationUnit || '').trim();
+        const audienceMode = String(req.body?.audienceMode || 'teachers').trim();
         const durationLimit = { hours: 8760, days: 365, months: 60 }[durationUnit];
         if (!message || message.length > 3000) return res.status(400).json({ success: false, message: 'Enter an announcement of up to 3000 characters.' });
         if (title.length > 120) return res.status(400).json({ success: false, message: 'Titles must be 120 characters or fewer.' });
         if (!durationLimit || !Number.isInteger(durationValue) || durationValue < 1 || durationValue > durationLimit) {
             return res.status(400).json({ success: false, message: 'Choose a valid announcement duration.' });
         }
+        if (!['teachers', 'all', 'custom'].includes(audienceMode)) {
+            return res.status(400).json({ success: false, message: 'Choose a valid recipient group.' });
+        }
+        let targetClassKeys = [];
+        let targetTeacherNames = [];
+        if (audienceMode === 'custom') {
+            const [configured, loginNames, sessionNames, subscribedNames] = await Promise.all([
+                CbtConfig.findOne({ key: 'default' }).lean(),
+                TeacherLogin.distinct('name'),
+                TeacherClassSession.distinct('name'),
+                TeacherPushSubscription.distinct('teacherName', { audienceType: 'teacher' })
+            ]);
+            const validClassKeys = new Set(getAnnouncementClassOptions(configured?.classConfigs || {}).map(item => item.key));
+            const teacherNames = [...new Set([...loginNames, ...sessionNames, ...subscribedNames])];
+            const normalizedTeacherNames = new Map(teacherNames.map(name => {
+                const normalized = String(name || '').trim().replace(/\s+/g, ' ');
+                return [normalized.toLowerCase(), normalized];
+            }));
+            targetClassKeys = [...new Set((Array.isArray(req.body?.targetClassKeys) ? req.body.targetClassKeys : [])
+                .map(normalizeAnnouncementClassKey).filter(key => key && validClassKeys.has(key)))];
+            targetTeacherNames = [...new Set((Array.isArray(req.body?.targetTeacherNames) ? req.body.targetTeacherNames : [])
+                .map(name => normalizedTeacherNames.get(String(name || '').trim().replace(/\s+/g, ' ').toLowerCase())).filter(Boolean))];
+            if (!targetClassKeys.length && !targetTeacherNames.length) {
+                return res.status(400).json({ success: false, message: 'Select at least one class or teacher for a custom announcement.' });
+            }
+        }
         const createdAt = new Date();
         const announcement = await TeacherAnnouncement.create({
             title,
             message,
+            audienceMode,
+            targetClassKeys,
+            targetTeacherNames,
             durationValue,
             durationUnit,
             expiresAt: getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt)
         });
-        res.status(201).json({ success: true, announcement });
+
+        const pushDelivery = { configured: WEB_PUSH_CONFIGURED, sent: 0, failed: 0, queued: true };
+        res.status(201).json({ success: true, announcement, pushDelivery });
+
+        void sendTeacherAnnouncementPush(announcement).then(async delivery => {
+            if (!delivery || !delivery.configured) return;
+            console.log(`Announcement push delivery queued for ${delivery.sent} of ${Math.max(delivery.sent + delivery.failed, 0)} matching subscriptions.`);
+        }).catch(err => {
+            console.error('Teacher announcement push delivery failed in background:', err.message);
+        });
     } catch (err) {
         console.error('Create teacher announcement error:', err.message);
         res.status(500).json({ success: false, message: 'Could not publish announcement.' });
     }
 });
 
+app.delete('/api/admin/teacher-announcements/:id', requireAnnouncementAdmin, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        }
+        const announcement = await TeacherAnnouncement.findByIdAndDelete(req.params.id);
+        if (!announcement) return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete teacher announcement error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not delete announcement.' });
+    }
+});
+
+async function sendTeacherAnnouncementPush(announcement) {
+    if (!WEB_PUSH_CONFIGURED) return { configured: false, sent: 0, failed: 0 };
+    const subscriptions = await TeacherPushSubscription.find().lean();
+    const matchingAudiences = record => (record.audiences?.length ? record.audiences : [{
+        audienceType: record.audienceType || 'teacher',
+        teacherName: record.teacherName,
+        classKeys: record.classKeys || []
+    }]).filter(audience => {
+        const audienceType = audience.audienceType || 'teacher';
+        const audienceMode = announcement.audienceMode || 'teachers';
+        if (audienceMode === 'all') return true;
+        if (audienceMode === 'teachers') return audienceType === 'teacher';
+        if (audienceType === 'teacher') {
+            return (announcement.targetTeacherNames || []).some(name => name.toLowerCase() === String(audience.teacherName || '').toLowerCase());
+        }
+        return audienceType === 'student'
+            && (audience.classKeys || []).some(classKey => (announcement.targetClassKeys || []).includes(classKey));
+    });
+    const targetedSubscriptions = subscriptions.filter(record => matchingAudiences(record).length > 0);
+    const results = await Promise.allSettled(targetedSubscriptions.map(async record => {
+        const audienceType = matchingAudiences(record).some(audience => audience.audienceType === 'student') ? 'student' : 'teacher';
+        const payload = JSON.stringify({
+            title: announcement.title || 'College announcement',
+            body: announcement.message,
+            announcementId: String(announcement._id),
+            audienceType,
+            url: audienceType === 'student' ? '/cbt.html' : '/teacher.html'
+        });
+        try {
+            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            return true;
+        } catch (err) {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+                await TeacherPushSubscription.deleteOne({ endpoint: record.endpoint });
+            }
+            throw err;
+        }
+    }));
+    const sent = results.filter(result => result.status === 'fulfilled').length;
+    const failed = results.length - sent;
+    if (failed) console.warn(`Announcement push delivery: ${sent} sent, ${failed} failed.`);
+    return { configured: true, sent, failed };
+}
+
+async function sendTeacherClassSessionPush(session) {
+    if (!WEB_PUSH_CONFIGURED || !session?.name) return { configured: false, sent: 0, failed: 0 };
+    const subscriptions = await TeacherPushSubscription.find({ teacherName: session.name }).lean();
+    if (!subscriptions.length) return { configured: true, sent: 0, failed: 0 };
+    const startClientRequestId = String(session.clientRequestId || session._id || '').trim();
+    const payload = JSON.stringify({
+        title: 'Class started',
+        body: `${session.className || 'Class'} ${session.subject ? `(${session.subject})` : ''} has started at ${session.classStartTime || 'now'}.`,
+        notificationType: 'class-session',
+        teacherName: session.name,
+        className: session.className,
+        subject: session.subject || '',
+        startClientRequestId,
+        url: '/teacher.html',
+        actions: [
+            { action: 'end-class', title: 'End class' },
+            { action: 'open-class', title: 'Open class' }
+        ]
+    });
+    const results = await Promise.allSettled(subscriptions.map(async record => {
+        try {
+            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            return true;
+        } catch (err) {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+                await TeacherPushSubscription.deleteOne({ endpoint: record.endpoint });
+            }
+            throw err;
+        }
+    }));
+    const sent = results.filter(result => result.status === 'fulfilled').length;
+    const failed = results.length - sent;
+    if (failed) console.warn(`Class session push delivery: ${sent} sent, ${failed} failed.`);
+    return { configured: true, sent, failed };
+}
+
+async function sendClassQuestionPush(classKey, subjectId = '', questionCount = 1) {
+    if (!WEB_PUSH_CONFIGURED || !classKey) return { configured: false, sent: 0, failed: 0 };
+    const normalizedClassKey = String(classKey).trim();
+    const normalizedSubjectId = String(subjectId || '').trim();
+    const subscriptions = await TeacherPushSubscription.find().lean();
+    const targetedSubscriptions = subscriptions.filter(record => {
+        const audiences = (record.audiences?.length ? record.audiences : [{
+            audienceType: record.audienceType || 'student',
+            deviceId: record.deviceId || '',
+            classKeys: record.classKeys || []
+        }]);
+        return audiences.some(audience =>
+            audience.audienceType === 'student'
+            && Array.isArray(audience.classKeys)
+            && audience.classKeys.includes(normalizedClassKey)
+        );
+    });
+
+    const results = await Promise.allSettled(targetedSubscriptions.map(async record => {
+        const payload = JSON.stringify({
+            title: 'New CBT questions available',
+            body: questionCount > 1
+                ? `New ${normalizedSubjectId || 'CBT'} questions are available for ${normalizedClassKey}.`
+                : `A new ${normalizedSubjectId || 'CBT'} question is available for ${normalizedClassKey}.`,
+            classKey: normalizedClassKey,
+            subjectId: normalizedSubjectId,
+            audienceType: 'student',
+            url: '/cbt.html'
+        });
+        try {
+            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            return true;
+        } catch (err) {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+                await TeacherPushSubscription.deleteOne({ endpoint: record.endpoint });
+            }
+            throw err;
+        }
+    }));
+
+    const sent = results.filter(result => result.status === 'fulfilled').length;
+    const failed = results.length - sent;
+    if (failed) console.warn(`Class question push delivery: ${sent} sent, ${failed} failed.`);
+    return { configured: true, sent, failed };
+}
+
+app.get('/api/teacher/push/config', requireTeacherAppAccess, (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ enabled: WEB_PUSH_CONFIGURED, publicKey: WEB_PUSH_CONFIGURED ? VAPID_PUBLIC_KEY : '' });
+});
+
+app.post('/api/teacher/push/subscriptions', requireTeacherAppAccess, async (req, res) => {
+    try {
+        if (!WEB_PUSH_CONFIGURED) return res.status(503).json({ success: false, message: 'Browser notifications are not configured on the server.' });
+        const teacherName = String(req.body?.teacherName || '').trim().replace(/\s+/g, ' ');
+        const subscription = req.body?.subscription;
+        if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
+        if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+            return res.status(400).json({ success: false, message: 'A valid browser push subscription is required.' });
+        }
+        let subscriptionUrl;
+        try { subscriptionUrl = new URL(subscription.endpoint); } catch (_) {}
+        if (subscriptionUrl?.protocol !== 'https:' || subscription.endpoint.length > 2048) {
+            return res.status(400).json({ success: false, message: 'Invalid browser push endpoint.' });
+        }
+        let savedSubscription = await TeacherPushSubscription.findOne({ endpoint: subscription.endpoint });
+        const teacherAudience = { audienceType: 'teacher', teacherName, deviceId: '', classKeys: [] };
+        if (!savedSubscription) {
+            savedSubscription = new TeacherPushSubscription({
+                endpoint: subscription.endpoint,
+                subscription,
+                audienceType: 'teacher',
+                teacherName,
+                audiences: [teacherAudience],
+                lastSeenAt: new Date()
+            });
+        } else {
+            savedSubscription.subscription = subscription;
+            savedSubscription.lastSeenAt = new Date();
+            const audiences = (savedSubscription.audiences || []).filter(audience =>
+                !(audience.audienceType === 'teacher' && audience.teacherName.toLowerCase() === teacherName.toLowerCase()));
+            audiences.push(teacherAudience);
+            savedSubscription.audiences = audiences;
+        }
+        await savedSubscription.save();
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Save teacher push subscription error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not enable browser notifications.' });
+    }
+});
+
+app.delete('/api/teacher/push/subscriptions', requireTeacherAppAccess, async (req, res) => {
+    try {
+        const teacherName = String(req.body?.teacherName || '').trim().replace(/\s+/g, ' ');
+        const endpoint = String(req.body?.endpoint || '').trim();
+        if (teacherName.length < 3 || !endpoint) return res.status(400).json({ success: false, message: 'Teacher and subscription are required.' });
+        const savedSubscription = await TeacherPushSubscription.findOne({ endpoint });
+        if (savedSubscription) {
+            savedSubscription.audiences = (savedSubscription.audiences || []).filter(audience =>
+                !(audience.audienceType === 'teacher' && audience.teacherName.toLowerCase() === teacherName.toLowerCase()));
+            if (!savedSubscription.audiences.length
+                && (savedSubscription.audienceType || 'teacher') === 'teacher'
+                && savedSubscription.teacherName.toLowerCase() === teacherName.toLowerCase()) {
+                await TeacherPushSubscription.deleteOne({ endpoint });
+            } else {
+                await savedSubscription.save();
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Remove teacher push subscription error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not disable browser notifications.' });
+    }
+});
+
+function announcementTargetsTeacher(announcement, teacherName) {
+    const audienceMode = announcement.audienceMode || 'teachers';
+    if (audienceMode === 'teachers' || audienceMode === 'all') return true;
+    return (announcement.targetTeacherNames || []).some(name => name.toLowerCase() === teacherName.toLowerCase());
+}
+
+function announcementTargetsCbtStudent(announcement, classKeys) {
+    if (announcement.audienceMode === 'all') return true;
+    if (announcement.audienceMode !== 'custom') return false;
+    return (announcement.targetClassKeys || []).some(classKey => classKeys.includes(classKey));
+}
+
 app.get('/api/teacher/announcements', requireTeacherAppAccess, async (req, res) => {
     try {
         res.set('Cache-Control', 'no-store');
         const teacherName = String(req.query.teacherName || '').trim().replace(/\s+/g, ' ');
         if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
-        const announcements = await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean();
+        const announcements = (await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean())
+            .filter(announcement => announcementTargetsTeacher(announcement, teacherName));
         res.json({
             success: true,
             announcements: announcements.map(announcement => ({
@@ -1133,7 +1549,7 @@ app.post('/api/teacher/announcements/:id/read', requireTeacherAppAccess, async (
         if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ success: false, message: 'Announcement not found.' });
         const announcement = await TeacherAnnouncement.findOne({ _id: req.params.id, expiresAt: { $gt: new Date() } });
-        if (!announcement) return res.status(404).json({ success: false, message: 'Announcement not found or expired.' });
+        if (!announcement || !announcementTargetsTeacher(announcement, teacherName)) return res.status(404).json({ success: false, message: 'Announcement not found or unavailable.' });
         const hasSeen = announcement.readBy.some(receipt => receipt.teacherName.toLowerCase() === teacherName.toLowerCase());
         if (!hasSeen) {
             announcement.readBy.push({ teacherName, seenAt: new Date() });
@@ -1143,6 +1559,134 @@ app.post('/api/teacher/announcements/:id/read', requireTeacherAppAccess, async (
     } catch (err) {
         console.error('Record teacher announcement read error:', err.message);
         res.status(500).json({ success: false, message: 'Could not record announcement view.' });
+    }
+});
+
+app.get('/api/cbt/announcements', async (req, res) => {
+    try {
+        const session = req.cbtStudent || getCbtStudentSession(req);
+        if (!session && !hasPageAccess(req, 'cbt')) {
+            return res.status(401).json({ success: false, message: 'Log in to the CBT exam section first.' });
+        }
+
+        res.set('Cache-Control', 'no-store');
+        const active = await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean();
+        const announcements = session
+            ? active.filter(item => announcementTargetsCbtStudent(item, session.classKeys)).map(item => ({
+                _id: item._id,
+                title: item.title,
+                message: item.message,
+                expiresAt: item.expiresAt,
+                seen: (item.cbtReadBy || []).some(receipt => receipt.deviceId === session.deviceId)
+            }))
+            : active.filter(item => item.audienceMode === 'all').map(item => ({
+                _id: item._id,
+                title: item.title,
+                message: item.message,
+                expiresAt: item.expiresAt,
+                seen: false
+            }));
+
+        res.json({
+            success: true,
+            classKeys: session?.classKeys || [],
+            announcements,
+            accessMode: session ? 'student-session' : 'cbt-page-access'
+        });
+    } catch (err) {
+        console.error('Load CBT announcements error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load CBT announcements.' });
+    }
+});
+
+app.post('/api/cbt/announcements/:id/read', requireCbtStudentSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        const announcement = await TeacherAnnouncement.findOne({ _id: req.params.id, expiresAt: { $gt: new Date() } });
+        if (!announcement || !announcementTargetsCbtStudent(announcement, req.cbtStudent.classKeys)) {
+            return res.status(404).json({ success: false, message: 'Announcement not found or unavailable.' });
+        }
+        const alreadySeen = (announcement.cbtReadBy || []).some(receipt => receipt.deviceId === req.cbtStudent.deviceId);
+        if (!alreadySeen) {
+            announcement.cbtReadBy.push({
+                deviceId: req.cbtStudent.deviceId,
+                classKeys: req.cbtStudent.classKeys,
+                seenAt: new Date()
+            });
+            await announcement.save();
+        }
+        res.json({ success: true, alreadySeen });
+    } catch (err) {
+        console.error('Record CBT announcement read error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not record CBT announcement view.' });
+    }
+});
+
+app.get('/api/cbt/push/config', requireCbtStudentSession, (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ enabled: WEB_PUSH_CONFIGURED, publicKey: WEB_PUSH_CONFIGURED ? VAPID_PUBLIC_KEY : '' });
+});
+
+app.post('/api/cbt/push/subscriptions', requireCbtStudentSession, async (req, res) => {
+    try {
+        if (!WEB_PUSH_CONFIGURED) return res.status(503).json({ success: false, message: 'Browser notifications are not configured on the server.' });
+        const subscription = req.body?.subscription;
+        if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+            return res.status(400).json({ success: false, message: 'A valid browser push subscription is required.' });
+        }
+        let subscriptionUrl;
+        try { subscriptionUrl = new URL(subscription.endpoint); } catch (_) {}
+        if (subscriptionUrl?.protocol !== 'https:' || subscription.endpoint.length > 2048) {
+            return res.status(400).json({ success: false, message: 'Invalid browser push endpoint.' });
+        }
+        const session = req.cbtStudent;
+        const studentAudience = { audienceType: 'student', teacherName: '', deviceId: session.deviceId, classKeys: session.classKeys };
+        let savedSubscription = await TeacherPushSubscription.findOne({ endpoint: subscription.endpoint });
+        if (!savedSubscription) {
+            savedSubscription = new TeacherPushSubscription({
+                endpoint: subscription.endpoint,
+                subscription,
+                audienceType: 'student',
+                deviceId: session.deviceId,
+                classKeys: session.classKeys,
+                audiences: [studentAudience],
+                lastSeenAt: new Date()
+            });
+        } else {
+            savedSubscription.subscription = subscription;
+            savedSubscription.lastSeenAt = new Date();
+            savedSubscription.audiences = (savedSubscription.audiences || []).filter(audience =>
+                !(audience.audienceType === 'student' && audience.deviceId === session.deviceId));
+            savedSubscription.audiences.push(studentAudience);
+        }
+        await savedSubscription.save();
+        res.json({ success: true, classKeys: session.classKeys });
+    } catch (err) {
+        console.error('Save CBT push subscription error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not enable CBT notifications.' });
+    }
+});
+
+app.delete('/api/cbt/push/subscriptions', requireCbtStudentSession, async (req, res) => {
+    try {
+        const endpoint = String(req.body?.endpoint || '').trim();
+        if (!endpoint) return res.status(400).json({ success: false, message: 'A browser subscription is required.' });
+        const savedSubscription = await TeacherPushSubscription.findOne({ endpoint });
+        if (savedSubscription) {
+            savedSubscription.audiences = (savedSubscription.audiences || []).filter(audience =>
+                !(audience.audienceType === 'student' && audience.deviceId === req.cbtStudent.deviceId));
+            if (!savedSubscription.audiences.length
+                && savedSubscription.audienceType === 'student'
+                && savedSubscription.deviceId === req.cbtStudent.deviceId) {
+                await TeacherPushSubscription.deleteOne({ endpoint });
+            } else {
+                await savedSubscription.save();
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Remove CBT push subscription error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not disable CBT notifications.' });
     }
 });
 
@@ -1409,12 +1953,16 @@ app.post('/api/student/login', async (req, res) => {
     try {
         const studentId = String(req.body?.studentId || '').trim();
         const password = String(req.body?.password || '').trim();
+        const deviceId = String(req.body?.deviceId || '').trim();
 
         if (!studentId) {
             return res.status(400).json({ success: false, message: 'Student ID is required.' });
         }
         if (!password) {
             return res.status(400).json({ success: false, message: 'Password is required.' });
+        }
+        if (!/^[a-z0-9-]{8,100}$/i.test(deviceId)) {
+            return res.status(400).json({ success: false, message: 'A valid CBT device ID is required.' });
         }
 
         const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id full_name student_class department picture status cbt_password').lean();
@@ -1430,6 +1978,18 @@ app.post('/api/student/login', async (req, res) => {
         if (savedPassword !== password) {
             return res.status(401).json({ success: false, message: 'Incorrect CBT password.' });
         }
+
+        const classKey = normalizeAnnouncementClassKey(student.student_class);
+        if (!classKey) return res.status(403).json({ success: false, message: 'Your student record does not have a supported class.' });
+        const enrolledDevice = await CbtAnnouncementDevice.findOneAndUpdate(
+            { deviceId },
+            { $addToSet: { classKeys: classKey }, $set: { lastStudentId: String(student.student_id).toUpperCase(), lastSeenAt: new Date() } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).lean();
+        const classKeys = [...new Set((enrolledDevice.classKeys || [classKey]).map(normalizeAnnouncementClassKey).filter(Boolean))];
+
+        const secureCookie = req.secure || req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
+        res.setHeader('Set-Cookie', `${CBT_STUDENT_COOKIE}=${createCbtStudentSession(student, deviceId, classKeys)}; Max-Age=${Math.floor(CBT_STUDENT_SESSION_TTL_MS / 1000)}; Path=/; HttpOnly; SameSite=Lax${secureCookie}`);
 
         return res.json({
             success: true,
@@ -2484,12 +3044,17 @@ app.put('/api/cbt-config', async (req, res) => {
 // POST a new CBT question
 app.post('/api/questions', async (req, res) => {
     try {
+        const classKey = String(req.body?.classKey || '').trim();
         const newQuestion = new Question({
             ...req.body,
+            classKey,
             subjectId: normalizeQuestionSubjectId(req.body?.classKey, req.body?.subjectId)
         });
         const saved = await newQuestion.save();
         invalidateQuestionCache();
+        void sendClassQuestionPush(classKey, saved.subjectId, 1).catch(err => {
+            console.error('Class question push delivery failed in background:', err.message);
+        });
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error saving question:', err);
@@ -3254,6 +3819,9 @@ app.post('/api/questions/bulk', async (req, res) => {
         await Question.deleteMany({ classKey, subjectId: { $in: getQuestionSubjectAliases(classKey, canonicalSubjectId) } });
         const saved = await Question.insertMany(documents, { ordered: true });
         invalidateQuestionCache();
+        void sendClassQuestionPush(classKey, canonicalSubjectId, saved.length).catch(err => {
+            console.error('Class question push delivery failed in background:', err.message);
+        });
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error bulk saving questions:', err);

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#163b3d">
+    <title>Announcements | Dynolinks Global College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --ink: #163b3d; --muted: #647a7d; --line: #d9e7e4; --teal: #0f766e; --teal-dark: #115e59; --coral: #b45309; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: var(--ink); background: #f4f8f7; font-family: 'DM Sans', sans-serif; }
+        .shell { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 56px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); font-weight: 700; text-decoration: none; min-width: 0; }
+        .brand img { width: 44px; height: 44px; object-fit: cover; border: 1px solid var(--line); border-radius: 11px; flex-shrink: 0; }
+        .brand span { min-width: 0; }
+        .brand small { display: block; color: var(--muted); font-size: .72rem; font-weight: 500; }
+        .back { color: var(--teal-dark); font-size: .88rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+        .heading { margin-bottom: 22px; }
+        .eyebrow { color: var(--coral); font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+        h1 { margin: 6px 0; font-size: clamp(1.8rem, 4vw, 2.6rem); }
+        .workspace { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr); gap: 20px; align-items: start; }
+        .panel { min-width: 0; padding: clamp(16px, 2.5vw, 26px); border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 12px 28px rgba(17,63,70,.07); }
+        .panel h2 { margin: 0 0 16px; font-size: 1.2rem; }
+        form { display: grid; gap: 13px; }
+        label { display: grid; gap: 6px; color: #496467; font-size: .8rem; font-weight: 700; }
+        input, select, textarea { width: 100%; min-height: 42px; border: 1px solid #bfd4cf; border-radius: 9px; padding: 9px 11px; color: var(--ink); background: #fbfdfb; font: inherit; outline: none; }
+        textarea { min-height: 130px; line-height: 1.5; resize: vertical; }
+        input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,118,110,.12); }
+        .duration { display: grid; grid-template-columns: minmax(90px, 130px) minmax(120px, 1fr); gap: 10px; }
+        .button { min-height: 42px; border: 0; border-radius: 9px; padding: 10px 14px; color: #fff; background: var(--teal); font: inherit; font-weight: 700; cursor: pointer; }
+        .button:hover { background: var(--teal-dark); }
+        .button.secondary { border: 1px solid var(--line); color: var(--teal-dark); background: #fff; }
+        .status { min-height: 20px; color: var(--teal-dark); font-size: .82rem; font-weight: 700; }
+        .custom-targets { display: grid; gap: 10px; }
+        .custom-targets[hidden] { display: none; }
+        .target-group { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #f8fcfa; }
+        .target-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 9px; font-size: .83rem; font-weight: 800; }
+        .target-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; max-height: 190px; overflow: auto; }
+        .target-option { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--ink); font-size: .78rem; font-weight: 500; }
+        .target-option input { width: 16px; min-height: 16px; height: 16px; flex: 0 0 16px; margin: 0; accent-color: var(--teal); }
+        .target-option span { overflow-wrap: anywhere; }
+        .announcement-list { display: grid; gap: 12px; }
+        .announcement { padding: 13px 0; border-top: 1px solid var(--line); }
+        .announcement:first-child { border-top: 0; padding-top: 0; }
+        .announcement-header { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+        .announcement h3 { margin: 0 0 5px; font-size: 1rem; }
+        .announcement p { margin: 6px 0; white-space: pre-wrap; line-height: 1.45; font-size: .86rem; }
+        .meta, .receipts { color: var(--muted); font-size: .75rem; }
+        .receipts { margin-top: 5px; }
+        .tag { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; color: var(--teal-dark); background: #e6f4ef; font-size: .68rem; font-weight: 800; text-transform: uppercase; }
+        .tag.expired { color: #92400e; background: #fff7ed; }
+        @media (max-width: 720px) { .workspace { grid-template-columns: 1fr; } .topbar { align-items: flex-start; } .back { width: 100%; text-align: right; } }
+        @media (max-width: 520px) { .shell { width: min(100% - 18px, 1040px); padding-top: 16px; } .panel { padding: 16px; } .target-list { grid-template-columns: 1fr; } .duration { grid-template-columns: 1fr; } .announcement-header { flex-direction: column; align-items: stretch; } .announcement-header > div:last-child { display: flex; justify-content: flex-end; } .brand { max-width: 100%; } .brand span { font-size: .92rem; } }
+        @media (max-width: 360px) { .topbar { flex-direction: column; align-items: stretch; } .brand, .back { width: 100%; justify-content: space-between; } .button, .button.secondary { width: 100%; } }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <nav class="topbar" aria-label="Announcement admin navigation">
+            <a class="brand" href="/index.html"><img src="/logo.jpg" alt=""><span>Dynolinks Global College<small>Announcement admin</small></span></a>
+            <button class="button secondary" id="installAnnouncementAppButton" type="button">Install app</button>
+            <span id="announcementAppInstallStatus" class="meta" role="status" aria-live="polite"></span>
+            <a class="back" href="/index.html">Back to home</a>
+        </nav>
+        <header class="heading">
+            <div class="eyebrow">Communication</div>
+            <h1>Announcements</h1>
+        </header>
+        <div class="workspace">
+            <section class="panel" aria-labelledby="composeTitle">
+                <h2 id="composeTitle">New announcement</h2>
+                <form id="announcementForm">
+                    <label>Title <input id="announcementTitle" type="text" maxlength="120" placeholder="Optional title"></label>
+                    <label>Message <textarea id="announcementMessage" maxlength="3000" required placeholder="Write the announcement"></textarea></label>
+                    <label>Recipients
+                        <select id="audienceMode">
+                            <option value="teachers">All teachers</option>
+                            <option value="all">All students and teachers</option>
+                            <option value="custom">Custom selection</option>
+                        </select>
+                    </label>
+                    <div class="custom-targets" id="customTargets" hidden>
+                        <section class="target-group" aria-labelledby="classTargetTitle">
+                            <div class="target-title"><span id="classTargetTitle">CBT classes</span><label class="target-option"><input id="selectAllClasses" type="checkbox"><span>All</span></label></div>
+                            <div class="target-list" id="classOptions"><span class="meta">Loading classes...</span></div>
+                        </section>
+                        <section class="target-group" aria-labelledby="teacherTargetTitle">
+                            <div class="target-title"><span id="teacherTargetTitle">Teachers</span><label class="target-option"><input id="selectAllTeachers" type="checkbox"><span>All</span></label></div>
+                            <div class="target-list" id="teacherOptions"><span class="meta">Loading teachers...</span></div>
+                        </section>
+                    </div>
+                    <div class="duration">
+                        <label>Show for <input id="durationValue" type="number" min="1" max="365" value="1" required></label>
+                        <label>Unit
+                            <select id="durationUnit"><option value="hours">Hours</option><option value="days" selected>Days</option><option value="months">Months</option></select>
+                        </label>
+                    </div>
+                    <button class="button" type="submit" id="publishButton">Send announcement</button>
+                    <div class="status" id="formStatus" role="status" aria-live="polite"></div>
+                </form>
+            </section>
+            <section class="panel" aria-labelledby="historyTitle">
+                <div class="announcement-header"><h2 id="historyTitle">Recent announcements</h2><button class="button secondary" type="button" id="refreshButton">Refresh</button></div>
+                <div class="announcement-list" id="announcementList" aria-live="polite">Loading announcements...</div>
+            </section>
+        </div>
+    </main>
+    <script>
+        const audienceMode = document.getElementById('audienceMode');
+        const customTargets = document.getElementById('customTargets');
+        const classOptions = document.getElementById('classOptions');
+        const teacherOptions = document.getElementById('teacherOptions');
+        const formStatus = document.getElementById('formStatus');
+        const announcementList = document.getElementById('announcementList');
+        const installAnnouncementAppButton = document.getElementById('installAnnouncementAppButton');
+        const announcementAppInstallStatus = document.getElementById('announcementAppInstallStatus');
+        let installPrompt = null;
+        let recipients = { classes: [], teachers: [] };
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+
+        function isAnnouncementAppInstalled() {
+            return localStorage.getItem('dgc_announcement_app_installed') === '1';
+        }
+
+        function updateAnnouncementInstallUi() {
+            if (installAnnouncementAppButton) {
+                installAnnouncementAppButton.hidden = isAnnouncementAppInstalled();
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            installPrompt = event;
+            updateAnnouncementInstallUi();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            localStorage.setItem('dgc_announcement_app_installed', '1');
+            updateAnnouncementInstallUi();
+            if (announcementAppInstallStatus) {
+                announcementAppInstallStatus.textContent = 'App installed.';
+            }
+        });
+
+        installAnnouncementAppButton?.addEventListener('click', async () => {
+            if (!installPrompt) {
+                if (announcementAppInstallStatus) announcementAppInstallStatus.textContent = 'Use your browser menu and choose Install app or Add to Home Screen.';
+                return;
+            }
+            installPrompt.prompt();
+            const choice = await installPrompt.userChoice;
+            if (announcementAppInstallStatus) {
+                announcementAppInstallStatus.textContent = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
+            }
+            if (choice.outcome === 'accepted') {
+                localStorage.setItem('dgc_announcement_app_installed', '1');
+                updateAnnouncementInstallUi();
+            }
+            installPrompt = null;
+        });
+
+        updateAnnouncementInstallUi();
+
+        function getSelectedValues(container) {
+            return [...container.querySelectorAll('input[type="checkbox"]:checked[data-value]')].map(input => input.dataset.value);
+        }
+
+        function renderRecipients() {
+            classOptions.innerHTML = recipients.classes.length ? recipients.classes.map(item => `<label class="target-option"><input type="checkbox" data-value="${escapeHtml(item.key)}"><span>${escapeHtml(item.label)}</span></label>`).join('') : '<span class="meta">No CBT classes are configured.</span>';
+            teacherOptions.innerHTML = recipients.teachers.length ? recipients.teachers.map(name => `<label class="target-option"><input type="checkbox" data-value="${escapeHtml(name)}"><span>${escapeHtml(name)}</span></label>`).join('') : '<span class="meta">No teachers found yet.</span>';
+        }
+
+        function setAll(container, value) {
+            container.querySelectorAll('input[type="checkbox"][data-value]').forEach(input => { input.checked = value; });
+        }
+
+        async function loadRecipients() {
+            try {
+                const response = await fetch('/api/admin/announcement-recipients', { cache: 'no-store' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not load recipient lists (${response.status}).`);
+                recipients = { classes: data.classes || [], teachers: data.teachers || [] };
+                renderRecipients();
+            } catch (error) {
+                classOptions.innerHTML = `<span class="meta">${escapeHtml(error.message)}</span>`;
+                teacherOptions.innerHTML = '';
+            }
+        }
+
+        async function deleteAnnouncement(announcementId) {
+            if (!announcementId) return;
+            const confirmed = window.confirm('Delete this announcement?');
+            if (!confirmed) return;
+            try {
+                const response = await fetch(`/api/admin/teacher-announcements/${encodeURIComponent(announcementId)}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not delete announcement (${response.status}).`);
+                formStatus.textContent = 'Announcement deleted.';
+                await loadAnnouncements();
+            } catch (error) {
+                formStatus.textContent = error.message || 'Could not delete announcement.';
+            }
+        }
+
+        async function loadAnnouncements() {
+            try {
+                const response = await fetch('/api/admin/teacher-announcements', { cache: 'no-store' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not load announcements (${response.status}).`);
+                const announcements = data.announcements || [];
+                announcementList.innerHTML = announcements.length ? announcements.map(item => {
+                    const readers = [...new Set((item.readBy || []).map(receipt => receipt.teacherName))];
+                    const cbtReaders = (item.cbtReadBy || []).length;
+                    const mode = item.audienceMode || 'teachers';
+                    const targets = mode === 'all' ? 'All students and teachers' : mode === 'teachers' ? 'All teachers' : `Classes: ${(item.targetClassKeys || []).join(', ') || 'none'} · Teachers: ${(item.targetTeacherNames || []).join(', ') || 'none'}`;
+                    const expired = new Date(item.expiresAt) <= new Date();
+                    return `<article class="announcement"><div class="announcement-header"><div><h3>${escapeHtml(item.title || 'Announcement')}</h3><div class="meta">${escapeHtml(targets)}</div></div><div style="display:flex; align-items:center; gap:8px;"><span class="tag ${expired ? 'expired' : ''}">${expired ? 'Expired' : 'Active'}</span><button type="button" class="button secondary" data-delete-id="${escapeHtml(item._id || '')}" style="padding:8px 10px; min-height:auto; font-size:0.75rem;">Delete</button></div></div><p>${escapeHtml(item.message)}</p><div class="meta">Expires ${new Date(item.expiresAt).toLocaleString()}</div><div class="receipts">Seen by ${readers.length} teachers${readers.length ? `: ${readers.map(escapeHtml).join(', ')}` : ''} · Seen on ${cbtReaders} CBT devices</div></article>`;
+                }).join('') : '<p class="meta">No announcements published yet.</p>';
+                announcementList.querySelectorAll('[data-delete-id]').forEach(button => {
+                    button.addEventListener('click', () => deleteAnnouncement(button.dataset.deleteId));
+                });
+            } catch (error) {
+                announcementList.innerHTML = `<p class="meta">${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        audienceMode.addEventListener('change', () => { customTargets.hidden = audienceMode.value !== 'custom'; });
+        document.getElementById('selectAllClasses').addEventListener('change', event => setAll(classOptions, event.target.checked));
+        document.getElementById('selectAllTeachers').addEventListener('change', event => setAll(teacherOptions, event.target.checked));
+        document.getElementById('refreshButton').addEventListener('click', loadAnnouncements);
+        document.getElementById('durationUnit').addEventListener('change', event => {
+            document.getElementById('durationValue').max = ({ hours: 8760, days: 365, months: 60 })[event.target.value];
+        });
+
+        document.getElementById('announcementForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const mode = audienceMode.value;
+            const targetClassKeys = getSelectedValues(classOptions);
+            const targetTeacherNames = getSelectedValues(teacherOptions);
+            if (mode === 'custom' && !targetClassKeys.length && !targetTeacherNames.length) {
+                formStatus.textContent = 'Select at least one class or teacher.';
+                return;
+            }
+            const publishButton = document.getElementById('publishButton');
+            publishButton.disabled = true;
+            formStatus.textContent = 'Sending announcement...';
+            try {
+                const response = await fetch('/api/admin/teacher-announcements', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: document.getElementById('announcementTitle').value.trim(),
+                        message: document.getElementById('announcementMessage').value.trim(),
+                        durationValue: Number(document.getElementById('durationValue').value),
+                        durationUnit: document.getElementById('durationUnit').value,
+                        audienceMode: mode,
+                        targetClassKeys,
+                        targetTeacherNames
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not send announcement (${response.status}).`);
+                const delivery = data.pushDelivery || {};
+                formStatus.textContent = delivery.configured
+                    ? `Announcement sent. Push delivered to ${delivery.sent} matching device(s).`
+                    : 'Announcement sent. Browser push is not configured on the server.';
+                event.target.reset();
+                document.getElementById('durationValue').max = '365';
+                customTargets.hidden = true;
+                document.getElementById('selectAllClasses').checked = false;
+                document.getElementById('selectAllTeachers').checked = false;
+                renderRecipients();
+                await loadAnnouncements();
+            } catch (error) {
+                formStatus.textContent = error.message || 'Could not send announcement.';
+            } finally {
+                publishButton.disabled = false;
+            }
+        });
+
+        void Promise.all([loadRecipients(), loadAnnouncements()]);
+    </script>
+</body>
+</html>

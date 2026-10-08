@@ -1,6 +1,6 @@
 const APP_CACHE_PREFIX = 'dynolinks-portal-cache';
 const APP_CACHE_NAME = `${APP_CACHE_PREFIX}-${Date.now()}`;
-const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v13';
+const TEACHER_CACHE_NAME = 'dynolinks-teacher-offline-v14';
 importScripts('/teacher-offline.js');
 
 self.addEventListener('install', (event) => {
@@ -46,7 +46,8 @@ self.addEventListener('activate', (event) => {
       caches.delete('dynolinks-teacher-offline-v9'),
       caches.delete('dynolinks-teacher-offline-v10'),
       caches.delete('dynolinks-teacher-offline-v11'),
-      caches.delete('dynolinks-teacher-offline-v12')
+      caches.delete('dynolinks-teacher-offline-v12'),
+      caches.delete('dynolinks-teacher-offline-v13')
     ]))
       .then(() => self.clients.claim())
   );
@@ -62,6 +63,69 @@ self.addEventListener('sync', (event) => {
   if (event.tag === 'teacher-attendance-sync') {
     event.waitUntil(self.TeacherOfflineQueue.syncPending());
   }
+});
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch (_) {}
+  const title = payload.title || 'College announcement';
+  const actions = Array.isArray(payload.actions) ? payload.actions.slice(0, 2).map((action) => ({
+    action: String(action.action || 'open'),
+    title: String(action.title || action.action || 'Open')
+  })) : [];
+  const options = {
+    body: payload.body || 'A new announcement is available.',
+    icon: '/logo.jpg',
+    badge: '/logo.jpg',
+    tag: payload.notificationType === 'class-session'
+      ? `class-session-${payload.startClientRequestId || payload.teacherName || 'new'}`
+      : `teacher-announcement-${payload.announcementId || 'new'}`,
+    actions,
+    data: {
+      url: payload.url || '/teacher.html',
+      announcementId: payload.announcementId || '',
+      teacherName: payload.teacherName || '',
+      startClientRequestId: payload.startClientRequestId || '',
+      className: payload.className || '',
+      subject: payload.subject || ''
+    }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const payload = event.notification.data || {};
+  const target = new URL(payload.url || '/teacher.html', self.location.origin);
+
+  if (event.action === 'end-class') {
+    const teacherName = payload.teacherName || '';
+    const startClientRequestId = payload.startClientRequestId || '';
+    if (teacherName && startClientRequestId) {
+      fetch('/api/teacher/class-sessions/end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: teacherName,
+          startClientRequestId,
+          endedAt: new Date().toISOString()
+        })
+      }).catch(() => {});
+    }
+  }
+
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clients) => {
+    const teacherClient = clients.find(client => {
+      const clientUrl = new URL(client.url);
+      return clientUrl.origin === target.origin && clientUrl.pathname === '/teacher.html';
+    });
+    if (teacherClient) {
+      await teacherClient.focus();
+      teacherClient.postMessage({ type: 'OPEN_TEACHER_ANNOUNCEMENTS', announcementId: payload.announcementId || '' });
+      return;
+    }
+    await self.clients.openWindow(target.href);
+  }));
 });
 
 self.addEventListener('fetch', (event) => {

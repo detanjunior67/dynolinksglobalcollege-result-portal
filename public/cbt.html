@@ -911,16 +911,16 @@
             </div>
 
             <!-- Controls & Mode Toggle -->
-            <div class="header-controls flex items-center space-x-3 sm:space-x-4">
+            <div class="header-controls flex items-center justify-end flex-wrap gap-2 sm:gap-3">
                 <!-- Home Navigation -->
                 <a href="/index.html"
-                    class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2"
+                    class="mobile-secondary-nav px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0"
                     title="Go to home page">
                     <i class="fa-solid fa-house text-blue-600"></i>
                     <span>Home</span>
                 </a>
                 <a href="cbt.html" onclick="showDashboard()"
-                    class="mobile-secondary-nav px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2"
+                    class="mobile-secondary-nav px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0"
                     title="Open student CBT portal">
                     <i class="fa-solid fa-laptop-code text-blue-600"></i>
                     <span>Student Portal</span>
@@ -928,13 +928,18 @@
 
                 <!-- Dedicated Admin Console Link -->
                 <button type="button" id="portalToggleBtn" onclick="openAdminAuthModal()"
-                    class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2">
+                    class="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0">
                     <i class="fa-solid fa-lock text-amber-500"></i>
                     <span id="portalToggleText">Admin Console</span>
                 </button>
 
+                <button id="studentAnnouncementButton" type="button" class="relative inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-800 shadow-sm transition hover:bg-blue-50" aria-label="Messages" title="Messages">
+                    <i class="fa-solid fa-message text-sm sm:text-base"></i>
+                    <span id="studentAnnouncementUnreadBadgeButton" class="absolute -right-1 -top-1 hidden min-w-[1.1rem] rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">0</span>
+                </button>
+
                 <!-- Profile Badge -->
-                <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2 pl-1 sm:pl-2 border-l border-gray-200 dark:border-gray-700 shrink-0">
                     <div class="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center font-bold text-sm"
                         id="userAvatar">
                         <img src="/student.jpg" alt="Student Portal" class="w-full h-full object-cover">
@@ -967,6 +972,38 @@
                     <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-2">Computer Based Testing Portal</h1>
                     <p class="mt-2 text-blue-100 text-sm sm:text-base leading-relaxed">Select your configured class
                         level below to begin your assignment. Ensure your registration details match system records.</p>
+                </div>
+            </div>
+
+            <div id="studentAnnouncementModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4" style="left:0; right:0; top:0; bottom:0; display:none;">
+                <div class="mx-auto w-full max-w-xl rounded-2xl border border-blue-100 bg-white p-5 shadow-2xl">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">Class updates</p>
+                            <h3 class="mt-1 text-xl font-extrabold text-slate-900">Announcements</h3>
+                        </div>
+                        <button id="studentAnnouncementCancelButton" type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Cancel</button>
+                    </div>
+                    <div id="studentAnnouncementModalList" class="mt-4 max-h-[65vh] space-y-3 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <div id="cbtNotificationPromptModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/60 p-4" style="left:0; right:0; top:0; bottom:0; display:none;">
+                <div class="mx-auto w-full max-w-md rounded-2xl border border-blue-100 bg-white p-5 shadow-2xl">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                            <i class="fa-solid fa-bell text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">Notifications</p>
+                            <h3 class="mt-1 text-lg font-extrabold text-slate-900">Enable class alerts</h3>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm leading-6 text-slate-600">Allow notifications so you receive important CBT and class updates even while you are not on this page.</p>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <button id="cbtNotificationLaterButton" type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Not now</button>
+                        <button id="cbtNotificationAllowButton" type="button" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700">Allow notifications</button>
+                    </div>
                 </div>
             </div>
 
@@ -2203,7 +2240,9 @@
                 console.warn('Shared CBT configuration unavailable; using local configuration:', err);
             }
             savePersistentData();
+            requestCbtNotificationsPermissionIfNeeded();
             void retryPendingCbtSubmissions();
+            void loadStudentAnnouncements(false);
             populateStudentClassDropdown();
             populateAdminClassDropdown();
             setStudentProfileCardVisibility(false);
@@ -2325,12 +2364,159 @@
             localStorage.setItem(pendingCbtSubmissionKey, JSON.stringify(remaining));
         }
 
+        const studentDeviceIdKey = 'dgc_student_device_id';
+        const cbtNotificationStateKey = 'dgc_cbt_notifications_prompt_state';
+
+        function getStudentDeviceId() {
+            let deviceId = String(localStorage.getItem(studentDeviceIdKey) || '').trim();
+            if (!deviceId) {
+                deviceId = `cbt-${crypto.getRandomValues(new Uint32Array(2)).reduce((acc, value) => acc + value.toString(16).padStart(8, '0'), '')}`;
+                localStorage.setItem(studentDeviceIdKey, deviceId);
+            }
+            return deviceId;
+        }
+
+        function decodeVapidPublicKey(value) {
+            const padding = '='.repeat((4 - value.length % 4) % 4);
+            const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
+            return Uint8Array.from(raw, character => character.charCodeAt(0));
+        }
+
+        async function registerCbtServiceWorker() {
+            if (!('serviceWorker' in navigator)) return null;
+            try {
+                return await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+            } catch (error) {
+                console.warn('CBT service worker registration failed:', error);
+                return null;
+            }
+        }
+
+        async function loadCbtPushConfig() {
+            const response = await fetch('/api/cbt/push/config', { cache: 'no-store' });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Could not check browser notifications (${response.status}).`);
+            return data;
+        }
+
+        async function saveCbtPushSubscription(subscription) {
+            const response = await fetch('/api/cbt/push/subscriptions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription: subscription.toJSON() })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Could not save browser notifications (${response.status}).`);
+        }
+
+        async function enableCbtPushNotifications() {
+            if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
+                throw new Error('Your browser does not support browser notifications.');
+            }
+
+            const config = await loadCbtPushConfig();
+            if (!config.enabled) {
+                throw new Error('Browser notifications are not configured on the server.');
+            }
+
+            const permission = Notification.permission === 'granted'
+                ? 'granted'
+                : await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Allow notifications in your browser to receive CBT alerts.');
+            }
+
+            await registerCbtServiceWorker();
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: decodeVapidPublicKey(config.publicKey)
+                });
+            }
+
+            try {
+                await saveCbtPushSubscription(subscription);
+            } catch (error) {
+                await subscription.unsubscribe();
+                throw error;
+            }
+
+            localStorage.setItem(cbtNotificationStateKey, 'granted');
+            updateCbtNotificationButtonState();
+            hideCbtNotificationPrompt();
+            showToast('Notifications enabled', 'success');
+        }
+
+        function showCbtNotificationPrompt() {
+            const modal = document.getElementById('cbtNotificationPromptModal');
+            if (!modal) return;
+            const permission = 'Notification' in window ? Notification.permission : 'unsupported';
+            const storedState = localStorage.getItem(cbtNotificationStateKey);
+            if (permission !== 'default' && storedState !== 'dismissed') {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modal.style.display = 'none';
+                return;
+            }
+            if (permission !== 'default' && storedState === 'dismissed') {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modal.style.display = 'none';
+                return;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+        }
+
+        function hideCbtNotificationPrompt() {
+            const modal = document.getElementById('cbtNotificationPromptModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+            modal.style.alignItems = '';
+            modal.style.justifyContent = '';
+        }
+
+        function updateCbtNotificationButtonState() {
+            const button = document.getElementById('cbtNotificationToggleButton');
+            if (!button) return;
+            const permission = 'Notification' in window ? Notification.permission : 'unsupported';
+            const previousState = localStorage.getItem(cbtNotificationStateKey);
+            const notificationsEnabled = permission === 'granted' || previousState === 'granted';
+            button.hidden = notificationsEnabled;
+            button.textContent = 'Enable notifications';
+        }
+
+        function requestCbtNotificationsPermissionIfNeeded(forcePrompt = false) {
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+            const permission = Notification.permission;
+            const previousState = localStorage.getItem(cbtNotificationStateKey);
+            if (permission !== 'default') {
+                if (!previousState || previousState === 'dismissed') {
+                    localStorage.setItem(cbtNotificationStateKey, permission === 'granted' ? 'granted' : 'denied');
+                }
+                updateCbtNotificationButtonState();
+                return;
+            }
+            if (!forcePrompt && previousState === 'granted') return;
+            if (!forcePrompt && previousState === 'denied') return;
+            showCbtNotificationPrompt();
+            updateCbtNotificationButtonState();
+        }
+
         async function verifyStudentPasswordOnServer(studentId, password) {
             try {
                 const response = await fetch(`${API_BASE_URL}/student/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentId, password })
+                    body: JSON.stringify({ studentId, password, deviceId: getStudentDeviceId() })
                 });
                 const data = await response.json().catch(() => ({}));
                 return response.ok && !!data.success;
@@ -2339,6 +2525,169 @@
                 return false;
             }
         }
+
+        async function markStudentAnnouncementSeen(announcementId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/cbt/announcements/${encodeURIComponent(announcementId)}/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    if (response.status !== 404) console.warn('Could not mark CBT announcement as seen:', data.message || response.statusText);
+                }
+            } catch (err) {
+                console.warn('CBT announcement read tracking failed:', err);
+            }
+        }
+
+        function renderAnnouncementCards(announcements) {
+            return announcements.length ? announcements.map(announcement => `
+                <div class="rounded-xl border border-blue-200 bg-white px-3 py-2 shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">${announcement.title || 'Class update'}</p>
+                            <p class="mt-1 text-sm text-gray-700 leading-relaxed">${String(announcement.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>
+                        </div>
+                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-800">${announcement.seen ? 'Seen' : 'New'}</span>
+                    </div>
+                    <p class="mt-2 text-[10px] text-gray-500">Available until ${new Date(announcement.expiresAt).toLocaleString()}</p>
+                </div>
+            `).join('') : '<p class="text-sm text-gray-500">No class updates right now.</p>';
+        }
+
+        function updateStudentAnnouncementSummary() {
+            const announcements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
+            const unreadCount = announcements.filter(item => !item.seen).length;
+            const badge = document.getElementById('studentAnnouncementUnreadBadge');
+            const buttonBadge = document.getElementById('studentAnnouncementUnreadBadgeButton');
+            const button = document.getElementById('studentAnnouncementButton');
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = String(unreadCount);
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.textContent = '0';
+                    badge.classList.add('hidden');
+                }
+            }
+            if (buttonBadge) {
+                if (unreadCount > 0) {
+                    buttonBadge.textContent = String(unreadCount);
+                    buttonBadge.classList.remove('hidden');
+                } else {
+                    buttonBadge.textContent = '0';
+                    buttonBadge.classList.add('hidden');
+                }
+            }
+            if (button) {
+                button.title = unreadCount > 0 ? `${unreadCount} unread messages` : 'Messages';
+            }
+        }
+
+        function openStudentAnnouncementModal() {
+            const modal = document.getElementById('studentAnnouncementModal');
+            const list = document.getElementById('studentAnnouncementModalList');
+            if (!modal || !list) return;
+            const announcements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
+            if (!announcements.length) {
+                closeStudentAnnouncementModal();
+                return;
+            }
+            list.innerHTML = renderAnnouncementCards(announcements);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+        }
+
+        function closeStudentAnnouncementModal() {
+            const modal = document.getElementById('studentAnnouncementModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+            modal.style.alignItems = '';
+            modal.style.justifyContent = '';
+        }
+
+        async function loadStudentAnnouncements(autoOpenPopup = false) {
+            const panel = document.getElementById('studentAnnouncementPanel');
+            const list = document.getElementById('studentAnnouncementList');
+            try {
+                const response = await fetch(`${API_BASE_URL}/cbt/announcements`, { cache: 'no-store' });
+                if (response.status === 401) {
+                    if (panel) panel.classList.add('hidden');
+                    closeStudentAnnouncementModal();
+                    return;
+                }
+                if (!response.ok) throw new Error('Could not load class announcements.');
+                const data = await response.json().catch(() => ({}));
+                const announcements = Array.isArray(data.announcements) ? data.announcements : [];
+                window.studentAnnouncementData = announcements;
+                if (panel) panel.classList.remove('hidden');
+                if (list) list.innerHTML = renderAnnouncementCards(announcements);
+                updateStudentAnnouncementSummary();
+                for (const announcement of announcements.filter(item => !item.seen)) {
+                    await markStudentAnnouncementSeen(announcement._id);
+                }
+                const refreshed = await fetch(`${API_BASE_URL}/cbt/announcements`, { cache: 'no-store' });
+                if (refreshed.ok) {
+                    const refreshedData = await refreshed.json().catch(() => ({}));
+                    const refreshedAnnouncements = Array.isArray(refreshedData.announcements) ? refreshedData.announcements : [];
+                    window.studentAnnouncementData = refreshedAnnouncements;
+                    if (panel) panel.classList.remove('hidden');
+                    if (list) list.innerHTML = renderAnnouncementCards(refreshedAnnouncements);
+                    updateStudentAnnouncementSummary();
+                    if (autoOpenPopup && refreshedAnnouncements.length > 0) {
+                        openStudentAnnouncementModal();
+                    }
+                }
+            } catch (err) {
+                console.warn('CBT announcements could not be loaded:', err);
+                if (panel) panel.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('studentAnnouncementButton')?.addEventListener('click', async () => {
+            const announcements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
+            if (!announcements.length) {
+                await loadStudentAnnouncements(false);
+                const refreshedAnnouncements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
+                if (!refreshedAnnouncements.length) {
+                    showToast('No announcements at the moment.', 'info');
+                    return;
+                }
+            }
+            openStudentAnnouncementModal();
+        });
+        document.getElementById('studentAnnouncementRefreshButton')?.addEventListener('click', () => { void loadStudentAnnouncements(); });
+        document.getElementById('studentAnnouncementCancelButton')?.addEventListener('click', closeStudentAnnouncementModal);
+        document.getElementById('studentAnnouncementModal')?.addEventListener('click', (event) => {
+            if (event.target.id === 'studentAnnouncementModal') closeStudentAnnouncementModal();
+        });
+
+        document.getElementById('cbtNotificationAllowButton')?.addEventListener('click', async () => {
+            try {
+                await enableCbtPushNotifications();
+            } catch (error) {
+                const message = error?.message || 'Could not enable notifications';
+                localStorage.setItem(cbtNotificationStateKey, 'denied');
+                updateCbtNotificationButtonState();
+                showToast(message, 'error');
+            }
+        });
+
+        document.getElementById('cbtNotificationLaterButton')?.addEventListener('click', () => {
+            localStorage.setItem(cbtNotificationStateKey, 'dismissed');
+            hideCbtNotificationPrompt();
+            updateCbtNotificationButtonState();
+        });
+
+        document.getElementById('cbtNotificationToggleButton')?.addEventListener('click', () => {
+            requestCbtNotificationsPermissionIfNeeded(true);
+        });
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -2627,6 +2976,7 @@
                 return showCustomAlert('Access Denied', 'This CBT password is incorrect or has not been set for this student ID yet. Please contact the admin to set/update it.');
             }
 
+            await loadStudentAnnouncements(false);
             let effectiveDepartment = normalizeDepartmentName(savedProfile?.department || selectedDepartment || '');
             if (classKey.startsWith('SSS') && !savedProfile?.department) {
                 try {
@@ -2697,6 +3047,8 @@
                 department: effectiveDepartment,
                 picture: candidatePicture
             };
+
+            void loadStudentAnnouncements();
 
             const departmentSubjects = getDepartmentSubjectList(classKey, effectiveDepartment);
             const configuredSubjects = classConfigs[classKey].subjects || [];

@@ -5038,7 +5038,9 @@
             e.preventDefault();
             const password = document.getElementById('cbtAccessPassword').value.trim().toLowerCase();
             const error = document.getElementById('cbtPasswordError');
-            const target = requestedProtectedPath || (password === 'cbtaccess' ? '/cbt.html' : '/teacher.html');
+            const target = requestedProtectedPath || (password === 'announce'
+                ? '/announcement-admin.html'
+                : password === 'cbtaccess' ? '/cbt.html' : '/teacher.html');
 
             fetch('/api/page-access', {
                 method: 'POST',
@@ -5064,8 +5066,10 @@
 
         const protectedPageQuery = new URLSearchParams(window.location.search);
         const protectedScope = protectedPageQuery.get('protected');
-        if (protectedScope === 'cbt' || protectedScope === 'teacher') {
-            requestedProtectedPath = protectedScope === 'cbt' ? '/cbt.html' : '/teacher.html';
+        if (protectedScope === 'cbt' || protectedScope === 'teacher' || protectedScope === 'announcement-admin') {
+            requestedProtectedPath = protectedScope === 'cbt'
+                ? '/cbt.html'
+                : protectedScope === 'teacher' ? '/teacher.html' : '/announcement-admin.html';
             setTimeout(accessCBT, 0);
         }
 

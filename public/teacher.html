@@ -72,6 +72,8 @@
         label { display: block; font-size: 0.83rem; font-weight: 700; margin-bottom: 8px; }
         input { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; color: var(--ink); background: #fbfdfb; font: inherit; outline: none; }
         input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.12); }
+        textarea { display: block; width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--ink); background: #fbfdfb; font: inherit; line-height: 1.5; outline: none; }
+        textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.12); }
         .primary, .outline { width: 100%; border-radius: 12px; padding: 14px 18px; margin-top: 16px; font-weight: 700; transition: transform .2s, background .2s; }
         .primary { border: 0; color: white; background: var(--teal); }
         .primary:hover { background: var(--teal-dark); transform: translateY(-2px); }
@@ -177,7 +179,9 @@
 
         .shell { width: min(1180px, calc(100% - 40px)); padding-top: 24px; }
         .topbar { padding: 11px 14px; margin-bottom: 78px; border: 1px solid rgba(217,231,228,.9); border-radius: 18px; background: rgba(255,255,255,.72); box-shadow: 0 10px 28px rgba(17,63,70,.06); backdrop-filter: blur(16px); }
+        .topbar { justify-content: flex-start; gap: 10px; }
         .brand { color: #163b3d; }
+        .brand { flex: 1 1 auto; }
         .brand-mark { width: 46px; height: 46px; border-radius: 12px; }
         .back-link { padding: 9px 14px; border: 1px solid #c8dcda; border-radius: 999px; background: #fff; color: #0f766e; }
         .back-link:hover { background: #edf7f5; }
@@ -250,7 +254,11 @@
         .teacher-checkin-report-actions [data-report-action="reject"] { color: #991b1b; }
         .teacher-announcement-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 1px solid #b8d5d1; border-radius: 9px; padding: 8px 11px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
         .teacher-announcement-button[hidden] { display: none; }
-        body.admin-mode .teacher-announcement-button { display: none; }
+        .teacher-topbar-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .teacher-push-button { min-height: 40px; border: 1px solid #bfd4cf; border-radius: 9px; padding: 8px 11px; color: var(--teal-dark); background: white; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+        .teacher-push-button:disabled { cursor: not-allowed; opacity: .65; }
+        .teacher-push-status { max-width: 150px; color: var(--muted); font-size: .72rem; }
+        body.admin-mode .teacher-topbar-actions { display: none; }
         .announcement-unread-count { display: inline-grid; min-width: 21px; height: 21px; padding: 0 5px; place-items: center; border-radius: 11px; color: white; background: #b42318; font-size: .72rem; }
         .teacher-announcement-dialog { width: min(600px, calc(100% - 32px)); max-height: min(80vh, 720px); margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: white; box-shadow: 0 24px 70px rgba(8,24,39,.28); }
         .teacher-announcement-dialog::backdrop { background: rgba(8,24,39,.62); }
@@ -263,20 +271,47 @@
         .teacher-announcement-item h3 { margin: 0 0 5px; font-size: 1rem; }
         .teacher-announcement-item p { margin: 0; line-height: 1.5; white-space: pre-wrap; }
         .teacher-announcement-item time { display: block; margin-top: 7px; color: var(--muted); font-size: .75rem; }
-        .admin-announcement-form { display: grid; gap: 12px; }
-        .admin-announcement-form textarea { min-height: 95px; resize: vertical; }
-        .admin-announcement-duration { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
-        .admin-announcement-duration label { min-width: 120px; margin: 0; }
-        .admin-announcement-duration input,
-        .admin-announcement-duration select { min-height: 40px; padding: 8px 10px; }
-        .admin-announcement-duration input { width: 110px; }
-        .admin-announcement-duration select { width: 130px; }
+        .admin-announcement-form { display: grid; gap: 16px; width: 100%; }
+        .admin-announcement-form > div:not(.admin-announcement-duration) { display: grid; gap: 7px; }
+        .admin-announcement-form input[type="text"],
+        .admin-announcement-form input[type="number"],
+        .admin-announcement-form select,
+        .admin-announcement-form textarea {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            min-height: 44px;
+            border: 1px solid #bfd4cf;
+            border-radius: 10px;
+            padding: 11px 13px;
+            color: var(--ink);
+            background: #fbfdfb;
+            font: inherit;
+            outline: none;
+        }
+        .admin-announcement-form textarea { min-height: 150px; line-height: 1.5; resize: vertical; }
+        .admin-announcement-form input:focus,
+        .admin-announcement-form select:focus,
+        .admin-announcement-form textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,118,110,.12); }
+        .admin-announcement-duration { display: grid; grid-template-columns: minmax(110px, 150px) minmax(130px, 190px) auto; align-items: end; gap: 10px; }
+        .admin-announcement-duration > div { display: grid; gap: 7px; }
+        .admin-announcement-duration label { margin: 0; }
+        .admin-announcement-duration .primary { width: auto; min-height: 44px; margin: 0; padding: 10px 16px; white-space: nowrap; }
         .admin-announcement-list { display: grid; gap: 12px; margin-top: 18px; }
         .admin-announcement-item { padding: 12px 0; border-top: 1px solid var(--line); }
         .admin-announcement-item-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .admin-announcement-item-header > div { display: flex; align-items: center; gap: 8px; }
+        .admin-announcement-delete { border: 1px solid #fecaca; border-radius: 7px; padding: 6px 9px; color: #991b1b; background: #fff7f7; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .admin-announcement-delete:hover { background: #fee2e2; }
         .admin-announcement-item p { margin: 8px 0; white-space: pre-wrap; }
         .admin-announcement-meta { color: var(--muted); font-size: .78rem; }
         .admin-announcement-readers { color: var(--teal-dark); font-size: .82rem; }
+        .admin-announcement-section-title { margin: 20px 0 8px; color: var(--muted); font-size: .76rem; font-weight: 700; text-transform: uppercase; }
+        .admin-announcement-archive { margin-top: 16px; border-top: 1px solid var(--line); }
+        .admin-announcement-archive summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 4px; color: var(--ink); font-weight: 700; cursor: pointer; }
+        .admin-announcement-archive[open] summary { margin-bottom: 10px; }
+        .admin-announcement-archived-item { opacity: .9; }
+        .install-status:empty { display: none; }
         .session-count { color: #0369a1; background: #e0f2fe; }
         body.admin-mode .class-session-panel,
         body.admin-mode .side-panel { display: none !important; }
@@ -284,6 +319,9 @@
         .admin-view { background: transparent; border: 0; box-shadow: none; padding: 0; }
         .admin-section-card { padding: clamp(20px, 3vw, 32px); border: 1px solid #d9e7e4; border-radius: 22px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(17,63,70,.08); }
         .admin-section-card + .admin-section-card { margin-top: 24px; }
+        .admin-section-heading-actions { display: flex; align-items: center; gap: 8px; }
+        .admin-section-toggle { min-width: 64px; min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; color: var(--teal-dark); background: white; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+        .admin-section-toggle:hover { background: #edf7f5; }
         .class-session-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
         .class-session-calendar-button { display: inline-flex; align-items: center; gap: 9px; min-height: 40px; border: 1px solid #b8d5d1; border-radius: 10px; padding: 8px 13px; color: var(--teal-dark); background: #edf7f5; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; transition: background .18s, border-color .18s, color .18s; }
         .class-session-calendar-button::before { content: ''; width: 15px; height: 15px; flex: 0 0 15px; border: 1.5px solid currentColor; border-radius: 3px; background: linear-gradient(currentColor,currentColor) 0 4px / 100% 1px no-repeat, radial-gradient(circle,currentColor 1px,transparent 1.2px) 3px 7px / 5px 5px repeat; }
@@ -331,7 +369,8 @@
             .admin-export-filter input { width: 100%; min-width: 0; }
             .admin-export-downloads { width: 100%; }
             .admin-export-downloads .admin-download-button { flex: 1; white-space: nowrap; }
-            .admin-announcement-duration label { flex: 1; }
+            .admin-announcement-duration { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+            .admin-announcement-duration .primary { grid-column: 1 / -1; width: 100%; }
             .teacher-checkin-report { grid-template-columns: 1fr; }
             .teacher-announcement-dialog-content { padding: 18px; }
             .admin-heading { align-items: flex-start; flex-direction: column; }
@@ -344,9 +383,13 @@
 
         @media (max-width: 760px) {
             .shell { width: min(100% - 24px, 620px); }
-            .topbar { align-items: flex-start; margin-bottom: 56px; }
-            .brand { flex: 1 1 auto; }
-            .back-link { flex: 0 0 auto; }
+            .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; margin-bottom: 56px; }
+            .brand { grid-column: 1; grid-row: 1; min-width: 0; }
+            .back-link { grid-column: 2; grid-row: 1; }
+            .teacher-topbar-actions { grid-column: 1; grid-row: 2; justify-self: start; flex-wrap: wrap; }
+            .install-button { grid-column: 2; grid-row: 2; justify-self: end; }
+            .install-status { grid-column: 1 / -1; justify-self: end; }
+            body.admin-mode .install-button { grid-column: 1 / -1; }
             .workspace { grid-template-columns: 1fr; }
             .workspace > div { min-width: 0; }
             .side-panel { width: 100%; }
@@ -389,9 +432,13 @@
                 <img class="brand-mark" src="logo.jpg" alt="Dynolinks Global College logo">
                 <span>Dynolinks Global College<small>Teacher check-in</small></span>
             </a>
-            <button class="teacher-announcement-button" id="teacherAnnouncementButton" type="button" hidden>
-                <span>Announcements</span><span class="announcement-unread-count" id="teacherAnnouncementUnreadCount" hidden>0</span>
-            </button>
+            <div class="teacher-topbar-actions">
+                <button class="teacher-announcement-button" id="teacherAnnouncementButton" type="button" hidden>
+                    <span>Announcements</span><span class="announcement-unread-count" id="teacherAnnouncementUnreadCount" hidden>0</span>
+                </button>
+                <button class="teacher-push-button" id="teacherPushButton" type="button" hidden>Enable notifications</button>
+                <span class="teacher-push-status" id="teacherPushStatus" role="status" aria-live="polite"></span>
+            </div>
             <button class="install-button" id="installAppButton" type="button">Install teacher app</button>
             <span class="install-status" id="installStatus" role="status" aria-live="polite"></span>
             <a class="back-link" href="index.html">Back to home</a>
@@ -491,8 +538,12 @@
                     <div class="admin-section-card">
                         <div class="admin-heading">
                             <h2>Announcements</h2>
-                            <button class="class-session-calendar-button" id="refreshTeacherAnnouncements" type="button">Refresh</button>
+                            <div class="admin-section-heading-actions">
+                                <button class="class-session-calendar-button" id="refreshTeacherAnnouncements" type="button">Refresh</button>
+                                <button class="admin-section-toggle" id="toggleAdminAnnouncements" type="button" aria-expanded="false" aria-controls="adminAnnouncementsBody">Show</button>
+                            </div>
                         </div>
+                        <div id="adminAnnouncementsBody" hidden>
                         <form class="admin-announcement-form" id="adminAnnouncementForm">
                             <div>
                                 <label for="adminAnnouncementTitle">Title</label>
@@ -503,28 +554,41 @@
                                 <textarea id="adminAnnouncementMessage" maxlength="3000" required placeholder="Write an announcement for teachers"></textarea>
                             </div>
                             <div class="admin-announcement-duration">
-                                <label for="adminAnnouncementDuration">Show for
+                                <div>
+                                    <label for="adminAnnouncementDuration">Show for</label>
                                     <input id="adminAnnouncementDuration" type="number" min="1" max="365" value="1" required>
-                                </label>
-                                <label for="adminAnnouncementUnit">Duration unit
+                                </div>
+                                <div>
+                                    <label for="adminAnnouncementUnit">Duration unit</label>
                                     <select id="adminAnnouncementUnit">
                                         <option value="hours">Hours</option>
                                         <option value="days" selected>Days</option>
                                         <option value="months">Months</option>
                                     </select>
-                                </label>
+                                </div>
                                 <button class="primary" type="submit">Publish announcement</button>
                             </div>
                             <div class="setting-status" id="adminAnnouncementStatus" role="status"></div>
                         </form>
+                        <h3 class="admin-announcement-section-title">Active announcements</h3>
                         <div class="admin-announcement-list" id="adminAnnouncementList" aria-live="polite">No announcements loaded.</div>
+                        <details class="admin-announcement-archive">
+                            <summary>Archived announcements <span class="count" id="adminArchivedAnnouncementCount">0</span></summary>
+                            <div class="admin-announcement-list" id="adminArchivedAnnouncementList" aria-live="polite"></div>
+                        </details>
+                        </div>
                     </div>
                     <div class="admin-section-card">
                         <div class="admin-heading">
                             <h2>Missed check-in reports</h2>
-                            <span class="count" id="teacherCheckinReportCount">0 pending</span>
+                            <div class="admin-section-heading-actions">
+                                <span class="count" id="teacherCheckinReportCount">0 pending</span>
+                                <button class="admin-section-toggle" id="toggleTeacherCheckinReports" type="button" aria-expanded="false" aria-controls="teacherCheckinReportsBody">Show</button>
+                            </div>
                         </div>
+                        <div id="teacherCheckinReportsBody" hidden>
                         <div class="teacher-checkin-reports" id="teacherCheckinReports" aria-live="polite">Loading reports...</div>
+                        </div>
                     </div>
                     <div class="admin-section-card">
                         <div class="admin-heading">
@@ -609,7 +673,7 @@
         <div class="teacher-announcement-dialog-content">
             <div class="teacher-announcement-dialog-header">
                 <h2 id="teacherAnnouncementTitle">Announcements</h2>
-                <button id="closeTeacherAnnouncements" type="button">Close</button>
+                <button id="closeTeacherAnnouncements" type="button">Cancel</button>
             </div>
             <div class="teacher-announcement-list" id="teacherAnnouncementList" aria-live="polite"></div>
         </div>
@@ -645,6 +709,7 @@
         let installPrompt = null;
         let hadServiceWorkerController = Boolean(navigator.serviceWorker?.controller);
         let reloadingForServiceWorkerUpdate = false;
+        let teacherPushConfig = null;
         const teacherAppInstalledKey = 'dgc_teacher_app_installed';
 
         function isTeacherAppInstalled() {
@@ -674,6 +739,8 @@
         const teacherCheckinReportCount = document.getElementById('teacherCheckinReportCount');
         const teacherAnnouncementButton = document.getElementById('teacherAnnouncementButton');
         const teacherAnnouncementUnreadCount = document.getElementById('teacherAnnouncementUnreadCount');
+        const teacherPushButton = document.getElementById('teacherPushButton');
+        const teacherPushStatus = document.getElementById('teacherPushStatus');
         const teacherAnnouncementDialog = document.getElementById('teacherAnnouncementDialog');
         const teacherAnnouncementList = document.getElementById('teacherAnnouncementList');
         const closeTeacherAnnouncements = document.getElementById('closeTeacherAnnouncements');
@@ -684,7 +751,13 @@
         const adminAnnouncementUnit = document.getElementById('adminAnnouncementUnit');
         const adminAnnouncementStatus = document.getElementById('adminAnnouncementStatus');
         const adminAnnouncementList = document.getElementById('adminAnnouncementList');
+        const adminArchivedAnnouncementList = document.getElementById('adminArchivedAnnouncementList');
+        const adminArchivedAnnouncementCount = document.getElementById('adminArchivedAnnouncementCount');
         const refreshTeacherAnnouncements = document.getElementById('refreshTeacherAnnouncements');
+        const toggleAdminAnnouncements = document.getElementById('toggleAdminAnnouncements');
+        const adminAnnouncementsBody = document.getElementById('adminAnnouncementsBody');
+        const toggleTeacherCheckinReports = document.getElementById('toggleTeacherCheckinReports');
+        const teacherCheckinReportsBody = document.getElementById('teacherCheckinReportsBody');
         const classSessionTableBody = document.getElementById('classSessionTableBody');
         const sessionCount = document.getElementById('sessionCount');
         const classSessionCalendarButton = document.getElementById('classSessionCalendarButton');
@@ -786,7 +859,7 @@
                 try { await registration.update(); } catch (_) {}
                 const response = await fetch('/teacher.html', { cache: 'no-store' });
                 if (response.ok && new URL(response.url).pathname === '/teacher.html') {
-                    const cache = await caches.open('dynolinks-teacher-offline-v13');
+                    const cache = await caches.open('dynolinks-teacher-offline-v14');
                     const cachedPage = await cache.match('/teacher.html');
                     const cachedHtml = cachedPage ? await cachedPage.clone().text() : '';
                     const latestHtml = await response.clone().text();
@@ -850,7 +923,10 @@
         window.addEventListener('online', () => {
             syncTeacherCheckins();
             const savedName = localStorage.getItem(teacherNameKey);
-            if (savedName) loadTeacherAnnouncements(savedName, true);
+            if (savedName) {
+                loadTeacherAnnouncements(savedName, true);
+                updateTeacherPushControl(savedName);
+            }
         });
         window.addEventListener('offline', updateTeacherOfflineStatus);
 
@@ -1009,6 +1085,31 @@
             return classSessionRecords
                 .filter(record => !selectedClassSessionDate || getNigeriaCalendarDate(record.submittedAt) === selectedClassSessionDate)
                 .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
+        }
+
+        function getDistanceInMeters(latitudeA, longitudeA, latitudeB, longitudeB) {
+            const earthRadiusMeters = 6371000;
+            const latitude1 = (latitudeA * Math.PI) / 180;
+            const latitude2 = (latitudeB * Math.PI) / 180;
+            const deltaLatitude = ((latitudeB - latitudeA) * Math.PI) / 180;
+            const deltaLongitude = ((longitudeB - longitudeA) * Math.PI) / 180;
+            const a = Math.sin(deltaLatitude / 2) * Math.sin(deltaLatitude / 2)
+                + Math.cos(latitude1) * Math.cos(latitude2)
+                * Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return earthRadiusMeters * c;
+        }
+
+        function getLocationStatus(location = {}) {
+            const latitude = Number(location.latitude);
+            const longitude = Number(location.longitude);
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                return 'Not in school';
+            }
+            const schoolLatitude = 7.412906;
+            const schoolLongitude = 3.887978;
+            const distanceInMeters = getDistanceInMeters(latitude, longitude, schoolLatitude, schoolLongitude);
+            return distanceInMeters <= 150 ? 'In school' : 'Not in school';
         }
 
         function exportLocationFields(location = {}) {
@@ -1233,12 +1334,13 @@
                 const teacherRecords = records.filter(record => record.name === name);
                     const details = teacherRecords.map(record => {
                     const location = record.location || {};
+                    const status = getLocationStatus(location);
                     const coordinates = Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))
                         ? ` <small>(${Number(location.latitude).toFixed(6)}, ${Number(location.longitude).toFixed(6)})</small>`
                         : '';
                     const accuracy = location.accuracy ? ` <small>(accuracy: ${Math.round(location.accuracy)}m)</small>` : '';
                     const place = location.mapUrl ? `<a href="${location.mapUrl}" target="_blank" rel="noopener">${escapeHtml(location.label)}</a>` : escapeHtml(location.label || 'Location unavailable');
-                    return `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${place}${coordinates}${accuracy} <button class="delete-login" type="button" data-login-id="${escapeHtml(record._id)}">Delete</button></span></div>`;
+                    return `<div class="login-detail"><span>${formatDate(record.loggedInAt)}</span><span>${place}${coordinates}${accuracy} <strong>Location status: ${status}</strong> <button class="delete-login" type="button" data-login-id="${escapeHtml(record._id)}">Delete</button></span></div>`;
                 }).join('');
                 return `<tr><td><button class="teacher-name" type="button" data-teacher-row="${index}">${escapeHtml(name)}</button><button class="attendance-toggle" type="button" data-attendance-name="${encodeURIComponent(name)}" hidden>Calendar</button><button class="delete-login delete-teacher" type="button" data-teacher-name="${encodeURIComponent(name)}">Delete teacher</button></td><td>${teacherRecords.length} sign-in${teacherRecords.length === 1 ? '' : 's'}</td></tr><tr class="teacher-details" id="teacher-details-${index}" hidden><td colspan="2">${details}<div class="attendance-calendar" id="attendance-calendar-${index}" hidden></div></td></tr>`;
             }).join('') : '<tr><td class="empty" colspan="2">No teacher sign-ins yet.</td></tr>';
@@ -1434,6 +1536,112 @@
             }
         }
 
+        function decodeVapidPublicKey(value) {
+            const padding = '='.repeat((4 - value.length % 4) % 4);
+            const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
+            return Uint8Array.from(raw, character => character.charCodeAt(0));
+        }
+
+        async function loadTeacherPushConfig() {
+            const response = await fetch('/api/teacher/push/config', {
+                headers: { 'x-teacher-page-password': teacherAccessPassword },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Could not check browser notifications (${response.status}).`);
+            teacherPushConfig = data;
+            return data;
+        }
+
+        async function saveTeacherPushSubscription(teacherName, subscription) {
+            const response = await fetch('/api/teacher/push/subscriptions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-teacher-page-password': teacherAccessPassword },
+                body: JSON.stringify({ teacherName, subscription: subscription.toJSON() })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Could not save browser notifications (${response.status}).`);
+        }
+
+        async function updateTeacherPushControl(teacherName) {
+            if (!teacherName || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                teacherPushButton.hidden = true;
+                return;
+            }
+            teacherPushButton.hidden = false;
+            teacherPushButton.disabled = true;
+            teacherPushButton.textContent = 'Checking alerts...';
+            try {
+                const config = await loadTeacherPushConfig();
+                if (!config.enabled) {
+                    teacherPushButton.textContent = 'Alerts unavailable';
+                    teacherPushStatus.textContent = 'Server push keys are not configured';
+                    return;
+                }
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription && navigator.onLine) await saveTeacherPushSubscription(teacherName, subscription);
+                teacherPushButton.textContent = subscription ? 'Disable notifications' : 'Enable notifications';
+                teacherPushButton.disabled = !subscription && Notification.permission === 'denied';
+                teacherPushStatus.textContent = Notification.permission === 'denied' && !subscription
+                    ? 'Notifications are blocked in browser settings'
+                    : subscription ? 'Browser alerts are on' : '';
+            } catch (error) {
+                teacherPushButton.textContent = 'Enable notifications';
+                teacherPushButton.disabled = false;
+                teacherPushStatus.textContent = error.message || 'Could not check browser notifications';
+            }
+        }
+
+        async function toggleTeacherPushNotifications() {
+            const teacherName = localStorage.getItem(teacherNameKey) || '';
+            if (teacherName.length < 3) {
+                teacherPushStatus.textContent = 'Sign in before enabling notifications';
+                return;
+            }
+            teacherPushButton.disabled = true;
+            try {
+                const config = await loadTeacherPushConfig();
+                if (!config.enabled) throw new Error('Browser notifications are not configured on the server.');
+                const registration = await navigator.serviceWorker.ready;
+                let subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    const response = await fetch('/api/teacher/push/subscriptions', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'x-teacher-page-password': teacherAccessPassword },
+                        body: JSON.stringify({ teacherName, endpoint: subscription.endpoint })
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.message || 'Could not disable notifications.');
+                    await subscription.unsubscribe();
+                    teacherPushStatus.textContent = 'Browser alerts are off';
+                } else {
+                    const permission = Notification.permission === 'granted'
+                        ? 'granted'
+                        : await Notification.requestPermission();
+                    if (permission !== 'granted') throw new Error('Allow notifications in your browser to receive announcements.');
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: decodeVapidPublicKey(config.publicKey)
+                    });
+                    try {
+                        await saveTeacherPushSubscription(teacherName, subscription);
+                    } catch (error) {
+                        await subscription.unsubscribe();
+                        throw error;
+                    }
+                    teacherPushStatus.textContent = 'Browser alerts are on';
+                }
+            } catch (error) {
+                teacherPushStatus.textContent = error.message || 'Could not update browser notifications';
+            } finally {
+                await updateTeacherPushControl(teacherName);
+            }
+        }
+
+        teacherPushButton.addEventListener('click', toggleTeacherPushNotifications);
+
         async function renderAdminAnnouncements() {
             const response = await fetch('/api/admin/teacher-announcements', {
                 headers: { 'x-teacher-admin-password': adminPassword },
@@ -1442,29 +1650,65 @@
             const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.message || `Could not load announcements (${response.status}).`);
             const announcements = data.announcements || [];
-            if (!announcements.length) {
-                adminAnnouncementList.innerHTML = '<p class="empty">No announcements published yet.</p>';
-                return;
-            }
-            adminAnnouncementList.innerHTML = announcements.map(announcement => {
+            const now = Date.now();
+            const activeAnnouncements = announcements.filter(announcement =>
+                !announcement.archivedAt && new Date(announcement.expiresAt).getTime() > now);
+            const archivedAnnouncements = announcements.filter(announcement =>
+                announcement.archivedAt || new Date(announcement.expiresAt).getTime() <= now);
+
+            const renderRows = (container, items, archived) => {
+                container.innerHTML = items.length ? items.map(announcement => {
                 const readers = [...new Set((announcement.readBy || []).map(receipt => receipt.teacherName))];
-                const isExpired = new Date(announcement.expiresAt) <= new Date();
                 return `
-                    <article class="admin-announcement-item">
+                    <article class="admin-announcement-item ${archived ? 'admin-announcement-archived-item' : ''}">
                         <div class="admin-announcement-item-header">
                             <strong>${escapeHtml(announcement.title || 'College announcement')}</strong>
-                            <span class="count">${isExpired ? 'Expired' : 'Active'}</span>
+                            <div><span class="count">${archived ? 'Archived' : 'Active'}</span><button class="admin-announcement-delete" type="button" data-announcement-id="${escapeHtml(announcement._id)}">Delete</button></div>
                         </div>
                         <p>${escapeHtml(announcement.message)}</p>
-                        <div class="admin-announcement-meta">Expires ${formatDate(announcement.expiresAt)} · Duration ${announcement.durationValue} ${escapeHtml(announcement.durationUnit)}</div>
+                        <div class="admin-announcement-meta">${archived ? 'Expired' : 'Expires'} ${formatDate(announcement.expiresAt)} · Duration ${announcement.durationValue} ${escapeHtml(announcement.durationUnit)}</div>
                         <div class="admin-announcement-readers">Seen by ${readers.length}: ${readers.length ? readers.map(escapeHtml).join(', ') : 'No teachers yet'}</div>
                     </article>
                 `;
-            }).join('');
+                }).join('') : `<p class="empty">${archived ? 'No expired announcements.' : 'No active announcements.'}</p>`;
+                container.querySelectorAll('[data-announcement-id]').forEach(button => {
+                    button.addEventListener('click', () => deleteTeacherAnnouncement(button));
+                });
+            };
+
+            adminArchivedAnnouncementCount.textContent = String(archivedAnnouncements.length);
+            renderRows(adminAnnouncementList, activeAnnouncements, false);
+            renderRows(adminArchivedAnnouncementList, archivedAnnouncements, true);
+        }
+
+        async function deleteTeacherAnnouncement(button) {
+            const announcement = button.closest('.admin-announcement-item');
+            const title = announcement?.querySelector('strong')?.textContent || 'this announcement';
+            if (!window.confirm(`Delete ${title}? Teachers will no longer see it.`)) return;
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/admin/teacher-announcements/${encodeURIComponent(button.dataset.announcementId)}`, {
+                    method: 'DELETE',
+                    headers: { 'x-teacher-admin-password': adminPassword }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not delete announcement (${response.status}).`);
+                adminAnnouncementStatus.textContent = 'Announcement deleted.';
+                await renderAdminAnnouncements();
+            } catch (error) {
+                adminAnnouncementStatus.textContent = error.message || 'Could not delete announcement.';
+                button.disabled = false;
+            }
         }
 
         teacherAnnouncementButton.addEventListener('click', () => {
             loadTeacherAnnouncements(localStorage.getItem(teacherNameKey), false, true);
+        });
+        navigator.serviceWorker?.addEventListener('message', event => {
+            if (event.data?.type === 'OPEN_TEACHER_ANNOUNCEMENTS') {
+                const savedName = localStorage.getItem(teacherNameKey);
+                if (savedName) loadTeacherAnnouncements(savedName, false, true);
+            }
         });
         closeTeacherAnnouncements.addEventListener('click', () => teacherAnnouncementDialog.close());
         teacherAnnouncementDialog.addEventListener('click', event => {
@@ -1475,6 +1719,15 @@
                 adminAnnouncementList.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
             });
         });
+        function toggleAdminSection(button, content) {
+            const expanded = button.getAttribute('aria-expanded') !== 'true';
+            content.hidden = !expanded;
+            button.setAttribute('aria-expanded', String(expanded));
+            button.textContent = expanded ? 'Hide' : 'Show';
+        }
+
+        toggleAdminAnnouncements.addEventListener('click', () => toggleAdminSection(toggleAdminAnnouncements, adminAnnouncementsBody));
+        toggleTeacherCheckinReports.addEventListener('click', () => toggleAdminSection(toggleTeacherCheckinReports, teacherCheckinReportsBody));
         adminAnnouncementUnit.addEventListener('change', () => {
             adminAnnouncementDuration.max = ({ hours: 8760, days: 365, months: 60 })[adminAnnouncementUnit.value];
             if (Number(adminAnnouncementDuration.value) > Number(adminAnnouncementDuration.max)) {
@@ -1497,7 +1750,12 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.message || `Could not publish announcement (${response.status}).`);
-                adminAnnouncementStatus.textContent = 'Announcement published.';
+                const pushDelivery = data.pushDelivery || {};
+                adminAnnouncementStatus.textContent = !pushDelivery.configured
+                    ? 'Published. Add VAPID keys to the server to enable browser alerts.'
+                    : pushDelivery.failed
+                        ? `Published. Alerts sent to ${pushDelivery.sent} devices; ${pushDelivery.failed} failed.`
+                        : `Published. Browser alerts sent to ${pushDelivery.sent} devices.`;
                 adminAnnouncementForm.reset();
                 adminAnnouncementDuration.max = '365';
                 adminAnnouncementDuration.value = '1';
@@ -1905,6 +2163,7 @@
                 : `Signed in at ${formatDate(new Date())}.`;
             showCheckedInTeacher(name);
             await loadTeacherAnnouncements(name, true);
+            await updateTeacherPushControl(name);
             if (result.queued) panelCopy.textContent = 'Your check-in is saved on this phone and will upload automatically when internet returns.';
             await updateTeacherOfflineStatus();
             await renderTeacherClassHistory(name);
@@ -2115,7 +2374,10 @@
             } else if (!isCheckInAvailable()) {
                 showUnavailableGuest();
             }
-            return registerTeacherApp();
+            const registration = await registerTeacherApp();
+            if (savedName && !isAdmin) await updateTeacherPushControl(savedName);
+            else teacherPushButton.hidden = true;
+            return registration;
         }
 
         async function unlockTeacherApp(isAdmin) {
@@ -2139,6 +2401,10 @@
 
         launchForm.addEventListener('submit', async event => {
             event.preventDefault();
+            if (isTeacherAppInstalled()) {
+                await unlockTeacherApp(false);
+                return;
+            }
             const password = launchPassword.value.trim();
             const adminRequested = new URLSearchParams(window.location.search).get('admin') === '1';
             if (password !== teacherLaunchPassword && password !== adminLaunchPassword) {
@@ -2156,7 +2422,9 @@
         });
 
         const websiteUnlockRole = sessionStorage.getItem('dgc_teacher_site_unlock');
-        if (websiteUnlockRole === 'teacher' || websiteUnlockRole === 'admin') {
+        if (isTeacherAppInstalled()) {
+            void unlockTeacherApp(false);
+        } else if (websiteUnlockRole === 'teacher' || websiteUnlockRole === 'admin') {
             sessionStorage.removeItem('dgc_teacher_site_unlock');
             launchPassword.value = websiteUnlockRole === 'admin' ? adminLaunchPassword : teacherLaunchPassword;
             launchForm.requestSubmit();
