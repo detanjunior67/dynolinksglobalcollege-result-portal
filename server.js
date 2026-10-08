@@ -1208,6 +1208,36 @@ function getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt = n
     return expiresAt;
 }
 
+function notifyClassOfQuestions(classKey, subjectId, questionCount) {
+    const normalizedClassKey = normalizeAnnouncementClassKey(classKey) || String(classKey || '').trim();
+    if (!normalizedClassKey) return;
+    const rawSubjectId = String(subjectId || '').trim();
+    const subjectPrefix = `${String(classKey || '').trim().toLowerCase()}_`;
+    const subjectLabel = (rawSubjectId.toLowerCase().startsWith(subjectPrefix)
+        ? rawSubjectId.slice(subjectPrefix.length)
+        : rawSubjectId).replace(/[_-]+/g, ' ').trim();
+    const message = questionCount > 1
+        ? `New ${subjectLabel || 'CBT'} questions are available for ${normalizedClassKey}.`
+        : `A new ${subjectLabel || 'CBT'} question is available for ${normalizedClassKey}.`;
+    const createdAt = new Date();
+
+    void TeacherAnnouncement.create({
+        title: 'New CBT questions available',
+        message,
+        audienceMode: 'custom',
+        targetClassKeys: [normalizedClassKey],
+        targetTeacherNames: [],
+        durationValue: 1,
+        durationUnit: 'days',
+        expiresAt: getTeacherAnnouncementExpiry(1, 'days', createdAt)
+    }).catch(err => {
+        console.error('Class question announcement could not be saved:', err.message);
+    });
+    void sendClassQuestionPush(classKey, subjectId, questionCount).catch(err => {
+        console.error('Class question push delivery failed in background:', err.message);
+    });
+}
+
 app.get('/api/admin/announcement-recipients', requireAnnouncementAdmin, async (req, res) => {
     try {
         const [cbtConfig, loginNames, sessionNames, subscribedNames] = await Promise.all([
@@ -1646,7 +1676,17 @@ app.get('/api/cbt/announcements', async (req, res) => {
         }
 
         res.set('Cache-Control', 'no-store');
-        const active = await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean();
+        const now = new Date();
+        const activeFilter = session
+            ? {
+                expiresAt: { $gt: now },
+                $or: [
+                    { audienceMode: 'all' },
+                    { audienceMode: 'custom', targetClassKeys: { $in: session.classKeys || [] } }
+                ]
+            }
+            : { expiresAt: { $gt: now }, audienceMode: 'all' };
+        const active = await TeacherAnnouncement.find(activeFilter).sort({ createdAt: -1 }).lean();
         const announcements = session
             ? active.filter(item => announcementTargetsCbtStudent(item, session.classKeys)).map(item => ({
                 _id: item._id,
@@ -3128,9 +3168,7 @@ app.post('/api/questions', async (req, res) => {
         });
         const saved = await newQuestion.save();
         invalidateQuestionCache();
-        void sendClassQuestionPush(classKey, saved.subjectId, 1).catch(err => {
-            console.error('Class question push delivery failed in background:', err.message);
-        });
+        notifyClassOfQuestions(classKey, saved.subjectId, 1);
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error saving question:', err);
@@ -3906,9 +3944,7 @@ app.post('/api/questions/bulk', async (req, res) => {
         await Question.deleteMany({ classKey, subjectId: { $in: getQuestionSubjectAliases(classKey, canonicalSubjectId) } });
         const saved = await Question.insertMany(documents, { ordered: true });
         invalidateQuestionCache();
-        void sendClassQuestionPush(classKey, canonicalSubjectId, saved.length).catch(err => {
-            console.error('Class question push delivery failed in background:', err.message);
-        });
+        notifyClassOfQuestions(classKey, canonicalSubjectId, saved.length);
         res.status(201).json(saved);
     } catch (err) {
         console.error('Error bulk saving questions:', err);

@@ -2241,7 +2241,6 @@
             }
             savePersistentData();
             void retryPendingCbtSubmissions();
-            void loadStudentAnnouncements(false);
             populateStudentClassDropdown();
             populateAdminClassDropdown();
             setStudentProfileCardVisibility(false);
@@ -2611,6 +2610,15 @@
             modal.style.justifyContent = '';
         }
 
+        let studentAnnouncementPollTimer = null;
+
+        function startStudentAnnouncementPolling() {
+            if (studentAnnouncementPollTimer !== null) return;
+            studentAnnouncementPollTimer = window.setInterval(() => {
+                if (currentCandidate.studentId && !document.hidden) void loadStudentAnnouncements(true);
+            }, 15000);
+        }
+
         async function loadStudentAnnouncements(autoOpenPopup = false) {
             const panel = document.getElementById('studentAnnouncementPanel');
             const list = document.getElementById('studentAnnouncementList');
@@ -2624,6 +2632,7 @@
                 if (!response.ok) throw new Error('Could not load class announcements.');
                 const data = await response.json().catch(() => ({}));
                 const announcements = Array.isArray(data.announcements) ? data.announcements : [];
+                const shouldAutoOpen = autoOpenPopup && announcements.some(item => !item.seen);
                 window.studentAnnouncementData = announcements;
                 if (panel) panel.classList.remove('hidden');
                 if (list) list.innerHTML = renderAnnouncementCards(announcements);
@@ -2639,7 +2648,7 @@
                     if (panel) panel.classList.remove('hidden');
                     if (list) list.innerHTML = renderAnnouncementCards(refreshedAnnouncements);
                     updateStudentAnnouncementSummary();
-                    if (autoOpenPopup && refreshedAnnouncements.length > 0) {
+                    if (shouldAutoOpen && refreshedAnnouncements.length > 0) {
                         openStudentAnnouncementModal();
                     }
                 }
@@ -2976,7 +2985,6 @@
                 return showCustomAlert('Access Denied', 'This CBT password is incorrect or has not been set for this student ID yet. Please contact the admin to set/update it.');
             }
 
-            await loadStudentAnnouncements(false);
             let effectiveDepartment = normalizeDepartmentName(savedProfile?.department || selectedDepartment || '');
             if (classKey.startsWith('SSS') && !savedProfile?.department) {
                 try {
@@ -3050,7 +3058,8 @@
                 picture: candidatePicture
             };
 
-            void loadStudentAnnouncements();
+            startStudentAnnouncementPolling();
+            void loadStudentAnnouncements(true);
 
             const departmentSubjects = getDepartmentSubjectList(classKey, effectiveDepartment);
             const configuredSubjects = classConfigs[classKey].subjects || [];
