@@ -1453,16 +1453,18 @@ async function sendTeacherClassSessionPush(session) {
 
 async function sendClassQuestionPush(classKey, subjectId = '', questionCount = 1) {
     if (!WEB_PUSH_CONFIGURED || !classKey) return { configured: false, sent: 0, failed: 0 };
-    const normalizedClassKey = String(classKey).trim();
+    const rawClassKey = String(classKey).trim();
+    const normalizedClassKey = normalizeAnnouncementClassKey(rawClassKey) || rawClassKey;
+    const classKeyVariants = [...new Set([normalizedClassKey, rawClassKey])];
     const normalizedSubjectId = String(subjectId || '').trim();
     const subscriptions = await TeacherPushSubscription.find({
         $or: [
-            { audiences: { $elemMatch: { audienceType: 'student', classKeys: normalizedClassKey } } },
+            { audiences: { $elemMatch: { audienceType: 'student', classKeys: { $in: classKeyVariants } } } },
             {
                 $and: [
                     { $or: [{ audiences: { $exists: false } }, { audiences: { $size: 0 } }, { audiences: null }] },
                     { audienceType: { $in: ['student', '', null] } },
-                    { classKeys: normalizedClassKey }
+                    { classKeys: { $in: classKeyVariants } }
                 ]
             }
         ]
@@ -1476,7 +1478,9 @@ async function sendClassQuestionPush(classKey, subjectId = '', questionCount = 1
         return audiences.some(audience =>
             audience.audienceType === 'student'
             && Array.isArray(audience.classKeys)
-            && audience.classKeys.includes(normalizedClassKey)
+            && audience.classKeys.some(audienceClassKey =>
+                (normalizeAnnouncementClassKey(audienceClassKey) || String(audienceClassKey).trim()) === normalizedClassKey
+            )
         );
     });
 
