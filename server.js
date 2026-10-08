@@ -11,6 +11,44 @@ const webPush = require('web-push');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+
+function ensureVapidKeys() {
+    const envPath = path.join(__dirname, '.env');
+    const hasPublicKey = Boolean(process.env.VAPID_PUBLIC_KEY);
+    const hasPrivateKey = Boolean(process.env.VAPID_PRIVATE_KEY);
+    if (hasPublicKey && hasPrivateKey) return;
+
+    const existingLines = (() => {
+        try {
+            return fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+        } catch (_) {
+            return [];
+        }
+    })();
+    const envEntries = {};
+    for (const line of existingLines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+        const separatorIndex = trimmed.indexOf('=');
+        const key = trimmed.slice(0, separatorIndex).trim();
+        const value = trimmed.slice(separatorIndex + 1).trim();
+        envEntries[key] = value;
+    }
+
+    if (!envEntries.VAPID_PUBLIC_KEY || !envEntries.VAPID_PRIVATE_KEY) {
+        const generated = webPush.generateVAPIDKeys();
+        envEntries.VAPID_PUBLIC_KEY = generated.publicKey;
+        envEntries.VAPID_PRIVATE_KEY = generated.privateKey;
+        const nextLines = [...Object.entries(envEntries)].map(([key, value]) => `${key}=${value}`);
+        fs.writeFileSync(envPath, `${nextLines.join('\n')}\n`, 'utf8');
+        process.env.VAPID_PUBLIC_KEY = generated.publicKey;
+        process.env.VAPID_PRIVATE_KEY = generated.privateKey;
+        console.log('Generated new VAPID browser push keys and saved them to .env');
+    }
+}
+
+ensureVapidKeys();
+
 const { google } = require('googleapis');
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
