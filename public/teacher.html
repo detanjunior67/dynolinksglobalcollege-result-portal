@@ -2234,7 +2234,8 @@
                 return;
             }
             classSessionStatus.textContent = 'Saving class start...';
-            const location = selectedDeviceLocation || await getLocation();
+            const location = selectedDeviceLocation || getCachedDeviceLocation() || { label: 'Device location not captured' };
+            if (!selectedDeviceLocation) void getLocation().then(updateLocationQuality);
             updateLocationQuality(location);
             const payload = {
                 name,

@@ -23,6 +23,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
         console.error('Web Push is disabled because VAPID configuration is invalid:', err.message);
     }
 }
+const PUSH_DELIVERY_OPTIONS = Object.freeze({ TTL: 60 * 60 * 24, urgency: 'high' });
 
 const app = express();
 
@@ -1323,14 +1324,59 @@ app.delete('/api/admin/teacher-announcements/:id', requireAnnouncementAdmin, asy
 
 async function sendTeacherAnnouncementPush(announcement) {
     if (!WEB_PUSH_CONFIGURED) return { configured: false, sent: 0, failed: 0 };
-    const subscriptions = await TeacherPushSubscription.find().lean();
+    const audienceMode = announcement.audienceMode || 'teachers';
+    const legacyAudienceFilter = {
+        $or: [
+            { audiences: { $exists: false } },
+            { audiences: { $size: 0 } },
+            { audiences: null }
+        ]
+    };
+    let subscriptionFilter = {};
+    if (audienceMode === 'teachers') {
+        subscriptionFilter = {
+            $or: [
+                { audiences: { $elemMatch: { audienceType: 'teacher' } } },
+                {
+                    $and: [
+                        legacyAudienceFilter,
+                        { audienceType: { $in: ['teacher', '', null] } }
+                    ]
+                }
+            ]
+        };
+    } else if (audienceMode === 'custom') {
+        const targetClassKeys = announcement.targetClassKeys || [];
+        const candidateAudiences = [
+            { audiences: { $elemMatch: { audienceType: 'teacher' } } },
+            {
+                $and: [
+                    legacyAudienceFilter,
+                    { audienceType: { $in: ['teacher', '', null] } }
+                ]
+            }
+        ];
+        if (targetClassKeys.length) {
+            candidateAudiences.push(
+                { audiences: { $elemMatch: { audienceType: 'student', classKeys: { $in: targetClassKeys } } } },
+                {
+                    $and: [
+                        legacyAudienceFilter,
+                        { audienceType: 'student' },
+                        { classKeys: { $in: targetClassKeys } }
+                    ]
+                }
+            );
+        }
+        subscriptionFilter = { $or: candidateAudiences };
+    }
+    const subscriptions = await TeacherPushSubscription.find(subscriptionFilter).lean();
     const matchingAudiences = record => (record.audiences?.length ? record.audiences : [{
         audienceType: record.audienceType || 'teacher',
         teacherName: record.teacherName,
         classKeys: record.classKeys || []
     }]).filter(audience => {
         const audienceType = audience.audienceType || 'teacher';
-        const audienceMode = announcement.audienceMode || 'teachers';
         if (audienceMode === 'all') return true;
         if (audienceMode === 'teachers') return audienceType === 'teacher';
         if (audienceType === 'teacher') {
@@ -1339,9 +1385,13 @@ async function sendTeacherAnnouncementPush(announcement) {
         return audienceType === 'student'
             && (audience.classKeys || []).some(classKey => (announcement.targetClassKeys || []).includes(classKey));
     });
-    const targetedSubscriptions = subscriptions.filter(record => matchingAudiences(record).length > 0);
-    const results = await Promise.allSettled(targetedSubscriptions.map(async record => {
-        const audienceType = matchingAudiences(record).some(audience => audience.audienceType === 'student') ? 'student' : 'teacher';
+    const targetedSubscriptions = subscriptions.map(record => ({
+        record,
+        audiences: matchingAudiences(record)
+    })).filter(target => target.audiences.length > 0);
+    const results = await Promise.allSettled(targetedSubscriptions.map(async target => {
+        const { record, audiences } = target;
+        const audienceType = audiences.some(audience => audience.audienceType === 'student') ? 'student' : 'teacher';
         const payload = JSON.stringify({
             title: announcement.title || 'College announcement',
             body: announcement.message,
@@ -1350,7 +1400,7 @@ async function sendTeacherAnnouncementPush(announcement) {
             url: audienceType === 'student' ? '/cbt.html' : '/teacher.html'
         });
         try {
-            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            await webPush.sendNotification(record.subscription, payload, PUSH_DELIVERY_OPTIONS);
             return true;
         } catch (err) {
             if (err.statusCode === 404 || err.statusCode === 410) {
@@ -1386,7 +1436,7 @@ async function sendTeacherClassSessionPush(session) {
     });
     const results = await Promise.allSettled(subscriptions.map(async record => {
         try {
-            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            await webPush.sendNotification(record.subscription, payload, PUSH_DELIVERY_OPTIONS);
             return true;
         } catch (err) {
             if (err.statusCode === 404 || err.statusCode === 410) {
@@ -1405,7 +1455,18 @@ async function sendClassQuestionPush(classKey, subjectId = '', questionCount = 1
     if (!WEB_PUSH_CONFIGURED || !classKey) return { configured: false, sent: 0, failed: 0 };
     const normalizedClassKey = String(classKey).trim();
     const normalizedSubjectId = String(subjectId || '').trim();
-    const subscriptions = await TeacherPushSubscription.find().lean();
+    const subscriptions = await TeacherPushSubscription.find({
+        $or: [
+            { audiences: { $elemMatch: { audienceType: 'student', classKeys: normalizedClassKey } } },
+            {
+                $and: [
+                    { $or: [{ audiences: { $exists: false } }, { audiences: { $size: 0 } }, { audiences: null }] },
+                    { audienceType: { $in: ['student', '', null] } },
+                    { classKeys: normalizedClassKey }
+                ]
+            }
+        ]
+    }).lean();
     const targetedSubscriptions = subscriptions.filter(record => {
         const audiences = (record.audiences?.length ? record.audiences : [{
             audienceType: record.audienceType || 'student',
@@ -1427,11 +1488,13 @@ async function sendClassQuestionPush(classKey, subjectId = '', questionCount = 1
                 : `A new ${normalizedSubjectId || 'CBT'} question is available for ${normalizedClassKey}.`,
             classKey: normalizedClassKey,
             subjectId: normalizedSubjectId,
+            notificationType: 'class-question',
+            notificationId: crypto.randomUUID(),
             audienceType: 'student',
             url: '/cbt.html'
         });
         try {
-            await webPush.sendNotification(record.subscription, payload, { TTL: 60 * 60 * 24 });
+            await webPush.sendNotification(record.subscription, payload, PUSH_DELIVERY_OPTIONS);
             return true;
         } catch (err) {
             if (err.statusCode === 404 || err.statusCode === 410) {

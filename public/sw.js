@@ -79,7 +79,9 @@ self.addEventListener('push', (event) => {
     badge: '/logo.jpg',
     tag: payload.notificationType === 'class-session'
       ? `class-session-${payload.startClientRequestId || payload.teacherName || 'new'}`
-      : `teacher-announcement-${payload.announcementId || 'new'}`,
+      : payload.notificationType === 'class-question'
+        ? `class-question-${payload.notificationId || 'new'}`
+        : `teacher-announcement-${payload.announcementId || 'new'}`,
     actions,
     data: {
       url: payload.url || '/teacher.html',
@@ -98,23 +100,34 @@ self.addEventListener('notificationclick', (event) => {
   const payload = event.notification.data || {};
   const target = new URL(payload.url || '/teacher.html', self.location.origin);
 
-  if (event.action === 'end-class') {
-    const teacherName = payload.teacherName || '';
-    const startClientRequestId = payload.startClientRequestId || '';
-    if (teacherName && startClientRequestId) {
-      fetch('/api/teacher/class-sessions/end', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+  event.waitUntil((async () => {
+    if (event.action === 'end-class') {
+      const teacherName = payload.teacherName || '';
+      const startClientRequestId = payload.startClientRequestId || '';
+      if (teacherName && startClientRequestId) {
+        const endPayload = {
           name: teacherName,
           startClientRequestId,
+          clientRequestId: `notification-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           endedAt: new Date().toISOString()
-        })
-      }).catch(() => {});
+        };
+        let response;
+        try {
+          response = await fetch('/api/teacher/class-sessions/end', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(endPayload)
+          });
+        } catch (error) {
+          if (!self.TeacherOfflineQueue) throw error;
+          await self.TeacherOfflineQueue.enqueue(endPayload, '/api/teacher/class-sessions/end');
+          try { await self.registration.sync?.register('teacher-attendance-sync'); } catch (_) {}
+        }
+        if (response && !response.ok) throw new Error(`Could not end class (${response.status}).`);
+      }
     }
-  }
 
-  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clients) => {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const teacherClient = clients.find(client => {
       const clientUrl = new URL(client.url);
       return clientUrl.origin === target.origin && clientUrl.pathname === '/teacher.html';
@@ -125,7 +138,7 @@ self.addEventListener('notificationclick', (event) => {
       return;
     }
     await self.clients.openWindow(target.href);
-  }));
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
