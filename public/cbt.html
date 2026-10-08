@@ -2240,7 +2240,6 @@
                 console.warn('Shared CBT configuration unavailable; using local configuration:', err);
             }
             savePersistentData();
-            requestCbtNotificationsPermissionIfNeeded();
             void retryPendingCbtSubmissions();
             void loadStudentAnnouncements(false);
             populateStudentClassDropdown();
@@ -2396,7 +2395,12 @@
         async function loadCbtPushConfig() {
             const response = await fetch('/api/cbt/push/config', { cache: 'no-store' });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.message || `Could not check browser notifications (${response.status}).`);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Please log in to the CBT section before enabling notifications.');
+                }
+                throw new Error(data.message || `Could not check browser notifications (${response.status}).`);
+            }
             return data;
         }
 
@@ -2495,9 +2499,15 @@
                 updateCbtNotificationButtonState();
                 return;
             }
-            if (!forcePrompt && previousState === 'granted') return;
+            if (!forcePrompt && (previousState === 'granted' || previousState === 'dismissed')) return;
             showCbtNotificationPrompt();
             updateCbtNotificationButtonState();
+        }
+
+        function maybeRequestCbtNotificationsAfterLogin() {
+            const hasCandidateSession = Boolean(currentCandidate && currentCandidate.studentId && currentCandidate.classKey);
+            if (!hasCandidateSession) return;
+            requestCbtNotificationsPermissionIfNeeded(true);
         }
 
         async function verifyStudentPasswordOnServer(studentId, password) {
@@ -2670,10 +2680,9 @@
         });
 
         document.getElementById('cbtNotificationLaterButton')?.addEventListener('click', () => {
-            localStorage.removeItem(cbtNotificationStateKey);
+            localStorage.setItem(cbtNotificationStateKey, 'dismissed');
             hideCbtNotificationPrompt();
             updateCbtNotificationButtonState();
-            requestCbtNotificationsPermissionIfNeeded(true);
         });
 
         document.getElementById('cbtNotificationToggleButton')?.addEventListener('click', () => {
@@ -2997,6 +3006,8 @@
                 }
             }
             currentStudentCbtPassword = studentPassword;
+            currentCandidate = { name, studentId, classKey };
+            maybeRequestCbtNotificationsAfterLogin();
 
             const rosterMatch = studentRoster.find(r => studentIdsMatch(r.studentId, studentId) && (r.classKey === classKey || normalizeClassKey(r.classKey) === classKey)) || (savedProfile ? {
                 studentId: savedProfile.student_id,
