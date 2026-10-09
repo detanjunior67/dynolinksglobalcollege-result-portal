@@ -1640,6 +1640,17 @@
             }
         }
 
+        function requestTeacherNotificationPermissionIfNeeded() {
+            if (!('Notification' in window) || Notification.permission !== 'default') return;
+            Notification.requestPermission().then(permission => {
+                if (permission === 'denied') {
+                    teacherPushStatus.textContent = 'Notifications are blocked. Allow them in your browser settings.';
+                }
+            }).catch(error => {
+                console.warn('Could not request browser notification permission:', error);
+            });
+        }
+
         teacherPushButton.addEventListener('click', toggleTeacherPushNotifications);
 
         async function renderAdminAnnouncements() {
@@ -2382,6 +2393,7 @@
         }
 
         async function unlockTeacherApp(isAdmin) {
+            if (!isAdmin) requestTeacherNotificationPermissionIfNeeded();
             launchGate.hidden = true;
             teacherApp.hidden = false;
             teacherAccessPassword = isAdmin ? adminLaunchPassword : teacherLaunchPassword;

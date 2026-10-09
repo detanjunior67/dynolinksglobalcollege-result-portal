@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CBT Admin Audit | Dynolinks Global College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "DM Sans", sans-serif;
+            color: #18352f;
+            background: #f2f4ee;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            --ink: #18352f;
+            --muted: #71817b;
+            --line: #dfe5dc;
+            --paper: #fffefa;
+            --green: #17483e;
+            --lime: #d7f276;
+            --teal: #167b69;
+            --coral: #c65e43;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #f2f4ee;
+            background-image: linear-gradient(rgba(36, 75, 60, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 75, 60, .035) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 72px;
+            padding: .8rem clamp(1rem, 4vw, 3.5rem);
+            background: linear-gradient(115deg, rgba(34, 73, 61, .84), rgba(16, 45, 39, .72));
+            color: white;
+            border-bottom: 1px solid rgba(226, 244, 223, .3);
+            box-shadow: 0 10px 30px rgba(19, 48, 41, .17), inset 0 1px rgba(255, 255, 255, .14);
+            -webkit-backdrop-filter: blur(20px) saturate(1.55);
+            backdrop-filter: blur(20px) saturate(1.55);
+        }
+        header::after {
+            position: absolute;
+            right: 0;
+            bottom: -1px;
+            left: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(215, 242, 118, .7), rgba(255, 255, 255, .3), transparent);
+            content: "";
+            pointer-events: none;
+        }
+        header h1 { margin: 0; font: 800 1rem/1.15 "Manrope", sans-serif; letter-spacing: 0; }
+        header span { color: #a9c6b9; font-size: .68rem; }
+        .brand-lockup { display: flex; align-items: center; gap: .8rem; }
+        .brand-mark {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border-radius: 11px;
+            background: var(--lime);
+            color: #173b32;
+            font: 800 .88rem "Manrope", sans-serif;
+        }
+        .brand-copy { display: grid; gap: .18rem; }
+        .brand-eyebrow { color: #acc9bc; font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .session-indicator { display: inline-flex; align-items: center; gap: .55rem; color: #d5e4dc; font-size: .72rem; white-space: nowrap; }
+        .session-indicator::before { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); content: ""; box-shadow: 0 0 0 4px rgba(215, 242, 118, .13); }
+        main { width: min(1440px, calc(100% - 3rem)); margin: 2rem auto 3.5rem; }
+        button, input, select { font: inherit; }
+        button {
+            min-height: 40px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: .6rem .85rem;
+            font-size: .76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+        }
+        button:hover:not(:disabled) { transform: translateY(-1px); }
+        button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(22, 123, 105, .24); outline-offset: 2px; }
+        button:disabled { opacity: .45; cursor: not-allowed; }
+        .primary { background: var(--lime); color: #18352f; }
+        .primary:hover:not(:disabled) { background: #c9ed5c; }
+        .quiet { border-color: var(--line); background: var(--paper); color: #34564c; }
+        .quiet:hover:not(:disabled) { border-color: #a9beb1; background: #f6f9f2; }
+        .danger { border-color: #f0d1c6; background: #fff5ef; color: #a14b34; }
+        .danger:hover:not(:disabled) { border-color: #e6a995; background: #ffebe1; }
+        #dashboard { display: none; animation: dashboard-enter .42s ease both; }
+        @keyframes dashboard-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.15rem; }
+        .toolbar h2 { margin: 0; color: var(--ink); font: 800 clamp(1.55rem, 2.4vw, 2rem)/1.18 "Manrope", sans-serif; letter-spacing: 0; }
+        .muted { color: var(--muted); font-size: .78rem; line-height: 1.5; }
+        .toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+        .grid { display: grid; grid-template-columns: minmax(300px, .82fr) minmax(0, 1.65fr); gap: 1rem; align-items: start; }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: .85rem; }
+        .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(210px, .8fr)); gap: .75rem; margin: 0 0 .9rem; }
+        .chart-body { display: grid; gap: .7rem; padding: .9rem 1rem 1rem; }
+        .trend-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: .3rem; min-height: 116px; padding-top: .3rem; }
+        .trend-column { display: grid; align-content: end; justify-items: center; gap: .35rem; min-width: 0; height: 100%; }
+        .trend-bar { width: min(100%, 22px); min-height: 3px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #a2cb55, #2f8067); }
+        .trend-day { color: #87948b; font-size: .55rem; }
+        .chart-row { display: grid; grid-template-columns: minmax(64px, .75fr) minmax(40px, 1fr) 28px; align-items: center; gap: .5rem; color: #576d62; font-size: .66rem; }
+        .chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chart-track { height: 7px; overflow: hidden; border-radius: 999px; background: #eef1e9; }
+        .chart-fill { height: 100%; min-width: 2px; border-radius: inherit; background: linear-gradient(90deg, #8dbb47, #257963); }
+        .chart-count { color: #53675d; font-size: .64rem; font-weight: 800; text-align: right; }
+        .chart-empty { padding: .8rem 0; color: #89958c; font-size: .7rem; }
+        .alert-list { display: grid; gap: .45rem; padding: .7rem .9rem .9rem; }
+        .audit-alert { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: .55rem; padding: .7rem .75rem; border: 1px solid #e8dfbe; border-radius: 8px; background: #fff9e7; }
+        .audit-alert.critical { border-color: #efc5b7; background: #fff1eb; }
+        .audit-alert.high { border-color: #e7d4a9; background: #fff8e8; }
+        .alert-mark { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 50%; background: #f0dfab; color: #76591c; font-size: .7rem; font-weight: 800; }
+        .critical .alert-mark { background: #f2c6b8; color: #9b432b; }
+        .alert-title { color: #4e4834; font-size: .72rem; font-weight: 800; }
+        .alert-detail { margin-top: .15rem; color: #81785c; font-size: .65rem; overflow-wrap: anywhere; }
+        .profile-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; padding: .9rem 1rem; }
+        .profile-stat { padding: .7rem; border-radius: 8px; background: #f5f7ef; }
+        .profile-stat span { display: block; color: #79877e; font-size: .62rem; font-weight: 700; text-transform: uppercase; }
+        .profile-stat strong { display: block; margin-top: .35rem; color: var(--ink); font-size: .88rem; overflow-wrap: anywhere; }
+        .schedule-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr); gap: 1rem; align-items: end; padding: .9rem 1rem 1rem; }
+        .schedule-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
+        .schedule-fields label { display: block; min-width: 0; color: #66786f; font-size: .66rem; font-weight: 700; }
+        .schedule-fields input, .schedule-fields select { width: 100%; min-height: 40px; margin-top: .32rem; border: 1px solid #d8e0d6; border-radius: 7px; padding: .55rem .65rem; background: #fffefa; color: var(--ink); font-size: .76rem; }
+        .schedule-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+        .schedule-status { color: #78867d; font-size: .68rem; line-height: 1.5; }
+        .note-list { display: grid; gap: .35rem; margin-top: .45rem; }
+        .audit-note { border-left: 2px solid #aac76e; padding: .25rem .5rem; color: #65746a; font-size: .65rem; }
+        .audit-note strong { color: #43584b; }
+        .event-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem .7rem; margin: .5rem 0; color: #68786f; font-size: .65rem; }
+        .event-meta strong { color: #3f594b; }
+        .metric {
+            min-height: 112px;
+            padding: 1rem 1.1rem;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--paper);
+            box-shadow: 0 4px 12px rgba(31, 60, 47, .035);
+        }
+        .metric:first-child { border-color: var(--green); background: var(--green); color: white; }
+        .metric-label { display: block; color: #74847d; font-size: .67rem; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
+        .metric:first-child .metric-label { color: #bad1c3; }
+        .metric-value { display: block; margin-top: .62rem; color: var(--ink); font: 800 1.8rem/1 "Manrope", sans-serif; letter-spacing: 0; }
+        .metric:first-child .metric-value { color: var(--lime); }
+        #metricLatest { max-width: 100%; font-size: .96rem !important; line-height: 1.3; overflow-wrap: anywhere; }
+        .filters {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.55fr) repeat(4, minmax(120px, 1fr));
+            gap: .7rem;
+            padding: .8rem;
+            margin-bottom: .72rem;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(255, 254, 250, .9);
+            box-shadow: 0 4px 12px rgba(31, 60, 47, .035);
+        }
+        .filters label { display: block; min-width: 0; margin: 0; color: #66786f; font-size: .66rem; font-weight: 700; }
+        .filters input, .filters select, .session-state input {
+            width: 100%;
+            min-height: 40px;
+            margin-top: .32rem;
+            border: 1px solid #d8e0d6;
+            border-radius: 7px;
+            padding: .55rem .65rem;
+            background: #fffefa;
+            color: var(--ink);
+            font-size: .76rem;
+        }
+        .filters input::placeholder { color: #98a49b; }
+        .filter-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 1rem; color: var(--muted); font-size: .72rem; }
+        .auto-refresh { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+        .auto-refresh input { width: 16px; height: 16px; margin: 0; accent-color: var(--teal); }
+        .panel { overflow: hidden; border: 1px solid #dce4da; border-radius: 10px; background: var(--paper); box-shadow: 0 8px 22px rgba(31, 60, 47, .055); }
+        .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: 1rem 1.05rem .88rem; border-bottom: 1px solid #e9eee6; }
+        .panel-heading h3 { margin: 0; color: var(--ink); font: 800 .88rem "Manrope", sans-serif; letter-spacing: 0; }
+        .panel-heading p { margin: .32rem 0 0; color: #7b8981; font-size: .69rem; line-height: 1.45; }
+        .table-wrap { overflow: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: .74rem; }
+        th, td { padding: .76rem .85rem; border-bottom: 1px solid #edf0e9; vertical-align: middle; }
+        th { position: sticky; top: 0; z-index: 1; background: #f7f8f2; color: #7a877e; font-size: .62rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+        td { color: #53675d; overflow-wrap: anywhere; }
+        tbody tr { transition: background-color .14s ease; }
+        tbody tr:hover { background: #f6f8f1; }
+        tbody tr:last-child td { border-bottom: 0; }
+        .teacher-name { color: var(--ink); font-weight: 800; }
+        .teacher-tools { display: flex; flex-wrap: wrap; gap: .3rem; }
+        .teacher-tools button { min-height: 32px; padding: .42rem .55rem; font-size: .66rem; }
+        .activity-action { display: inline-flex; align-items: center; min-height: 24px; padding: .2rem .5rem; border: 1px solid #cce5da; border-radius: 999px; background: #edf7ef; color: #236351; font-size: .68rem; font-weight: 700; text-transform: capitalize; }
+        .activity-detail { max-width: 34rem; margin-top: .3rem; }
+        .activity-detail summary { cursor: pointer; color: #77857c; font-size: .67rem; }
+        .details { padding: .45rem 0 .1rem; color: #62746a; font: .68rem/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
+        .empty { padding: 1.4rem 1rem; color: #8a968d; font-size: .76rem; text-align: center; }
+        .pagination { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; padding: .65rem .85rem; border-top: 1px solid #e9eee6; color: #738178; font-size: .68rem; }
+        .pagination button { min-height: 32px; padding: .4rem .6rem; font-size: .68rem; }
+        .session-state { max-width: 520px; margin: 12vh auto; padding: clamp(1.4rem, 4vw, 2.3rem); border: 1px solid #dce4da; border-radius: 12px; background: var(--paper); box-shadow: 0 18px 50px rgba(31, 60, 47, .1); }
+        .session-state h2 { margin: 0 0 .5rem; color: var(--ink); font: 800 1.2rem "Manrope", sans-serif; }
+        .session-state p { color: #65776d; font-size: .82rem; line-height: 1.55; }
+        .session-state a { display: inline-flex; align-items: center; margin-top: .6rem; padding: .7rem .9rem; border-radius: 8px; color: var(--ink); font-size: .76rem; font-weight: 700; text-decoration: none; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+        @media (max-width: 1050px) { .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } .grid { grid-template-columns: minmax(260px, .9fr) minmax(0, 1.4fr); } }
+        @media (max-width: 1050px) { .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .analytics-grid > :first-child { grid-column: 1 / -1; } .schedule-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 780px) { main { width: min(100% - 2rem, 680px); margin-top: 1.4rem; } .grid { grid-template-columns: 1fr; } .toolbar { align-items: flex-start; flex-direction: column; } .toolbar-actions { justify-content: flex-start; } }
+        @media (max-width: 620px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .analytics-grid { grid-template-columns: 1fr; } .analytics-grid > :first-child { grid-column: auto; } .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filters label:first-child { grid-column: 1 / -1; } .schedule-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } .profile-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metric { min-height: 100px; padding: .85rem; } .metric-value { font-size: 1.55rem; } }
+        @media (max-width: 420px) { header { min-height: 64px; align-items: flex-start; flex-direction: column; } .brand-mark { width: 34px; height: 34px; } .brand-lockup { gap: .6rem; } .brand-copy { min-width: 0; } header h1 { font-size: .78rem; white-space: nowrap; } header h1 span { font-size: .56rem; } .session-indicator { font-size: .64rem; } main { width: calc(100% - 1.2rem); margin-top: 1rem; } .filters { gap: .5rem; padding: .65rem; } .filter-footer { align-items: flex-start; flex-direction: column; } th, td { padding: .65rem .58rem; } .toolbar h2 { font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand-lockup">
+            <div class="brand-mark" aria-hidden="true">D</div>
+            <div class="brand-copy">
+                <span class="brand-eyebrow">Admin Operations</span>
+                <h1>Dynolinks Global College <span>/ CBT Audit</span></h1>
+            </div>
+        </div>
+        <span class="session-indicator" id="sessionIndicator">Secure session</span>
+    </header>
+    <main>
+        <section id="sessionState" class="session-state" aria-live="polite">
+            <h2 id="sessionHeading">Opening audit dashboard</h2>
+            <p id="sessionMessage">Verifying the secure administrator session...</p>
+            <a id="returnToAdmin" class="primary" href="/cbt-admin.html" hidden>Return to CBT Admin</a>
+        </section>
+        <section id="dashboard" aria-labelledby="dashboardHeading">
+            <div class="toolbar">
+                <div>
+                    <h2 id="dashboardHeading">Teacher registrations & activity</h2>
+                    <div id="dataSummary" class="muted" aria-live="polite"></div>
+                </div>
+                <div class="toolbar-actions">
+                    <button id="exportButton" class="primary" type="button" title="Export filtered activity">Export CSV</button>
+                    <button id="refreshButton" class="quiet" type="button" title="Refresh audit data">Refresh</button>
+                    <button id="lockButton" class="quiet" type="button" title="End the secure audit session">Lock</button>
+                </div>
+            </div>
+            <div class="summary-grid" aria-label="Audit summary">
+                <div class="metric"><span class="metric-label">Registered teachers</span><strong id="metricTeachers" class="metric-value">0</strong></div>
+                <div class="metric"><span class="metric-label">Events, last 24 hours</span><strong id="metricRecent" class="metric-value">0</strong></div>
+                <div class="metric"><span class="metric-label">Question activity</span><strong id="metricQuestions" class="metric-value">0</strong></div>
+                <div class="metric"><span class="metric-label">Latest recorded event</span><strong id="metricLatest" class="metric-value">None</strong></div>
+            </div>
+            <section id="alertsPanel" class="panel" aria-labelledby="alertsHeading" hidden>
+                <div class="panel-heading"><div><h3 id="alertsHeading">Attention needed</h3><p>Repeated failed logins and high-impact changes from the last day.</p></div></div>
+                <div id="alertsList" class="alert-list"></div>
+            </section>
+            <div class="analytics-grid" aria-label="Audit analytics">
+                <section class="panel" aria-labelledby="trendHeading">
+                    <div class="panel-heading"><div><h3 id="trendHeading">Activity trend</h3><p>Daily audit events across the last 14 days.</p></div></div>
+                    <div id="activityTrend" class="chart-body"></div>
+                </section>
+                <section class="panel" aria-labelledby="actionsHeading">
+                    <div class="panel-heading"><div><h3 id="actionsHeading">Top actions</h3><p>Most frequent activity, 30 days.</p></div></div>
+                    <div id="actionBreakdown" class="chart-body"></div>
+                </section>
+                <section class="panel" aria-labelledby="teacherActivityHeading">
+                    <div class="panel-heading"><div><h3 id="teacherActivityHeading">Teacher activity</h3><p>Recent activity, 30 days.</p></div></div>
+                    <div id="teacherActivityChart" class="chart-body"></div>
+                </section>
+            </div>
+            <section id="selectedTeacherProfile" class="panel" aria-labelledby="profileHeading" hidden>
+                <div class="panel-heading"><div><h3 id="profileHeading">Teacher profile</h3><p id="profileSubtitle"></p></div><button id="clearTeacherProfile" class="quiet" type="button">Clear profile</button></div>
+                <div id="profileStats" class="profile-body"></div>
+            </section>
+            <section class="filters" aria-label="Activity filters">
+                <label>Search activity<input id="activitySearch" type="search" placeholder="Teacher, action, class, subject..."></label>
+                <label>Teacher<select id="teacherFilter"><option value="">All teachers</option></select></label>
+                <label>Activity<select id="actionFilter"><option value="">All activities</option></select></label>
+                <label>From<input id="dateFrom" type="date"></label>
+                <label>To<input id="dateTo" type="date"></label>
+            </section>
+            <div class="filter-footer">
+                <span id="filterSummary" aria-live="polite">Showing all recorded activity</span>
+                <label class="auto-refresh"><input id="autoRefreshToggle" type="checkbox"> Refresh every 30 seconds</label>
+            </div>
+            <div class="grid">
+                <section class="panel" aria-labelledby="teachersHeading">
+                    <div class="panel-heading"><div><h3 id="teachersHeading">Saved teacher names</h3><p>Only this secret admin can remove a registration.</p></div></div>
+                    <div class="table-wrap">
+                        <table><thead><tr><th>Teacher</th><th>Registered</th><th>Last admin login</th><th>Activity</th></tr></thead><tbody id="teachersBody"></tbody></table>
+                        <div id="teachersEmpty" class="empty" hidden>No teacher names have been registered.</div>
+                    </div>
+                </section>
+                <section class="panel" aria-labelledby="activityHeading">
+                    <div class="panel-heading"><div><h3 id="activityHeading">Admin activity history</h3><p id="activityHeadingMeta">Searchable server history, newest first.</p></div></div>
+                    <div class="table-wrap">
+                        <table><thead><tr><th>Time</th><th>Teacher</th><th>Activity &amp; audit context</th></tr></thead><tbody id="activitiesBody"></tbody></table>
+                        <div id="activitiesEmpty" class="empty" hidden>No admin activity has been recorded.</div>
+                    </div>
+                    <div class="pagination">
+                        <span id="pageSummary">0 events</span>
+                        <button id="previousPage" class="quiet" type="button">Previous</button>
+                        <button id="nextPage" class="quiet" type="button">Next</button>
+                    </div>
+                </section>
+            </div>
+            <section class="panel" aria-labelledby="reportScheduleHeading" style="margin-top:1rem">
+                <div class="panel-heading"><div><h3 id="reportScheduleHeading">Scheduled email reports</h3><p>Send a CBT activity digest through the configured college Gmail account.</p></div></div>
+                <div class="schedule-layout">
+                    <div class="schedule-fields">
+                        <label>Recipient email<input id="reportRecipient" type="email" placeholder="admin@school.edu"></label>
+                        <label>Frequency<select id="reportCadence"><option value="daily">Daily</option><option value="weekly">Weekly</option></select></label>
+                        <label>Delivery hour (UTC)<select id="reportHour"></select></label>
+                        <label>Weekly day (UTC)<select id="reportWeekday"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+                    </div>
+                    <div>
+                        <div class="schedule-actions"><button id="saveReportSchedule" class="primary" type="button">Save schedule</button><button id="deleteReportSchedule" class="danger" type="button" hidden>Disable</button></div>
+                        <p id="reportScheduleStatus" class="schedule-status" role="status">No scheduled report is configured.</p>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+    <script>
+        let auditTeachers = [];
+        let auditActivities = [];
+        let auditAnalytics = { activityByDay: [], actionBreakdown: [], teacherActivity: [] };
+        let auditAlerts = [];
+        let auditPagination = { page: 1, pageSize: 40, total: 0, totalPages: 1 };
+        let auditSummary = { teacherCount: 0, eventsLast24Hours: 0, questionActivity: 0 };
+        let currentPage = 1;
+        const pageSize = 40;
+        let isLoading = false;
+        let lastRefreshedAt = null;
+        let autoRefreshTimer = null;
+        let filterDebounceTimer = null;
+        let reportScheduleLoaded = false;
+
+        function formatDate(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString();
+        }
+
+        function localDateKey(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function normalizedAction(value) {
+            return String(value || '').replace(/[_-]+/g, ' ');
+        }
+
+        function addCell(row, value) {
+            const cell = document.createElement('td');
+            cell.textContent = value == null ? '' : String(value);
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function getAuditQueryString() {
+            const params = new URLSearchParams({ page: String(currentPage), pageSize: String(pageSize) });
+            const values = {
+                search: document.getElementById('activitySearch').value.trim(),
+                teacher: document.getElementById('teacherFilter').value,
+                action: document.getElementById('actionFilter').value,
+                from: document.getElementById('dateFrom').value,
+                to: document.getElementById('dateTo').value
+            };
+            Object.entries(values).forEach(([key, value]) => { if (value) params.set(key, value); });
+            return params;
+        }
+
+        async function loadAuditData() {
+            if (isLoading) return;
+            isLoading = true;
+            const refreshButton = document.getElementById('refreshButton');
+            refreshButton.disabled = true;
+            let response;
+            try {
+                response = await fetch(`/api/cbt-admin/audit?${getAuditQueryString()}`, { cache: 'no-store' });
+            } finally {
+                isLoading = false;
+                refreshButton.disabled = false;
+            }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) throw new Error(data.message || 'Could not load audit data.');
+
+            auditTeachers = Array.isArray(data.teachers) ? data.teachers : [];
+            auditActivities = Array.isArray(data.activities) ? data.activities : [];
+            auditAnalytics = data.analytics || { activityByDay: [], actionBreakdown: [], teacherActivity: [] };
+            auditAlerts = Array.isArray(data.alerts) ? data.alerts : [];
+            auditPagination = data.pagination || auditPagination;
+            auditSummary = data.summary || auditSummary;
+            lastRefreshedAt = new Date();
+            document.getElementById('sessionState').hidden = true;
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('sessionIndicator').textContent = `Secure session · refreshed ${lastRefreshedAt.toLocaleTimeString()}`;
+            populateFilters();
+            renderSummary();
+            renderTeachers();
+            renderActivities();
+            renderAnalytics();
+            renderAlerts();
+            if (!reportScheduleLoaded) {
+                populateReportHours();
+                renderReportSchedule(data.reportSchedule || null);
+                reportScheduleLoaded = true;
+            }
+        }
+
+        function populateFilters() {
+            const teacherFilter = document.getElementById('teacherFilter');
+            const selectedTeacher = teacherFilter.value;
+            teacherFilter.replaceChildren(new Option('All teachers', ''));
+            auditTeachers.forEach(teacher => teacherFilter.add(new Option(teacher.name, teacher.name)));
+            if (auditTeachers.some(teacher => teacher.name === selectedTeacher)) teacherFilter.value = selectedTeacher;
+
+            const actionFilter = document.getElementById('actionFilter');
+            const selectedAction = actionFilter.value;
+            actionFilter.replaceChildren(new Option('All activities', ''));
+            (auditAnalytics.actionBreakdown || [])
+                .map(item => item.action)
+                .filter(Boolean)
+                .sort((left, right) => normalizedAction(left).localeCompare(normalizedAction(right)))
+                .forEach(action => actionFilter.add(new Option(normalizedAction(action), action)));
+            if ([...actionFilter.options].some(option => option.value === selectedAction)) actionFilter.value = selectedAction;
+        }
+
+        function renderSummary() {
+            document.getElementById('metricTeachers').textContent = dataCount(auditSummary.teacherCount);
+            document.getElementById('metricRecent').textContent = dataCount(auditSummary.eventsLast24Hours);
+            document.getElementById('metricQuestions').textContent = dataCount(auditSummary.questionActivity);
+            document.getElementById('metricLatest').textContent = auditActivities.length ? formatDate(auditActivities[0].occurredAt) : 'No matches';
+            document.getElementById('dataSummary').textContent = `${auditPagination.total.toLocaleString()} matching events · Updated ${formatDate(lastRefreshedAt)}`;
+        }
+
+        function dataCount(value) { return Number(value || 0).toLocaleString(); }
+
+        function appendChartRow(container, label, count, maximum, onClick = null) {
+            const row = document.createElement(onClick ? 'button' : 'div');
+            row.className = 'chart-row';
+            if (onClick) {
+                row.type = 'button';
+                row.style.width = '100%';
+                row.style.border = '0';
+                row.style.padding = '0';
+                row.style.background = 'transparent';
+                row.addEventListener('click', onClick);
+            }
+            const name = document.createElement('span');
+            name.className = 'chart-label';
+            name.textContent = label;
+            const track = document.createElement('span');
+            track.className = 'chart-track';
+            const fill = document.createElement('span');
+            fill.className = 'chart-fill';
+            fill.style.display = 'block';
+            fill.style.width = `${maximum ? Math.max(3, (count / maximum) * 100) : 0}%`;
+            track.appendChild(fill);
+            const value = document.createElement('strong');
+            value.className = 'chart-count';
+            value.textContent = dataCount(count);
+            row.append(name, track, value);
+            container.appendChild(row);
+        }
+
+        function renderAnalytics() {
+            const trend = document.getElementById('activityTrend');
+            trend.replaceChildren();
+            const dailyValues = new Map((auditAnalytics.activityByDay || []).map(item => [item.date, item.count]));
+            const days = [];
+            for (let offset = 13; offset >= 0; offset--) {
+                const date = new Date();
+                date.setHours(0, 0, 0, 0);
+                date.setDate(date.getDate() - offset);
+                days.push({ key: localDateKey(date), date });
+            }
+            const maxDaily = Math.max(1, ...days.map(day => dailyValues.get(day.key) || 0));
+            const bars = document.createElement('div');
+            bars.className = 'trend-chart';
+            days.forEach((day, index) => {
+                const count = dailyValues.get(day.key) || 0;
+                const column = document.createElement('div');
+                column.className = 'trend-column';
+                const bar = document.createElement('span');
+                bar.className = 'trend-bar';
+                bar.style.height = `${Math.max(3, (count / maxDaily) * 82)}px`;
+                bar.title = `${day.key}: ${count} events`;
+                const label = document.createElement('span');
+                label.className = 'trend-day';
+                label.textContent = day.date.getDate() % 2 === 1 || index === 0 ? String(day.date.getDate()) : '';
+                column.append(bar, label);
+                bars.appendChild(column);
+            });
+            const trendLegend = document.createElement('span');
+            trendLegend.className = 'schedule-status';
+            trendLegend.textContent = `Peak: ${maxDaily.toLocaleString()} event${maxDaily === 1 ? '' : 's'} in one day`;
+            trend.append(bars, trendLegend);
+
+            renderRankedChart('actionBreakdown', (auditAnalytics.actionBreakdown || []).slice(0, 7).map(item => ({ label: normalizedAction(item.action), count: item.count })));
+            renderRankedChart('teacherActivityChart', (auditAnalytics.teacherActivity || []).slice(0, 7).map(item => ({
+                label: item.name,
+                count: item.count,
+                onClick: () => selectTeacherHistory(item.name)
+            })));
+            if (!auditActivities.length && !auditPagination.total) trendLegend.textContent = 'No audit activity recorded yet.';
+        }
+
+        function renderRankedChart(containerId, items) {
+            const container = document.getElementById(containerId);
+            container.replaceChildren();
+            if (!items.length) {
+                const empty = document.createElement('span');
+                empty.className = 'chart-empty';
+                empty.textContent = 'No activity to display yet.';
+                container.appendChild(empty);
+                return;
+            }
+            const maximum = Math.max(1, ...items.map(item => item.count));
+            items.forEach(item => appendChartRow(container, item.label, item.count, maximum, item.onClick));
+        }
+
+        function renderAlerts() {
+            const panel = document.getElementById('alertsPanel');
+            const container = document.getElementById('alertsList');
+            container.replaceChildren();
+            panel.hidden = auditAlerts.length === 0;
+            auditAlerts.forEach(alert => {
+                const card = document.createElement('article');
+                card.className = `audit-alert ${alert.severity || ''}`;
+                const mark = document.createElement('span');
+                mark.className = 'alert-mark';
+                mark.textContent = alert.severity === 'critical' ? '!' : 'i';
+                const copy = document.createElement('div');
+                const title = document.createElement('div');
+                title.className = 'alert-title';
+                title.textContent = alert.title;
+                const detail = document.createElement('div');
+                detail.className = 'alert-detail';
+                detail.textContent = `${alert.detail || ''}${alert.ipAddress ? ` · IP ${alert.ipAddress}` : ''} · ${formatDate(alert.occurredAt)}`;
+                copy.append(title, detail);
+                card.append(mark, copy);
+                container.appendChild(card);
+            });
+        }
+
+        function selectTeacherHistory(name) {
+            document.getElementById('teacherFilter').value = name;
+            currentPage = 1;
+            renderTeacherProfile(name);
+            void loadAuditData();
+            document.getElementById('selectedTeacherProfile').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function renderTeacherProfile(name) {
+            const item = (auditAnalytics.teacherActivity || []).find(teacher => teacher.name === name);
+            const registered = auditTeachers.find(teacher => teacher.name === name);
+            const panel = document.getElementById('selectedTeacherProfile');
+            if (!item && !registered) { panel.hidden = true; return; }
+            panel.hidden = false;
+            document.getElementById('profileHeading').textContent = name;
+            document.getElementById('profileSubtitle').textContent = `Registered ${registered ? formatDate(registered.registeredAt) : 'recorded in audit history'} · Last admin login ${registered?.lastLoginAt ? formatDate(registered.lastLoginAt) : 'not recorded'}`;
+            const stats = document.getElementById('profileStats');
+            stats.replaceChildren();
+            [
+                ['Events, 30 days', item?.count || 0],
+                ['Failed logins', item?.failedLogins || 0],
+                ['Most recent activity', item?.latestAt ? formatDate(item.latestAt) : 'None']
+            ].forEach(([label, value]) => {
+                const stat = document.createElement('div');
+                stat.className = 'profile-stat';
+                const statLabel = document.createElement('span');
+                statLabel.textContent = label;
+                const statValue = document.createElement('strong');
+                statValue.textContent = String(value);
+                stat.append(statLabel, statValue);
+                stats.appendChild(stat);
+            });
+        }
+
+        function renderTeachers() {
+            const teachersBody = document.getElementById('teachersBody');
+            teachersBody.replaceChildren();
+            document.getElementById('teachersEmpty').hidden = auditTeachers.length > 0;
+            auditTeachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                const nameCell = addCell(row, '');
+                const name = document.createElement('span');
+                name.className = 'teacher-name';
+                name.textContent = teacher.name;
+                nameCell.appendChild(name);
+                addCell(row, formatDate(teacher.registeredAt));
+                addCell(row, teacher.lastLoginAt ? formatDate(teacher.lastLoginAt) : 'Never');
+                const actionCell = document.createElement('td');
+                const tools = document.createElement('div');
+                tools.className = 'teacher-tools';
+                const historyButton = document.createElement('button');
+                historyButton.type = 'button';
+                historyButton.className = 'quiet';
+                historyButton.textContent = 'History';
+                historyButton.title = `Filter activity for ${teacher.name}`;
+                historyButton.addEventListener('click', () => selectTeacherHistory(teacher.name));
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'danger';
+                removeButton.textContent = 'Remove';
+                removeButton.title = `Remove ${teacher.name}'s registration`;
+                removeButton.addEventListener('click', () => removeTeacher(teacher.id, teacher.name));
+                tools.append(historyButton, removeButton);
+                actionCell.appendChild(tools);
+                row.appendChild(actionCell);
+                teachersBody.appendChild(row);
+            });
+        }
+
+        function renderActivities() {
+            const activitiesBody = document.getElementById('activitiesBody');
+            activitiesBody.replaceChildren();
+            document.getElementById('activitiesEmpty').hidden = auditActivities.length > 0;
+            document.getElementById('filterSummary').textContent = `${auditPagination.total.toLocaleString()} matching events · ${auditActivities.length} shown on this page`;
+            document.getElementById('activityHeadingMeta').textContent = `${auditPagination.total.toLocaleString()} matching records, searchable across the full history.`;
+            document.getElementById('pageSummary').textContent = auditPagination.total
+                ? `Page ${auditPagination.page} of ${auditPagination.totalPages} · ${auditActivities.length} events`
+                : '0 events';
+            document.getElementById('previousPage').disabled = auditPagination.page <= 1;
+            document.getElementById('nextPage').disabled = auditPagination.page >= auditPagination.totalPages;
+
+            auditActivities.forEach(activity => {
+                const row = document.createElement('tr');
+                addCell(row, formatDate(activity.occurredAt));
+                addCell(row, activity.teacherName);
+                const activityCell = document.createElement('td');
+                const action = document.createElement('span');
+                action.className = 'activity-action';
+                action.textContent = normalizedAction(activity.action);
+                activityCell.appendChild(action);
+                const metadataToggle = document.createElement('details');
+                metadataToggle.className = 'activity-detail';
+                const summary = document.createElement('summary');
+                summary.textContent = 'View audit context';
+                const metadata = document.createElement('div');
+                metadata.className = 'event-meta';
+                [
+                    ['Class / subject', [activity.details?.classKey, activity.details?.subjectId].filter(Boolean).join(' / ') || 'Not specified'],
+                    ['IP address', activity.ipAddress || 'Unavailable'],
+                    ['Device', activity.deviceInfo?.exactModel || activity.deviceInfo?.deviceType || 'Unknown device'],
+                    ['Admin actor', activity.actorName || activity.teacherName || 'Unknown'],
+                    ['Browser', activity.deviceInfo?.browser || 'Unknown browser'],
+                    ['Operating system', activity.deviceInfo?.os || 'Unknown OS']
+                ].forEach(([label, value]) => {
+                    const span = document.createElement('span');
+                    span.innerHTML = `<strong>${label}:</strong> `;
+                    span.appendChild(document.createTextNode(String(value)));
+                    metadata.appendChild(span);
+                });
+                const detailText = activity.details && Object.keys(activity.details).length ? JSON.stringify(activity.details, null, 2) : '';
+                if (detailText) {
+                    const details = document.createElement('div');
+                    details.className = 'details';
+                    details.textContent = detailText;
+                    metadata.appendChild(details);
+                }
+                const notes = Array.isArray(activity.notes) ? activity.notes : [];
+                if (notes.length) {
+                    const noteList = document.createElement('div');
+                    noteList.className = 'note-list';
+                    notes.forEach(note => {
+                        const noteItem = document.createElement('div');
+                        noteItem.className = 'audit-note';
+                        const author = document.createElement('strong');
+                        author.textContent = `${note.adminName || 'Admin'} · ${formatDate(note.createdAt)}: `;
+                        noteItem.append(author, document.createTextNode(note.text));
+                        noteList.appendChild(noteItem);
+                    });
+                    metadata.appendChild(noteList);
+                }
+                const noteButton = document.createElement('button');
+                noteButton.type = 'button';
+                noteButton.className = 'quiet';
+                noteButton.style.minHeight = '30px';
+                noteButton.style.marginTop = '.4rem';
+                noteButton.textContent = 'Add admin note';
+                noteButton.addEventListener('click', () => addAuditNote(activity._id || activity.id));
+                metadata.appendChild(noteButton);
+                metadataToggle.append(summary, metadata);
+                activityCell.appendChild(metadataToggle);
+                row.appendChild(activityCell);
+                activitiesBody.appendChild(row);
+            });
+        }
+
+        async function removeTeacher(id, name) {
+            if (!window.confirm(`Remove ${name}'s saved teacher name? Existing activity history will remain.`)) return;
+            try {
+                const response = await fetch(`/api/cbt-admin/audit/teachers/${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Could not remove this registration.');
+                await loadAuditData();
+            } catch (error) {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not remove this registration.');
+            }
+        }
+
+        function showSessionExpired(error) {
+            if (!String(error?.message || '').toLowerCase().includes('session')) return false;
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('sessionState').hidden = false;
+            document.getElementById('sessionHeading').textContent = 'Session expired';
+            document.getElementById('sessionMessage').textContent = error.message;
+            document.getElementById('returnToAdmin').hidden = false;
+            return true;
+        }
+
+        function exportFilteredActivities() {
+            fetch(`/api/cbt-admin/audit/export?${getAuditQueryString()}`, { cache: 'no-store' })
+                .then(async response => {
+                    if (!response.ok) throw new Error('Could not export matching activity.');
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `cbt-admin-activity-${new Date().toISOString().slice(0, 10)}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => window.alert(error.message || 'Could not export matching activity.'));
+        }
+
+        async function addAuditNote(activityId) {
+            const text = window.prompt('Add a note to this audit event:');
+            if (!text || !text.trim()) return;
+            try {
+                const response = await fetch(`/api/cbt-admin/audit/activities/${encodeURIComponent(activityId)}/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text.trim() })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Could not save note.');
+                await loadAuditData();
+            } catch (error) {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not save note.');
+            }
+        }
+
+        function populateReportHours() {
+            const select = document.getElementById('reportHour');
+            select.replaceChildren(...Array.from({ length: 24 }, (_, hour) => {
+                const option = new Option(`${String(hour).padStart(2, '0')}:00`, String(hour));
+                if (hour === 8) option.selected = true;
+                return option;
+            }));
+        }
+
+        function renderReportSchedule(schedule) {
+            const status = document.getElementById('reportScheduleStatus');
+            const disableButton = document.getElementById('deleteReportSchedule');
+            if (!schedule) {
+                status.textContent = 'No scheduled report is configured. Times are UTC.';
+                disableButton.hidden = true;
+                return;
+            }
+            document.getElementById('reportRecipient').value = schedule.recipient || '';
+            document.getElementById('reportCadence').value = schedule.cadence || 'daily';
+            document.getElementById('reportHour').value = String(schedule.hourUtc ?? 8);
+            document.getElementById('reportWeekday').value = String(schedule.weekdayUtc ?? 1);
+            status.textContent = `${schedule.enabled ? 'Enabled' : 'Paused'} · Next send ${formatDate(schedule.nextSendAt)}${schedule.lastSentAt ? ` · Last sent ${formatDate(schedule.lastSentAt)}` : ''}${schedule.lastError ? ` · Last error: ${schedule.lastError}` : ''}`;
+            disableButton.hidden = false;
+        }
+
+        async function saveReportSchedule() {
+            const button = document.getElementById('saveReportSchedule');
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/cbt-admin/audit/report-schedule', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipient: document.getElementById('reportRecipient').value,
+                        cadence: document.getElementById('reportCadence').value,
+                        hourUtc: document.getElementById('reportHour').value,
+                        weekdayUtc: document.getElementById('reportWeekday').value
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Could not save report schedule.');
+                renderReportSchedule(data.schedule);
+            } catch (error) {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not save report schedule.');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function deleteReportSchedule() {
+            if (!window.confirm('Disable and remove the scheduled CBT audit email?')) return;
+            try {
+                const response = await fetch('/api/cbt-admin/audit/report-schedule', { method: 'DELETE' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'Could not disable report schedule.');
+                document.getElementById('reportRecipient').value = '';
+                renderReportSchedule(null);
+            } catch (error) {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not disable report schedule.');
+            }
+        }
+
+        function scheduleAuditRefresh() {
+            window.clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = window.setTimeout(() => {
+                currentPage = 1;
+                void loadAuditData().catch(error => {
+                    if (!showSessionExpired(error)) console.warn('Audit search failed:', error);
+                });
+            }, 250);
+        }
+
+        async function lockAuditSession() {
+            try {
+                await fetch('/api/cbt-admin/audit/logout', { method: 'POST' });
+            } finally {
+                window.location.assign('/cbt-admin.html');
+            }
+        }
+
+        document.getElementById('refreshButton').addEventListener('click', async () => {
+            try { await loadAuditData(); }
+            catch (error) {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not refresh audit data.');
+            }
+        });
+        document.getElementById('lockButton').addEventListener('click', lockAuditSession);
+        document.getElementById('exportButton').addEventListener('click', exportFilteredActivities);
+        document.getElementById('clearTeacherProfile').addEventListener('click', () => {
+            document.getElementById('selectedTeacherProfile').hidden = true;
+            document.getElementById('teacherFilter').value = '';
+            currentPage = 1;
+            void loadAuditData();
+        });
+        ['activitySearch', 'teacherFilter', 'actionFilter', 'dateFrom', 'dateTo'].forEach(id => {
+            document.getElementById(id).addEventListener(id === 'activitySearch' ? 'input' : 'change', scheduleAuditRefresh);
+        });
+        document.getElementById('previousPage').addEventListener('click', () => { currentPage = Math.max(1, currentPage - 1); void loadAuditData(); });
+        document.getElementById('nextPage').addEventListener('click', () => { currentPage += 1; void loadAuditData(); });
+        document.getElementById('saveReportSchedule').addEventListener('click', saveReportSchedule);
+        document.getElementById('deleteReportSchedule').addEventListener('click', deleteReportSchedule);
+        document.getElementById('autoRefreshToggle').addEventListener('change', event => {
+            if (autoRefreshTimer) window.clearInterval(autoRefreshTimer);
+            autoRefreshTimer = event.target.checked ? window.setInterval(() => {
+                loadAuditData().catch(error => {
+                    if (!showSessionExpired(error)) console.warn('Audit auto-refresh failed:', error);
+                });
+            }, 30000) : null;
+        });
+
+        loadAuditData().catch(error => {
+            document.getElementById('sessionHeading').textContent = 'Administrator session required';
+            document.getElementById('sessionMessage').textContent = error.message || 'Enter cbtadmin1 in the CBT Admin password box to open this dashboard.';
+            document.getElementById('returnToAdmin').hidden = false;
+        });
+    </script>
+</body>
+</html>

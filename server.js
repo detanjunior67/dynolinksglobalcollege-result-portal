@@ -32,6 +32,10 @@ const PAGE_ACCESS_SECRET = process.env.PAGE_ACCESS_SECRET || process.env.ADMIN_P
 const PAGE_ACCESS_TTL_SECONDS = 60 * 15;
 const TEACHER_PAGE_PASSWORD = process.env.TEACHER_PAGE_PASSWORD || 'checkme';
 const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
+const CBT_AUDIT_ADMIN_PASSWORD = process.env.CBT_AUDIT_ADMIN_PASSWORD || 'cbtadmin1';
+const CBT_AUDIT_SESSION_COOKIE = 'dgc_cbt_audit';
+const CBT_AUDIT_SESSION_TTL_SECONDS = 60 * 60 * 2;
+const CBT_AUDIT_SESSION_SECRET = process.env.CBT_AUDIT_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const protectedPageAccess = {
     '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
     '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] },
@@ -468,11 +472,31 @@ function parseDeviceInfo(userAgent = '', clientDeviceName = '', clientDeviceInfo
 
 app.post('/api/admin/login', async (req, res) => {
     const { password, surface = 'portal', deviceName = 'Unknown device', deviceInfo = {} } = req.body || {};
+    const teacherName = surface === 'cbt'
+        ? String(req.body?.teacherName || '').trim().replace(/\s+/g, ' ').slice(0, 100)
+        : '';
+    const teacherNameHtml = teacherName.replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[character]));
     const expectedPassword = surface === 'cbt'
         ? (process.env.CBT_ADMIN_PASSWORD || 'cbtadmin')
         : (process.env.ADMIN_PASSWORD || 'adminDGC');
 
     if (!password || password !== expectedPassword) {
+        if (surface === 'cbt') {
+            const attemptedName = String(req.body?.teacherName || '').trim().replace(/\s+/g, ' ').slice(0, 100) || 'Unknown teacher';
+            const device = parseDeviceInfo(req.get('user-agent'), deviceName, deviceInfo, req.headers);
+            void CbtAdminActivity.create({
+                teacherName: attemptedName,
+                action: 'cbt_login_failed',
+                details: { reason: 'Invalid CBT administrator password.' },
+                detailsSearch: 'invalid cbt administrator password',
+                ipAddress: req.ip || '',
+                userAgent: String(req.get('user-agent') || '').slice(0, 500),
+                deviceInfo: device,
+                occurredAt: new Date()
+            }).catch(err => console.error('Failed CBT admin login could not be recorded:', err.message));
+        }
         return res.status(401).json({ success: false, message: 'Invalid Administrator Password!' });
     }
 
@@ -481,7 +505,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     sendEmail({
         to: process.env.EMAIL_USER || 'infodynolinks@gmail.com',
-        subject: `Admin Login: ${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'} (${detectedDevice.exactModel})`,
+        subject: `Admin Login: ${surface === 'cbt' ? `CBT Management Portal - ${teacherName || 'Teacher name unavailable'}` : 'Result Portal'} (${detectedDevice.exactModel})`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                 <div style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 22px 20px; color: #ffffff; text-align: center;">
@@ -500,6 +524,12 @@ app.post('/api/admin/login', async (req, res) => {
                             <td style="padding: 8px 0; color: #64748b; width: 38%;"><strong>Portal:</strong></td>
                             <td style="padding: 8px 0; font-weight: 700; color: #0f172a;">${surface === 'cbt' ? 'CBT Management Portal' : 'Result Portal'}</td>
                         </tr>
+                        ${surface === 'cbt' ? `
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;"><strong>Teacher:</strong></td>
+                            <td style="padding: 8px 0; font-weight: 800; color: #0f172a;">${teacherNameHtml || 'Name unavailable'}</td>
+                        </tr>
+                        ` : ''}
                         <tr>
                             <td style="padding: 8px 0; color: #64748b;"><strong>Exact Phone / Device:</strong></td>
                             <td style="padding: 8px 0; font-weight: 800; color: #0284c7; font-size: 14px;">${detectedDevice.exactModel}</td>
@@ -727,6 +757,487 @@ const CbtConfigSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const CbtConfig = mongoose.model('CbtConfig', CbtConfigSchema);
+
+const CbtAdminTeacherSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true, maxlength: 100 },
+    normalizedName: { type: String, required: true, unique: true },
+    identityTokenHash: { type: String, required: true, unique: true },
+    lastLoginAt: { type: Date, default: null }
+}, { timestamps: true });
+
+const CbtAdminTeacher = mongoose.model('CbtAdminTeacher', CbtAdminTeacherSchema);
+
+const CbtAdminActivitySchema = new mongoose.Schema({
+    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'CbtAdminTeacher', default: null },
+    teacherName: { type: String, required: true, trim: true },
+    action: { type: String, required: true, trim: true, maxlength: 80 },
+    details: { type: mongoose.Schema.Types.Mixed, default: {} },
+    detailsSearch: { type: String, default: '' },
+    ipAddress: { type: String, default: '' },
+    userAgent: { type: String, default: '' },
+    deviceInfo: { type: mongoose.Schema.Types.Mixed, default: {} },
+    actorName: { type: String, default: '' },
+    notes: [{
+        text: { type: String, required: true, maxlength: 1000 },
+        adminName: { type: String, default: 'Secret administrator' },
+        createdAt: { type: Date, default: Date.now }
+    }],
+    occurredAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+CbtAdminActivitySchema.index({ occurredAt: -1 });
+CbtAdminActivitySchema.index({ teacherId: 1, occurredAt: -1 });
+CbtAdminActivitySchema.index({ action: 1, occurredAt: -1 });
+CbtAdminActivitySchema.index({ detailsSearch: 'text', teacherName: 'text', action: 'text' });
+const CbtAdminActivity = mongoose.model('CbtAdminActivity', CbtAdminActivitySchema);
+
+const CbtAuditReportScheduleSchema = new mongoose.Schema({
+    key: { type: String, unique: true, default: 'default' },
+    recipient: { type: String, required: true, trim: true },
+    cadence: { type: String, enum: ['daily', 'weekly'], required: true },
+    hourUtc: { type: Number, min: 0, max: 23, default: 8 },
+    weekdayUtc: { type: Number, min: 0, max: 6, default: 1 },
+    enabled: { type: Boolean, default: true },
+    nextSendAt: { type: Date, required: true },
+    lastSentAt: { type: Date, default: null },
+    lastError: { type: String, default: '' }
+}, { timestamps: true });
+
+const CbtAuditReportSchedule = mongoose.model('CbtAuditReportSchedule', CbtAuditReportScheduleSchema);
+
+async function requireCbtAdminTeacher(req, res, next) {
+    const token = String(req.get('x-cbt-teacher-token') || '').trim();
+    if (!token) return res.status(401).json({ success: false, message: 'Register a teacher name before using the CBT admin console.' });
+
+    try {
+        const identityTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const teacher = await CbtAdminTeacher.findOne({ identityTokenHash });
+        if (!teacher) return res.status(401).json({ success: false, message: 'This teacher registration is no longer active.' });
+        req.cbtAdminTeacher = teacher;
+        next();
+    } catch (err) {
+        console.error('CBT admin teacher identity check failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not verify the teacher registration.' });
+    }
+}
+
+function isValidCbtAuditPassword(password) {
+    const expected = String(CBT_AUDIT_ADMIN_PASSWORD);
+    const suppliedBuffer = Buffer.from(String(password || ''));
+    const expectedBuffer = Buffer.from(expected);
+    return suppliedBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(suppliedBuffer, expectedBuffer);
+}
+
+function createCbtAuditSessionToken() {
+    const payload = Buffer.from(JSON.stringify({ expiresAt: Date.now() + CBT_AUDIT_SESSION_TTL_SECONDS * 1000 })).toString('base64url');
+    const signature = crypto.createHmac('sha256', CBT_AUDIT_SESSION_SECRET).update(payload).digest('base64url');
+    return `${payload}.${signature}`;
+}
+
+function hasValidCbtAuditSession(req) {
+    const cookie = String(req.headers.cookie || '').split(';').map(part => part.trim())
+        .find(part => part.startsWith(`${CBT_AUDIT_SESSION_COOKIE}=`));
+    const token = cookie?.slice(CBT_AUDIT_SESSION_COOKIE.length + 1) || '';
+    const [payload, signature] = token.split('.');
+    if (!payload || !signature) return false;
+    const expectedSignature = crypto.createHmac('sha256', CBT_AUDIT_SESSION_SECRET).update(payload).digest('base64url');
+    const suppliedBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (suppliedBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(suppliedBuffer, expectedBuffer)) return false;
+    try {
+        const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return Number(session.expiresAt) > Date.now();
+    } catch (_) {
+        return false;
+    }
+}
+
+function requireCbtAuditAdmin(req, res, next) {
+    if (!hasValidCbtAuditSession(req)) {
+        return res.status(401).json({ success: false, message: 'CBT audit session expired. Enter the secret password in the CBT admin login box.' });
+    }
+    next();
+}
+
+function getCbtAuditRequestMetadata(req) {
+    return {
+        ipAddress: String(req.ip || '').slice(0, 100),
+        userAgent: String(req.get('user-agent') || '').slice(0, 500),
+        deviceInfo: parseDeviceInfo(req.get('user-agent'), '', {}, req.headers)
+    };
+}
+
+function escapeAuditRegex(value) {
+    return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildCbtAuditActivityFilter(query = {}) {
+    const filter = {};
+    const teacherName = String(query.teacher || '').trim().slice(0, 100);
+    const action = String(query.action || '').trim().slice(0, 80);
+    const search = String(query.search || '').trim().slice(0, 100);
+    const from = String(query.from || '').trim();
+    const to = String(query.to || '').trim();
+    if (teacherName) filter.teacherName = teacherName;
+    if (action) filter.action = action;
+
+    const occurredAt = {};
+    if (/^\d{4}-\d{2}-\d{2}$/.test(from)) occurredAt.$gte = new Date(`${from}T00:00:00.000Z`);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+        const exclusiveEnd = new Date(`${to}T00:00:00.000Z`);
+        exclusiveEnd.setUTCDate(exclusiveEnd.getUTCDate() + 1);
+        occurredAt.$lt = exclusiveEnd;
+    }
+    if (Object.keys(occurredAt).length) filter.occurredAt = occurredAt;
+    if (search) {
+        const expression = new RegExp(escapeAuditRegex(search), 'i');
+        filter.$or = [
+            { teacherName: expression },
+            { action: expression },
+            { detailsSearch: expression },
+            { 'details.classKey': expression },
+            { 'details.subjectId': expression },
+            { 'details.topic': expression },
+            { 'details.studentId': expression }
+        ];
+    }
+    return filter;
+}
+
+function getNextCbtAuditReportTime(cadence, hourUtc, weekdayUtc, after = new Date()) {
+    const next = new Date(after);
+    next.setUTCHours(hourUtc, 0, 0, 0);
+    if (next <= after) next.setUTCDate(next.getUTCDate() + 1);
+    if (cadence === 'weekly') {
+        const daysUntil = (weekdayUtc - next.getUTCDay() + 7) % 7;
+        next.setUTCDate(next.getUTCDate() + daysUntil);
+        if (next <= after) next.setUTCDate(next.getUTCDate() + 7);
+    }
+    return next;
+}
+
+function escapeAuditHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[character]));
+}
+
+function setCbtAuditSessionCookie(req, res) {
+    const secure = req.secure || req.get('x-forwarded-proto') === 'https' ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `${CBT_AUDIT_SESSION_COOKIE}=${createCbtAuditSessionToken()}; Max-Age=${CBT_AUDIT_SESSION_TTL_SECONDS}; Path=/api/cbt-admin/audit; HttpOnly; SameSite=Strict${secure}`);
+}
+
+function verifyCbtAuditLogin(req, res, next) {
+    const password = String(req.get('x-cbt-audit-password') || req.body?.password || '');
+    if (!isValidCbtAuditPassword(password)) {
+        return res.status(401).json({ success: false, message: 'Invalid secret administrator password.' });
+    }
+    next();
+}
+
+app.post('/api/cbt-admin/teachers', async (req, res) => {
+    const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
+    if (name.length < 3 || name.length > 100) {
+        return res.status(400).json({ success: false, message: 'Enter a teacher name between 3 and 100 characters.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    try {
+        const teacher = await CbtAdminTeacher.create({
+            name,
+            normalizedName: name.toLowerCase(),
+            identityTokenHash: crypto.createHash('sha256').update(token).digest('hex')
+        });
+        const metadata = getCbtAuditRequestMetadata(req);
+        await CbtAdminActivity.create({
+            teacherId: teacher._id,
+            teacherName: teacher.name,
+            action: 'teacher_registered',
+            details: { source: 'CBT admin registration' },
+            detailsSearch: 'teacher registered cbt admin registration',
+            ...metadata
+        });
+        res.status(201).json({ success: true, teacher: { id: teacher.id, name: teacher.name }, token });
+    } catch (err) {
+        if (err.code === 11000) return res.status(409).json({ success: false, message: 'That teacher name is already registered. Contact the secret administrator if it needs to be reset.' });
+        console.error('CBT admin teacher registration failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save the teacher name.' });
+    }
+});
+
+app.get('/api/cbt-admin/identity', requireCbtAdminTeacher, (req, res) => {
+    res.json({ success: true, teacher: { id: req.cbtAdminTeacher.id, name: req.cbtAdminTeacher.name } });
+});
+
+app.post('/api/cbt-admin/activity', requireCbtAdminTeacher, async (req, res) => {
+    const action = String(req.body?.action || '').trim().slice(0, 80);
+    if (!/^[a-z0-9_-]+$/i.test(action)) return res.status(400).json({ success: false, message: 'A valid activity name is required.' });
+
+    const rawDetails = req.body?.details && typeof req.body.details === 'object' && !Array.isArray(req.body.details)
+        ? req.body.details
+        : {};
+    const details = Object.fromEntries(Object.entries(rawDetails).slice(0, 10).map(([key, value]) => [
+        String(key).slice(0, 40),
+        (typeof value === 'string' ? value : (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value ?? ''))).slice(0, 1400)
+    ]));
+
+    try {
+        const occurredAt = new Date();
+        const metadata = getCbtAuditRequestMetadata(req);
+        await CbtAdminActivity.create({
+            teacherId: req.cbtAdminTeacher._id,
+            teacherName: req.cbtAdminTeacher.name,
+            action,
+            details,
+            detailsSearch: Object.entries(details).map(([key, value]) => `${key} ${value}`).join(' ').slice(0, 10000),
+            ...metadata,
+            occurredAt
+        });
+        if (action === 'admin_login') {
+            req.cbtAdminTeacher.lastLoginAt = occurredAt;
+            await req.cbtAdminTeacher.save();
+        }
+        res.status(201).json({ success: true });
+    } catch (err) {
+        console.error('CBT admin activity save failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save the activity.' });
+    }
+});
+
+app.post('/api/cbt-admin/audit/login', verifyCbtAuditLogin, (req, res) => {
+    setCbtAuditSessionCookie(req, res);
+    res.json({ success: true });
+});
+
+app.post('/api/cbt-admin/audit/logout', requireCbtAuditAdmin, (req, res) => {
+    res.setHeader('Set-Cookie', `${CBT_AUDIT_SESSION_COOKIE}=; Max-Age=0; Path=/api/cbt-admin/audit; HttpOnly; SameSite=Strict${req.secure || req.get('x-forwarded-proto') === 'https' ? '; Secure' : ''}`);
+    res.json({ success: true });
+});
+
+app.get('/api/cbt-admin/audit', requireCbtAuditAdmin, async (req, res) => {
+    try {
+        const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+        const pageSize = Math.min(100, Math.max(10, Number.parseInt(req.query.pageSize, 10) || 40));
+        const activityFilter = buildCbtAuditActivityFilter(req.query);
+        const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const last14Days = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+        const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const lastHour = new Date(Date.now() - 60 * 60 * 1000);
+        const questionActions = ['question_boxes_opened', 'questions_generated', 'questions_saved', 'question_updated', 'question_deleted', 'question_bank_cleared'];
+        const [teachers, activities, total, teacherCount, eventsLast24Hours, questionActivity, activityByDay, actionBreakdown, teacherActivity, failedLogins, bulkChanges, reportSchedule] = await Promise.all([
+            CbtAdminTeacher.find({}).select('name createdAt lastLoginAt').sort({ createdAt: -1 }).lean(),
+            CbtAdminActivity.find(activityFilter).sort({ occurredAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
+            CbtAdminActivity.countDocuments(activityFilter),
+            CbtAdminTeacher.countDocuments({}),
+            CbtAdminActivity.countDocuments({ occurredAt: { $gte: last24Hours } }),
+            CbtAdminActivity.countDocuments({ action: { $in: questionActions } }),
+            CbtAdminActivity.aggregate([
+                { $match: { occurredAt: { $gte: last14Days } } },
+                { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$occurredAt' } }, count: { $sum: 1 } } },
+                { $sort: { _id: 1 } }
+            ]),
+            CbtAdminActivity.aggregate([
+                { $match: { occurredAt: { $gte: last30Days } } },
+                { $group: { _id: '$action', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 12 }
+            ]),
+            CbtAdminActivity.aggregate([
+                { $match: { occurredAt: { $gte: last30Days }, teacherName: { $ne: 'Unknown teacher' } } },
+                { $group: { _id: '$teacherName', count: { $sum: 1 }, latestAt: { $max: '$occurredAt' }, failedLogins: { $sum: { $cond: [{ $eq: ['$action', 'cbt_login_failed'] }, 1, 0] } } } },
+                { $sort: { count: -1 } },
+                { $limit: 20 }
+            ]),
+            CbtAdminActivity.aggregate([
+                { $match: { action: 'cbt_login_failed', occurredAt: { $gte: lastHour } } },
+                { $group: { _id: '$ipAddress', count: { $sum: 1 }, latestAt: { $max: '$occurredAt' }, teacherNames: { $addToSet: '$teacherName' } } },
+                { $match: { count: { $gte: 3 } } },
+                { $sort: { count: -1 } },
+                { $limit: 20 }
+            ]),
+            CbtAdminActivity.aggregate([
+                { $match: { occurredAt: { $gte: last24Hours }, action: { $in: ['roster_bulk_imported', 'roster_csv_imported', 'bulk_result_visibility_changed', 'questions_saved', 'question_bank_cleared', 'cbt_login_failed'] } } },
+                { $sort: { occurredAt: -1 } },
+                { $limit: 20 },
+                { $project: { _id: 1, action: 1, teacherName: 1, details: 1, ipAddress: 1, occurredAt: 1 } }
+            ]),
+            CbtAuditReportSchedule.findOne({ key: 'default' }).select('recipient cadence hourUtc weekdayUtc enabled nextSendAt lastSentAt lastError').lean()
+        ]);
+        const alerts = [
+            ...failedLogins.map(group => ({
+                severity: 'critical',
+                type: 'repeated_login_failures',
+                title: `${group.count} failed logins from ${group._id || 'unknown IP'}`,
+                detail: (group.teacherNames || []).slice(0, 3).join(', '),
+                occurredAt: group.latestAt,
+                ipAddress: group._id || ''
+            })),
+            ...bulkChanges.filter(event => event.action !== 'cbt_login_failed').map(event => ({
+                severity: ['question_bank_cleared', 'bulk_result_visibility_changed'].includes(event.action) ? 'high' : 'notice',
+                type: event.action,
+                title: event.action.replace(/[_-]+/g, ' '),
+                detail: `${event.teacherName}: ${JSON.stringify(event.details || {})}`,
+                occurredAt: event.occurredAt,
+                ipAddress: event.ipAddress || ''
+            }))
+        ];
+        res.json({
+            success: true,
+            teachers: teachers.map(teacher => ({ id: teacher._id, name: teacher.name, registeredAt: teacher.createdAt, lastLoginAt: teacher.lastLoginAt })),
+            activities,
+            pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
+            summary: { teacherCount, eventsLast24Hours, questionActivity },
+            analytics: {
+                activityByDay: activityByDay.map(item => ({ date: item._id, count: item.count })),
+                actionBreakdown: actionBreakdown.map(item => ({ action: item._id, count: item.count })),
+                teacherActivity: teacherActivity.map(item => ({ name: item._id, count: item.count, latestAt: item.latestAt, failedLogins: item.failedLogins }))
+            },
+            alerts,
+            reportSchedule: reportSchedule || null
+        });
+    } catch (err) {
+        console.error('CBT admin audit load failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not load CBT admin audit data.' });
+    }
+});
+
+app.get('/api/cbt-admin/audit/export', requireCbtAuditAdmin, async (req, res) => {
+    try {
+        const filter = buildCbtAuditActivityFilter(req.query);
+        const activities = await CbtAdminActivity.find(filter).sort({ occurredAt: -1 }).limit(10000).lean();
+        const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+        const rows = [['Timestamp', 'Teacher', 'Action', 'Details', 'IP Address', 'Device', 'Administrator Notes']];
+        activities.forEach(activity => rows.push([
+            activity.occurredAt?.toISOString?.() || '',
+            activity.teacherName,
+            activity.action,
+            JSON.stringify(activity.details || {}),
+            activity.ipAddress || '',
+            activity.deviceInfo?.exactModel || activity.deviceInfo?.deviceType || '',
+            (activity.notes || []).map(note => `${note.adminName}: ${note.text}`).join(' | ')
+        ]));
+        const csv = '\uFEFF' + rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="cbt-audit-${new Date().toISOString().slice(0, 10)}.csv"`);
+        res.send(csv);
+    } catch (err) {
+        console.error('CBT audit export failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not export CBT audit activity.' });
+    }
+});
+
+app.post('/api/cbt-admin/audit/activities/:id/notes', requireCbtAuditAdmin, async (req, res) => {
+    const text = String(req.body?.text || '').trim().slice(0, 1000);
+    if (!text) return res.status(400).json({ success: false, message: 'Enter a note before saving.' });
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid activity record.' });
+    try {
+        const metadata = getCbtAuditRequestMetadata(req);
+        const activity = await CbtAdminActivity.findByIdAndUpdate(req.params.id, {
+            $push: { notes: { text, adminName: 'Secret administrator', createdAt: new Date() } }
+        }, { new: true }).lean();
+        if (!activity) return res.status(404).json({ success: false, message: 'Activity record not found.' });
+        await CbtAdminActivity.create({
+            teacherName: activity.teacherName,
+            action: 'audit_note_added',
+            actorName: 'Secret administrator',
+            details: { activityId: activity._id, notedAction: activity.action },
+            detailsSearch: `note added ${activity.teacherName} ${activity.action}`,
+            ...metadata
+        });
+        res.json({ success: true, notes: activity.notes });
+    } catch (err) {
+        console.error('CBT audit note save failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save the audit note.' });
+    }
+});
+
+app.get('/api/cbt-admin/audit/report-schedule', requireCbtAuditAdmin, async (req, res) => {
+    const schedule = await CbtAuditReportSchedule.findOne({ key: 'default' })
+        .select('recipient cadence hourUtc weekdayUtc enabled nextSendAt lastSentAt lastError').lean();
+    res.json({ success: true, schedule: schedule || null });
+});
+
+app.put('/api/cbt-admin/audit/report-schedule', requireCbtAuditAdmin, async (req, res) => {
+    const recipient = String(req.body?.recipient || '').trim().toLowerCase();
+    const cadence = String(req.body?.cadence || 'daily');
+    const hourUtc = Number.parseInt(req.body?.hourUtc, 10);
+    const weekdayUtc = Number.parseInt(req.body?.weekdayUtc, 10);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) return res.status(400).json({ success: false, message: 'Enter a valid report recipient email.' });
+    if (!['daily', 'weekly'].includes(cadence)) return res.status(400).json({ success: false, message: 'Choose a daily or weekly report.' });
+    if (!Number.isInteger(hourUtc) || hourUtc < 0 || hourUtc > 23) return res.status(400).json({ success: false, message: 'Choose a valid UTC delivery hour.' });
+    if (!Number.isInteger(weekdayUtc) || weekdayUtc < 0 || weekdayUtc > 6) return res.status(400).json({ success: false, message: 'Choose a valid weekly delivery day.' });
+    try {
+        const schedule = await CbtAuditReportSchedule.findOneAndUpdate({ key: 'default' }, {
+            $set: {
+                recipient,
+                cadence,
+                hourUtc,
+                weekdayUtc,
+                enabled: req.body?.enabled !== false,
+                nextSendAt: getNextCbtAuditReportTime(cadence, hourUtc, weekdayUtc),
+                lastError: ''
+            }
+        }, { new: true, upsert: true, runValidators: true }).select('recipient cadence hourUtc weekdayUtc enabled nextSendAt lastSentAt lastError').lean();
+        res.json({ success: true, schedule });
+    } catch (err) {
+        console.error('CBT audit report schedule save failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not save the audit email schedule.' });
+    }
+});
+
+app.delete('/api/cbt-admin/audit/report-schedule', requireCbtAuditAdmin, async (req, res) => {
+    await CbtAuditReportSchedule.deleteOne({ key: 'default' });
+    res.json({ success: true });
+});
+
+app.delete('/api/cbt-admin/audit/teachers/:id', requireCbtAuditAdmin, async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid teacher record.' });
+    try {
+        const teacher = await CbtAdminTeacher.findByIdAndDelete(req.params.id);
+        if (!teacher) return res.status(404).json({ success: false, message: 'Teacher registration not found.' });
+        const metadata = getCbtAuditRequestMetadata(req);
+        await CbtAdminActivity.create({
+            teacherName: teacher.name,
+            action: 'teacher_registration_removed',
+            actorName: 'Secret administrator',
+            details: { targetTeacherId: String(teacher._id), targetTeacherName: teacher.name },
+            detailsSearch: `teacher registration removed ${teacher.name}`,
+            ...metadata
+        });
+        res.json({ success: true, message: 'Teacher registration removed. Existing activity history was retained.' });
+    } catch (err) {
+        console.error('CBT admin teacher removal failed:', err.message);
+        res.status(500).json({ success: false, message: 'Could not remove the teacher registration.' });
+    }
+});
+
+async function sendDueCbtAuditReports() {
+    const now = new Date();
+    const schedules = await CbtAuditReportSchedule.find({ enabled: true, nextSendAt: { $lte: now } }).lean();
+    for (const schedule of schedules) {
+        const nextSendAt = getNextCbtAuditReportTime(schedule.cadence, schedule.hourUtc, schedule.weekdayUtc, now);
+        await CbtAuditReportSchedule.updateOne({ _id: schedule._id }, { $set: { nextSendAt, lastError: '' } });
+        const rangeStart = schedule.lastSentAt || new Date(now.getTime() - (schedule.cadence === 'weekly' ? 7 : 1) * 24 * 60 * 60 * 1000);
+        try {
+            const [events, eventCount, teacherCount, failures] = await Promise.all([
+                CbtAdminActivity.find({ occurredAt: { $gte: rangeStart, $lte: now } }).sort({ occurredAt: -1 }).limit(100).lean(),
+                CbtAdminActivity.countDocuments({ occurredAt: { $gte: rangeStart, $lte: now } }),
+                CbtAdminTeacher.countDocuments({}),
+                CbtAdminActivity.countDocuments({ action: 'cbt_login_failed', occurredAt: { $gte: rangeStart, $lte: now } })
+            ]);
+            const rows = events.map(event => `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0">${escapeAuditHtml(event.occurredAt?.toLocaleString?.() || '')}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0">${escapeAuditHtml(event.teacherName)}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0">${escapeAuditHtml(event.action.replace(/[_-]+/g, ' '))}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0">${escapeAuditHtml(event.ipAddress || 'Unavailable')}</td></tr>`).join('');
+            await sendEmail({
+                to: schedule.recipient,
+                subject: `CBT Audit ${schedule.cadence === 'weekly' ? 'Weekly' : 'Daily'} Report - ${now.toISOString().slice(0, 10)}`,
+                html: `<div style="font-family:Arial,sans-serif;max-width:760px;margin:auto;color:#18352f"><h2>Dynolinks Global College CBT Audit</h2><p>Period: ${escapeAuditHtml(rangeStart.toLocaleString())} to ${escapeAuditHtml(now.toLocaleString())}</p><p><strong>${eventCount}</strong> recorded events · <strong>${teacherCount}</strong> registered teachers · <strong>${failures}</strong> failed CBT admin logins</p><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th style="padding:8px;background:#eef3eb">Time</th><th style="padding:8px;background:#eef3eb">Teacher</th><th style="padding:8px;background:#eef3eb">Activity</th><th style="padding:8px;background:#eef3eb">IP</th></tr></thead><tbody>${rows || '<tr><td colspan="4" style="padding:12px">No activity was recorded during this period.</td></tr>'}</tbody></table><p>Up to 100 latest events are shown. Sign in to the CBT Audit Dashboard for the full searchable log.</p></div>`
+            });
+            await CbtAuditReportSchedule.updateOne({ _id: schedule._id }, { $set: { lastSentAt: now, lastError: '' } });
+        } catch (err) {
+            console.error('Scheduled CBT audit report failed:', err.message);
+            await CbtAuditReportSchedule.updateOne({ _id: schedule._id }, { $set: { lastError: String(err.message || 'Email delivery failed').slice(0, 500) } });
+        }
+    }
+}
 
 const TeacherSettingsSchema = new mongoose.Schema({
     key: { type: String, unique: true, default: 'default' },
@@ -3910,6 +4421,10 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
     try {
         await ensureMongoReady();
+        void sendDueCbtAuditReports().catch(err => console.error('CBT audit report scheduler startup check failed:', err.message));
+        setInterval(() => {
+            void sendDueCbtAuditReports().catch(err => console.error('CBT audit report scheduler failed:', err.message));
+        }, 60 * 1000).unref();
         app.listen(PORT, () => {
             console.log(`Dynolinks Portal Server running on port ${PORT}`);
         });

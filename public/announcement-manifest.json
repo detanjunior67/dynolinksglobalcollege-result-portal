@@ -1,0 +1,25 @@
+{
+  "id": "/announcement-admin.html",
+  "name": "DGC Announcements",
+  "short_name": "Announcements",
+  "start_url": "/announcement-admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f8f7",
+  "theme_color": "#163b3d",
+  "description": "Announcements for Dynolinks Global College",
+  "icons": [
+    {
+      "src": "/logo-transparent.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-transparent.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
