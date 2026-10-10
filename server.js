@@ -32,6 +32,9 @@ const PAGE_ACCESS_SECRET = process.env.PAGE_ACCESS_SECRET || process.env.ADMIN_P
 const PAGE_ACCESS_TTL_SECONDS = 60 * 15;
 const TEACHER_PAGE_PASSWORD = process.env.TEACHER_PAGE_PASSWORD || 'checkme';
 const TEACHER_ADMIN_PASSWORD = process.env.TEACHER_ADMIN_PASSWORD || 'admincheck';
+const CBT_STUDENT_ADMIN_OVERRIDE_PASSWORD = process.env.CBT_STUDENT_ADMIN_OVERRIDE_PASSWORD || 'admin';
+const STUDENT_PROFILE_PASSWORD = process.env.STUDENT_PROFILE_PASSWORD || 'profile';
+const STUDENT_PROFILE_ADMIN_PASSWORD = process.env.STUDENT_PROFILE_ADMIN_PASSWORD || 'adminprofile';
 const CBT_AUDIT_ADMIN_PASSWORD = process.env.CBT_AUDIT_ADMIN_PASSWORD || 'cbtadmin1';
 const CBT_AUDIT_SESSION_COOKIE = 'dgc_cbt_audit';
 const CBT_AUDIT_SESSION_TTL_SECONDS = 60 * 60 * 2;
@@ -39,7 +42,16 @@ const CBT_AUDIT_SESSION_SECRET = process.env.CBT_AUDIT_SESSION_SECRET || crypto.
 const protectedPageAccess = {
     '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
     '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] },
-    '/announcement-admin.html': { scope: 'announcement-admin', passwords: [process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce', TEACHER_ADMIN_PASSWORD] }
+    '/announcement-admin.html': { scope: 'announcement-admin', passwords: [process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce', TEACHER_ADMIN_PASSWORD] },
+    '/student-profile.html': { scope: 'student-profile', passwords: [STUDENT_PROFILE_PASSWORD] },
+    '/student-profile-admin.html': { scope: 'student-profile-admin', passwords: [STUDENT_PROFILE_ADMIN_PASSWORD] }
+};
+
+const requireStudentProfileAdmin = (req, res, next) => {
+    if (!hasPageAccess(req, 'student-profile-admin')) {
+        return res.status(401).json({ success: false, message: 'Admin profile access is required.' });
+    }
+    next();
 };
 
 function createPageAccessToken(scope) {
@@ -639,7 +651,7 @@ const StudentSchema = new mongoose.Schema({
     session: { type: String, default: '' },
     term: { type: String, default: '' },
     pin_code: { type: String, default: '' },
-    cbt_password: { type: String, default: '' },
+    cbt_password: { type: String, default: '', select: false },
     usage_count: { type: Number, default: 0 },
     max_usage: { type: Number, default: 3 },
     results: [{
@@ -654,6 +666,60 @@ const StudentSchema = new mongoose.Schema({
 StudentSchema.index({ student_id: 1, pin_code: 1, session: 1, term: 1 });
 
 const Student = mongoose.model('Student', StudentSchema);
+
+const StudentProfileChangeRequestSchema = new mongoose.Schema({
+    studentId: { type: String, required: true, uppercase: true, trim: true },
+    studentName: { type: String, required: true, trim: true },
+    changes: {
+        full_name: { type: String, default: '' },
+        student_class: { type: String, default: '' },
+        department: { type: String, default: '' },
+        picture: { type: String, default: '' }
+    },
+    current: {
+        full_name: { type: String, default: '' },
+        student_class: { type: String, default: '' },
+        department: { type: String, default: '' },
+        picture: { type: String, default: '' }
+    },
+    passwordHash: { type: String, default: '' },
+    passwordChangeRequested: { type: Boolean, default: false },
+    reason: { type: String, default: '', maxlength: 500 },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    reviewNote: { type: String, default: '', maxlength: 500 },
+    reviewedAt: { type: Date, default: null }
+}, { timestamps: true });
+
+StudentProfileChangeRequestSchema.index({ status: 1, createdAt: -1 });
+StudentProfileChangeRequestSchema.index({ studentId: 1, createdAt: -1 });
+const StudentProfileChangeRequest = mongoose.model('StudentProfileChangeRequest', StudentProfileChangeRequestSchema);
+
+function matchesConfiguredSecret(providedValue, expectedValue) {
+    const provided = Buffer.from(String(providedValue || ''));
+    const expected = Buffer.from(String(expectedValue || ''));
+    return expected.length > 0 && provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+}
+
+function hashCbtPassword(password) {
+    const salt = crypto.randomBytes(16);
+    const hash = crypto.scryptSync(String(password), salt, 64);
+    return `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
+}
+
+function verifyCbtPassword(savedPassword, providedPassword) {
+    const saved = String(savedPassword || '');
+    const provided = String(providedPassword || '');
+    if (!saved.startsWith('scrypt$')) return saved.trim() === provided.trim();
+    const [, saltHex, hashHex] = saved.split('$');
+    if (!saltHex || !hashHex || !/^[a-f0-9]{32}$/i.test(saltHex) || !/^[a-f0-9]{128}$/i.test(hashHex)) return false;
+    const expected = Buffer.from(hashHex, 'hex');
+    const actual = crypto.scryptSync(provided, Buffer.from(saltHex, 'hex'), expected.length);
+    return crypto.timingSafeEqual(actual, expected);
+}
+
+function isHashedCbtPassword(password) {
+    return String(password || '').startsWith('scrypt$');
+}
 
 const STUDENT_DATA_PASSWORD = process.env.STUDENT_DATA_PASSWORD || 'studata';
 
@@ -1300,10 +1366,14 @@ const TeacherAnnouncementSchema = new mongoose.Schema({
     audienceMode: { type: String, enum: ['teachers', 'all', 'custom'], default: 'teachers' },
     targetClassKeys: { type: [String], default: [] },
     targetTeacherNames: { type: [String], default: [] },
+    isPinned: { type: Boolean, default: false },
     durationValue: { type: Number, required: true, min: 1 },
     durationUnit: { type: String, enum: ['hours', 'days', 'months'], required: true },
     expiresAt: { type: Date, required: true },
     archivedAt: { type: Date, default: null },
+    pushDeliveryStatus: { type: String, enum: ['pending', 'complete', 'disabled', 'failed'], default: 'pending' },
+    pushSentCount: { type: Number, default: 0 },
+    pushFailedCount: { type: Number, default: 0 },
     readBy: [{
         teacherName: { type: String, required: true, trim: true },
         seenAt: { type: Date, required: true }
@@ -1312,7 +1382,8 @@ const TeacherAnnouncementSchema = new mongoose.Schema({
         deviceId: { type: String, required: true, trim: true },
         classKeys: { type: [String], default: [] },
         seenAt: { type: Date, required: true }
-    }]
+    }],
+    cbtOpenedBy: { type: [String], default: [] }
 }, { timestamps: true });
 
 TeacherAnnouncementSchema.index({ expiresAt: 1 });
@@ -1775,7 +1846,7 @@ app.get('/api/admin/teacher-announcements', requireAnnouncementAdmin, async (req
             { expiresAt: { $lte: now }, archivedAt: null },
             { $set: { archivedAt: now } }
         );
-        const announcements = await TeacherAnnouncement.find().sort({ createdAt: -1 }).lean();
+        const announcements = await TeacherAnnouncement.find().sort({ isPinned: -1, createdAt: -1 }).lean();
         res.json({ success: true, announcements });
     } catch (err) {
         console.error('Load teacher announcements error:', err.message);
@@ -1838,9 +1909,16 @@ app.post('/api/admin/teacher-announcements', requireAnnouncementAdmin, async (re
         res.status(201).json({ success: true, announcement, pushDelivery });
 
         void sendTeacherAnnouncementPush(announcement).then(async delivery => {
+            await TeacherAnnouncement.updateOne({ _id: announcement._id }, { $set: {
+                pushDeliveryStatus: delivery?.configured ? 'complete' : 'disabled',
+                pushSentCount: delivery?.sent || 0,
+                pushFailedCount: delivery?.failed || 0
+            } });
             if (!delivery || !delivery.configured) return;
             console.log(`Announcement push delivery queued for ${delivery.sent} of ${Math.max(delivery.sent + delivery.failed, 0)} matching subscriptions.`);
         }).catch(err => {
+            void TeacherAnnouncement.updateOne({ _id: announcement._id }, { $set: { pushDeliveryStatus: 'failed' } })
+                .catch(updateError => console.error('Could not save announcement push status:', updateError.message));
             console.error('Teacher announcement push delivery failed in background:', err.message);
         });
     } catch (err) {
@@ -2142,7 +2220,7 @@ app.get('/api/teacher/announcements', requireTeacherAppAccess, async (req, res) 
         res.set('Cache-Control', 'no-store');
         const teacherName = String(req.query.teacherName || '').trim().replace(/\s+/g, ' ');
         if (teacherName.length < 3) return res.status(400).json({ success: false, message: 'A valid teacher name is required.' });
-        const announcements = (await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean())
+        const announcements = (await TeacherAnnouncement.find({ expiresAt: { $gt: new Date() } }).sort({ isPinned: -1, createdAt: -1 }).lean())
             .filter(announcement => announcementTargetsTeacher(announcement, teacherName));
         res.json({
             success: true,
@@ -2151,6 +2229,7 @@ app.get('/api/teacher/announcements', requireTeacherAppAccess, async (req, res) 
                 title: announcement.title,
                 message: announcement.message,
                 expiresAt: announcement.expiresAt,
+                isPinned: Boolean(announcement.isPinned),
                 seen: announcement.readBy.some(receipt => receipt.teacherName.toLowerCase() === teacherName.toLowerCase())
             }))
         });
@@ -2197,20 +2276,22 @@ app.get('/api/cbt/announcements', async (req, res) => {
                 ]
             }
             : { expiresAt: { $gt: now }, audienceMode: 'all' };
-        const active = await TeacherAnnouncement.find(activeFilter).sort({ createdAt: -1 }).lean();
+        const active = await TeacherAnnouncement.find(activeFilter).sort({ isPinned: -1, createdAt: -1 }).lean();
         const announcements = session
             ? active.filter(item => announcementTargetsCbtStudent(item, session.classKeys)).map(item => ({
                 _id: item._id,
                 title: item.title,
                 message: item.message,
                 expiresAt: item.expiresAt,
-                seen: (item.cbtReadBy || []).some(receipt => receipt.deviceId === session.deviceId)
+                isPinned: Boolean(item.isPinned),
+                seen: (item.cbtOpenedBy || []).includes(session.deviceId)
             }))
             : active.filter(item => item.audienceMode === 'all').map(item => ({
                 _id: item._id,
                 title: item.title,
                 message: item.message,
                 expiresAt: item.expiresAt,
+                isPinned: Boolean(item.isPinned),
                 seen: false
             }));
 
@@ -2233,13 +2314,17 @@ app.post('/api/cbt/announcements/:id/read', requireCbtStudentSession, async (req
         if (!announcement || !announcementTargetsCbtStudent(announcement, req.cbtStudent.classKeys)) {
             return res.status(404).json({ success: false, message: 'Announcement not found or unavailable.' });
         }
-        const alreadySeen = (announcement.cbtReadBy || []).some(receipt => receipt.deviceId === req.cbtStudent.deviceId);
+        const alreadySeen = (announcement.cbtOpenedBy || []).includes(req.cbtStudent.deviceId);
         if (!alreadySeen) {
-            announcement.cbtReadBy.push({
-                deviceId: req.cbtStudent.deviceId,
-                classKeys: req.cbtStudent.classKeys,
-                seenAt: new Date()
-            });
+            const seenAt = new Date();
+            announcement.cbtOpenedBy.push(req.cbtStudent.deviceId);
+            if (!(announcement.cbtReadBy || []).some(receipt => receipt.deviceId === req.cbtStudent.deviceId)) {
+                announcement.cbtReadBy.push({
+                    deviceId: req.cbtStudent.deviceId,
+                    classKeys: req.cbtStudent.classKeys,
+                    seenAt
+                });
+            }
             await announcement.save();
         }
         res.json({ success: true, alreadySeen });
@@ -2592,18 +2677,34 @@ app.post('/api/student/login', async (req, res) => {
             return res.status(400).json({ success: false, message: 'A valid CBT device ID is required.' });
         }
 
-        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id full_name student_class department picture status cbt_password').lean();
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id full_name student_class department picture status +cbt_password').lean();
         if (!student) {
             return res.status(404).json({ success: false, message: 'Student record not found.' });
         }
 
         const savedPassword = String(student.cbt_password || '').trim();
-        if (!savedPassword) {
+        const isAdminOverride = matchesConfiguredSecret(password, CBT_STUDENT_ADMIN_OVERRIDE_PASSWORD);
+        if (!savedPassword && !isAdminOverride) {
             return res.status(401).json({ success: false, message: 'No CBT password has been set for this student yet.' });
         }
 
-        if (savedPassword !== password) {
+        if (!isAdminOverride && !verifyCbtPassword(savedPassword, password)) {
             return res.status(401).json({ success: false, message: 'Incorrect CBT password.' });
+        }
+        if (!isAdminOverride && !isHashedCbtPassword(savedPassword)) {
+            await Student.updateOne({ _id: student._id }, { $set: { cbt_password: hashCbtPassword(password) } });
+        }
+        if (isAdminOverride) {
+            console.warn(`CBT admin override login for student ${student.student_id} from ${req.ip || 'unknown IP'}.`);
+            void CbtAdminActivity.create({
+                teacherName: 'CBT admin override',
+                action: 'student_override_login',
+                details: { studentId: student.student_id, deviceId },
+                detailsSearch: `admin override student ${student.student_id}`,
+                ipAddress: String(req.ip || ''),
+                userAgent: String(req.headers['user-agent'] || ''),
+                occurredAt: new Date()
+            }).catch(err => console.error('Could not audit CBT admin override login:', err.message));
         }
 
         const classKey = normalizeAnnouncementClassKey(student.student_class);
@@ -2635,7 +2736,184 @@ app.post('/api/student/login', async (req, res) => {
     }
 });
 
-app.post('/api/student/department', async (req, res) => {
+app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
+        try {
+            const student = await Student.findOne(buildStudentQuery(req.cbtStudent.studentId))
+                .select('student_id full_name student_class department picture')
+                .lean();
+            if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
+            res.json({
+                success: true,
+                student: {
+                    student_id: student.student_id,
+                    full_name: student.full_name,
+                    student_class: student.student_class,
+                    department: student.department || '',
+                    picture: student.picture || ''
+                }
+            });
+        } catch (err) {
+            console.error('Load student profile error:', err.message);
+            res.status(500).json({ success: false, message: 'Could not load student profile.' });
+        }
+    });
+
+    app.get('/api/student/profile/requests', requireCbtStudentSession, async (req, res) => {
+        try {
+            const requests = await StudentProfileChangeRequest.find({ studentId: req.cbtStudent.studentId })
+                .select('-passwordHash')
+                .sort({ createdAt: -1 })
+                .lean();
+            res.json({ success: true, requests: requests.map(request => ({
+                _id: request._id,
+                changes: request.changes,
+                current: request.current,
+                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash),
+                status: request.status,
+                reason: request.reason,
+                reviewNote: request.reviewNote,
+                createdAt: request.createdAt,
+                reviewedAt: request.reviewedAt
+            })) });
+        } catch (err) {
+            console.error('Load student profile requests error:', err.message);
+            res.status(500).json({ success: false, message: 'Could not load profile requests.' });
+        }
+    });
+
+    app.post('/api/student/profile/requests', requireCbtStudentSession, async (req, res) => {
+        try {
+            const student = await Student.findOne(buildStudentQuery(req.cbtStudent.studentId))
+                .select('student_id full_name student_class department picture +cbt_password')
+                .lean();
+            if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
+
+            const input = req.body || {};
+            const changes = {};
+            if (input.full_name !== undefined) {
+                const value = String(input.full_name).trim().replace(/\s+/g, ' ');
+                if (value.length < 2 || value.length > 120) return res.status(400).json({ success: false, message: 'Enter a name between 2 and 120 characters.' });
+                if (value !== student.full_name) changes.full_name = value;
+            }
+            if (input.student_class !== undefined) {
+                const value = String(input.student_class).trim().replace(/\s+/g, ' ');
+                if (!value || value.length > 40) return res.status(400).json({ success: false, message: 'Enter a valid class.' });
+                if (value !== student.student_class) changes.student_class = value;
+            }
+            if (input.department !== undefined) {
+                const value = normalizeStudentDepartmentValue(input.department);
+                if (value.length > 60) return res.status(400).json({ success: false, message: 'Department must be 60 characters or fewer.' });
+                if (value !== normalizeStudentDepartmentValue(student.department || '')) changes.department = value;
+            }
+            if (input.picture !== undefined) {
+                const picture = String(input.picture || '').trim();
+                if (!/^data:image\/(?:png|jpeg|jpg|webp);base64,/i.test(picture) || picture.length > 6_000_000) {
+                    return res.status(400).json({ success: false, message: 'Choose a supported image smaller than 4.5 MB.' });
+                }
+                const compressedPicture = await compressStudentDataUrl(picture);
+                if (compressedPicture !== student.picture) changes.picture = compressedPicture;
+            }
+
+            let passwordHash = '';
+            if (input.newPassword !== undefined) {
+                const newPassword = String(input.newPassword).trim();
+                if (newPassword.length < 8 || newPassword.length > 128) {
+                    return res.status(400).json({ success: false, message: 'A new CBT password must be 8 to 128 characters.' });
+                }
+                if (verifyCbtPassword(student.cbt_password, newPassword)) {
+                    return res.status(400).json({ success: false, message: 'Choose a password different from your current password.' });
+                }
+                passwordHash = hashCbtPassword(newPassword);
+            }
+            if (!Object.keys(changes).length && !passwordHash) {
+                return res.status(400).json({ success: false, message: 'Enter at least one profile change.' });
+            }
+            const existingRequest = await StudentProfileChangeRequest.findOne({ studentId: student.student_id, status: 'pending' }).select('_id').lean();
+            if (existingRequest) return res.status(409).json({ success: false, message: 'You already have a request awaiting admin review.' });
+
+            const request = await StudentProfileChangeRequest.create({
+                studentId: student.student_id,
+                studentName: student.full_name,
+                changes,
+                current: {
+                    full_name: student.full_name,
+                    student_class: student.student_class,
+                    department: student.department || '',
+                    picture: student.picture || ''
+                },
+                passwordHash,
+                reason: String(input.reason || '').trim().slice(0, 500)
+            });
+            res.status(201).json({ success: true, requestId: request._id, status: request.status });
+        } catch (err) {
+            console.error('Submit student profile request error:', err.message);
+            res.status(500).json({ success: false, message: 'Could not submit profile request.' });
+        }
+    });
+
+    app.get('/api/admin/student-profile/requests', requireStudentProfileAdmin, async (req, res) => {
+        try {
+            const status = ['pending', 'approved', 'rejected'].includes(String(req.query.status || ''))
+                ? String(req.query.status)
+                : '';
+            const filter = status ? { status } : {};
+            const requests = await StudentProfileChangeRequest.find(filter)
+                .select('-passwordHash')
+                .sort({ status: 1, createdAt: -1 })
+                .limit(300)
+                .lean();
+            res.json({ success: true, requests: requests.map(request => ({
+                _id: request._id,
+                studentId: request.studentId,
+                studentName: request.studentName,
+                changes: request.changes,
+                current: request.current,
+                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash),
+                status: request.status,
+                reason: request.reason,
+                reviewNote: request.reviewNote,
+                createdAt: request.createdAt,
+                reviewedAt: request.reviewedAt
+            })) });
+        } catch (err) {
+            console.error('Load admin student profile requests error:', err.message);
+            res.status(500).json({ success: false, message: 'Could not load profile requests.' });
+        }
+    });
+
+    app.patch('/api/admin/student-profile/requests/:id', requireStudentProfileAdmin, async (req, res) => {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ success: false, message: 'Request not found.' });
+            const decision = String(req.body?.decision || '').trim();
+            const reviewNote = String(req.body?.reviewNote || '').trim().slice(0, 500);
+            if (!['approved', 'rejected'].includes(decision)) return res.status(400).json({ success: false, message: 'Choose approve or reject.' });
+            const request = await StudentProfileChangeRequest.findOne({ _id: req.params.id, status: 'pending' });
+            if (!request) return res.status(404).json({ success: false, message: 'Pending request not found.' });
+
+            if (decision === 'approved') {
+                const student = await Student.findOne(buildStudentQuery(request.studentId));
+                if (!student) return res.status(404).json({ success: false, message: 'Student record not found.' });
+                for (const field of ['full_name', 'student_class', 'department', 'picture']) {
+                    if (request.changes?.[field] !== undefined && request.changes[field] !== '') student[field] = request.changes[field];
+                }
+                if (request.passwordHash) student.cbt_password = request.passwordHash;
+                await student.save();
+            }
+
+            request.status = decision;
+            request.reviewNote = reviewNote;
+            request.reviewedAt = new Date();
+            if (request.passwordHash) request.passwordChangeRequested = true;
+            request.passwordHash = '';
+            await request.save();
+            res.json({ success: true, status: request.status });
+        } catch (err) {
+            console.error('Review student profile request error:', err.message);
+            res.status(500).json({ success: false, message: 'Could not review profile request.' });
+        }
+    });
+
+    app.post('/api/student/department', async (req, res) => {
     try {
         const studentId = String(req.body?.studentId || '').trim();
         const password = String(req.body?.password || '').trim();
@@ -2644,8 +2922,8 @@ app.post('/api/student/department', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Student ID, CBT password, and department are required.' });
         }
 
-        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id cbt_password student_class department').lean();
-        if (!student || String(student.cbt_password || '').trim() !== password) {
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id student_class department +cbt_password').lean();
+        if (!student || !verifyCbtPassword(student.cbt_password, password)) {
             return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
         }
         if (!String(student.student_class || '').toUpperCase().startsWith('SSS')) {
@@ -2689,7 +2967,7 @@ app.post('/api/admin/student-password', requireStudentDataPassword, async (req, 
 
         const updated = await Student.findOneAndUpdate(
             { _id: existingStudent._id },
-            { $set: { cbt_password: password } },
+            { $set: { cbt_password: hashCbtPassword(password) } },
             { new: true, runValidators: true }
         );
 
@@ -2712,7 +2990,7 @@ app.get('/api/admin/student-password', requireStudentDataPassword, async (req, r
             return res.status(400).json({ success: false, message: 'Student ID is required.' });
         }
 
-        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id cbt_password').lean();
+        const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id +cbt_password').lean();
         if (!student) {
             return res.status(404).json({ success: false, message: 'Student not found.' });
         }
@@ -2759,7 +3037,7 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
         const summaryOnly = String(req.query.summary || '') === '1';
         const fields = summaryOnly
             ? 'student_id full_name student_class department show_result status'
-            : 'student_id full_name student_class department picture show_result status cbt_password';
+            : 'student_id full_name student_class department picture show_result status +cbt_password';
         const requestedPage = Number.parseInt(req.query.page, 10);
         const requestedPageSize = Number.parseInt(req.query.pageSize, 10);
         const page = !summaryOnly && Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
@@ -2785,7 +3063,7 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 has_picture: Boolean(student.picture),
                 picture: summaryOnly ? '' : (student.picture || ''),
                 has_password: summaryOnly ? false : Boolean(String(student.cbt_password || '').trim()),
-                cbt_password: summaryOnly ? '' : String(student.cbt_password || '').trim(),
+                cbt_password: '',
                 show_result: student.show_result !== false,
                 status: student.status || 'Authorized'
             }));
@@ -4290,10 +4568,13 @@ app.post('/api/student/cbt-result', async (req, res) => {
         }
 
         const student = await Student.findOne(buildStudentQuery(studentId))
-            .select('student_id full_name student_class cbt_password show_result picture')
+            .select('student_id full_name student_class show_result picture +cbt_password')
             .lean();
-        if (!student || String(student.cbt_password || '').trim() !== password) {
+        if (!student || !verifyCbtPassword(student.cbt_password, password)) {
             return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
+        }
+        if (!isHashedCbtPassword(student.cbt_password)) {
+            await Student.updateOne({ _id: student._id }, { $set: { cbt_password: hashCbtPassword(password) } });
         }
         if (student.show_result === false) {
             return res.status(403).json({ success: false, resultAvailable: false, message: 'Your result is not yet available.' });
@@ -4505,5 +4786,26 @@ app.delete('/api/teacher/class-sessions/:id', requireTeacherAdmin, async (req, r
     } catch (err) {
         console.error('Delete teacher class session error:', err.message);
         res.status(500).json({ success: false, message: 'Could not delete class start record.' });
+    }
+});
+
+app.patch('/api/admin/teacher-announcements/:id/pin', requireAnnouncementAdmin, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        }
+        if (typeof req.body?.isPinned !== 'boolean') {
+            return res.status(400).json({ success: false, message: 'Choose whether to pin this announcement.' });
+        }
+        const announcement = await TeacherAnnouncement.findByIdAndUpdate(
+            req.params.id,
+            { $set: { isPinned: req.body.isPinned } },
+            { new: true }
+        );
+        if (!announcement) return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        res.json({ success: true, isPinned: announcement.isPinned });
+    } catch (err) {
+        console.error('Update announcement pin error:', err.message);
+        res.status(500).json({ success: false, message: 'Could not update announcement pin.' });
     }
 });

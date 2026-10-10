@@ -55,6 +55,7 @@
         .receipts { margin-top: 5px; }
         .tag { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; color: var(--teal-dark); background: #e6f4ef; font-size: .68rem; font-weight: 800; text-transform: uppercase; }
         .tag.expired { color: #92400e; background: #fff7ed; }
+        .tag.pinned { color: #92400e; background: #fff7ed; }
         @media (max-width: 720px) { .workspace { grid-template-columns: 1fr; } .topbar { align-items: flex-start; } .back { width: 100%; text-align: right; } }
         @media (max-width: 520px) { .shell { width: min(100% - 18px, 1040px); padding-top: 16px; } .panel { padding: 16px; } .target-list { grid-template-columns: 1fr; } .duration { grid-template-columns: 1fr; } .announcement-header { flex-direction: column; align-items: stretch; } .announcement-header > div:last-child { display: flex; justify-content: flex-end; } .brand { max-width: 100%; } .brand span { font-size: .92rem; } }
         @media (max-width: 360px) { .topbar { flex-direction: column; align-items: stretch; } .brand, .back { width: 100%; justify-content: space-between; } .button, .button.secondary { width: 100%; } }
@@ -210,6 +211,25 @@
             }
         }
 
+        async function toggleAnnouncementPin(button) {
+            const isPinned = button.dataset.pinValue === 'true';
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/admin/teacher-announcements/${encodeURIComponent(button.dataset.pinId)}/pin`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isPinned })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not update pin (${response.status}).`);
+                formStatus.textContent = isPinned ? 'Announcement pinned as urgent.' : 'Announcement unpinned.';
+                await loadAnnouncements();
+            } catch (error) {
+                formStatus.textContent = error.message || 'Could not update announcement pin.';
+                button.disabled = false;
+            }
+        }
+
         async function loadAnnouncements() {
             try {
                 const response = await fetch('/api/admin/teacher-announcements', { cache: 'no-store' });
@@ -221,11 +241,20 @@
                     const cbtReaders = (item.cbtReadBy || []).length;
                     const mode = item.audienceMode || 'teachers';
                     const targets = mode === 'all' ? 'All students and teachers' : mode === 'teachers' ? 'All teachers' : `Classes: ${(item.targetClassKeys || []).join(', ') || 'none'} · Teachers: ${(item.targetTeacherNames || []).join(', ') || 'none'}`;
+                    const pushStatus = item.pushDeliveryStatus === 'pending' ? 'Notification delivery pending'
+                        : item.pushDeliveryStatus === 'disabled' ? 'Browser notifications not configured'
+                            : item.pushDeliveryStatus === 'failed' ? 'Notification delivery failed'
+                                : item.pushDeliveryStatus === 'complete'
+                                    ? `Notifications sent to ${Number(item.pushSentCount) || 0} devices${item.pushFailedCount ? ` · ${item.pushFailedCount} failed` : ''}`
+                                    : 'Delivery count unavailable';
                     const expired = new Date(item.expiresAt) <= new Date();
-                    return `<article class="announcement"><div class="announcement-header"><div><h3>${escapeHtml(item.title || 'Announcement')}</h3><div class="meta">${escapeHtml(targets)}</div></div><div style="display:flex; align-items:center; gap:8px;"><span class="tag ${expired ? 'expired' : ''}">${expired ? 'Expired' : 'Active'}</span><button type="button" class="button secondary" data-delete-id="${escapeHtml(item._id || '')}" style="padding:8px 10px; min-height:auto; font-size:0.75rem;">Delete</button></div></div><p>${escapeHtml(item.message)}</p><div class="meta">Expires ${new Date(item.expiresAt).toLocaleString()}</div><div class="receipts">Seen by ${readers.length} teachers${readers.length ? `: ${readers.map(escapeHtml).join(', ')}` : ''} · Seen on ${cbtReaders} CBT devices</div></article>`;
+                    return `<article class="announcement"><div class="announcement-header"><div><h3>${escapeHtml(item.title || 'Announcement')}</h3><div class="meta">${escapeHtml(targets)}</div></div><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;"><span class="tag ${expired ? 'expired' : ''}">${expired ? 'Expired' : 'Active'}</span>${item.isPinned ? '<span class="tag pinned">Pinned</span>' : ''}<button type="button" class="button secondary" data-pin-id="${escapeHtml(item._id || '')}" data-pin-value="${item.isPinned ? 'false' : 'true'}" style="padding:8px 10px; min-height:auto; font-size:0.75rem;">${item.isPinned ? 'Unpin' : 'Pin urgent'}</button><button type="button" class="button secondary" data-delete-id="${escapeHtml(item._id || '')}" style="padding:8px 10px; min-height:auto; font-size:0.75rem;">Delete</button></div></div><p>${escapeHtml(item.message)}</p><div class="meta">Expires ${new Date(item.expiresAt).toLocaleString()}</div><div class="receipts">${escapeHtml(pushStatus)}</div><div class="receipts">Seen by ${readers.length} teachers${readers.length ? `: ${readers.map(escapeHtml).join(', ')}` : ''} · Seen on ${cbtReaders} CBT devices</div></article>`;
                 }).join('') : '<p class="meta">No announcements published yet.</p>';
                 announcementList.querySelectorAll('[data-delete-id]').forEach(button => {
                     button.addEventListener('click', () => deleteAnnouncement(button.dataset.deleteId));
+                });
+                announcementList.querySelectorAll('[data-pin-id]').forEach(button => {
+                    button.addEventListener('click', () => toggleAnnouncementPin(button));
                 });
             } catch (error) {
                 announcementList.innerHTML = `<p class="meta">${escapeHtml(error.message)}</p>`;
@@ -287,6 +316,13 @@
         });
 
         void Promise.all([loadRecipients(), loadAnnouncements()]);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+                    .catch(error => console.warn('Announcement app service worker registration failed:', error));
+            });
+        }
     </script>
 </body>
 </html>

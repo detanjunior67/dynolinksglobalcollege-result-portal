@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#163b3d">
+    <title>Student Profile Requests | Dynolinks Global College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --ink: #163b3d; --muted: #647a7d; --line: #d9e7e4; --teal: #0f766e; --teal-dark: #115e59; --amber: #a4530b; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; background: #f4f8f7; color: var(--ink); font-family: 'DM Sans', sans-serif; }
+        .shell { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 56px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+        .brand { color: var(--ink); font: 700 1.1rem 'Space Grotesk', sans-serif; text-decoration: none; }
+        .brand small { display: block; margin-top: 3px; color: var(--muted); font: 500 .75rem 'DM Sans', sans-serif; }
+        .back { color: var(--teal-dark); font-weight: 700; text-decoration: none; }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+        h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+        .intro { margin-bottom: 20px; }
+        .intro p { margin: 8px 0 0; color: var(--muted); }
+        .toolbar { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
+        .toolbar select, .note { min-height: 42px; padding: 9px 11px; border: 1px solid #bfd4cf; border-radius: 8px; color: var(--ink); background: white; font: inherit; }
+        .toolbar select { width: min(240px, 100%); }
+        .list { display: grid; gap: 12px; }
+        .request { padding: clamp(16px, 2.5vw, 24px); border: 1px solid var(--line); border-radius: 10px; background: white; box-shadow: 0 8px 24px rgba(17,63,70,.05); }
+        .request-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .request h2 { margin: 0; font-size: 1.05rem; }
+        .meta { margin-top: 4px; color: var(--muted); font-size: .78rem; }
+        .tag { flex: 0 0 auto; padding: 4px 9px; border-radius: 999px; color: var(--teal-dark); background: #e6f4ef; font-size: .68rem; font-weight: 800; text-transform: uppercase; }
+        .tag.pending { color: #92400e; background: #fff4df; }
+        .tag.rejected { color: #991b1b; background: #fee2e2; }
+        .changes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+        .change { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfdfb; }
+        .change strong { display: block; margin-bottom: 6px; font-size: .78rem; }
+        .before { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
+        .after { margin-top: 4px; color: var(--ink); font-size: .88rem; font-weight: 700; overflow-wrap: anywhere; }
+        .photo-pair { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .photo-pair img { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--line); border-radius: 8px; }
+        .password-note { padding: 11px 12px; border-radius: 8px; color: #70420d; background: #fff7e8; font-size: .84rem; }
+        .review-note { display: grid; gap: 6px; margin-top: 14px; color: #496467; font-size: .78rem; font-weight: 700; }
+        .note { width: 100%; resize: vertical; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .button { min-height: 40px; padding: 9px 13px; border: 0; border-radius: 8px; color: white; background: var(--teal); font: inherit; font-weight: 700; cursor: pointer; }
+        .button:hover { background: var(--teal-dark); }
+        .button.reject { color: #991b1b; background: #fee2e2; }
+        .button.reject:hover { background: #fecaca; }
+        .button:disabled { opacity: .6; cursor: wait; }
+        .status { min-height: 1.2em; color: var(--teal-dark); font-size: .85rem; font-weight: 700; }
+        .empty { padding: 22px; color: var(--muted); text-align: center; border: 1px dashed #bfd4cf; border-radius: 10px; background: rgba(255,255,255,.65); }
+        [hidden] { display: none !important; }
+        @media (max-width: 620px) { .shell { width: min(100% - 20px, 1040px); padding-top: 18px; } .topbar { align-items: flex-start; flex-wrap: wrap; } .back { margin-left: auto; } .changes { grid-template-columns: 1fr; } .request-head { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <nav class="topbar" aria-label="Profile request admin navigation">
+            <a class="brand" href="/index.html">Dynolinks Global College<small>Student profile requests</small></a>
+            <a class="back" href="/index.html">Back to home</a>
+        </nav>
+        <header class="intro"><h1>Profile change requests</h1><p>Review student profile and CBT password-change requests.</p></header>
+        <div class="toolbar">
+            <label for="requestFilter" class="meta">Show</label>
+            <select id="requestFilter"><option value="pending">Pending requests</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All requests</option></select>
+        </div>
+        <div class="status" id="pageStatus" role="status" aria-live="polite"></div>
+        <section class="list" id="requestList" aria-live="polite"><div class="empty">Loading requests...</div></section>
+    </main>
+    <script>
+        const fieldLabels = { full_name: 'Full name', student_class: 'Class', department: 'Department' };
+        const pageStatus = document.getElementById('pageStatus');
+        const requestList = document.getElementById('requestList');
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+        }
+
+        async function loadRequests() {
+            requestList.innerHTML = '<div class="empty">Loading requests...</div>';
+            try {
+                const status = document.getElementById('requestFilter').value;
+                const query = status === 'all' ? '' : `?status=${encodeURIComponent(status)}`;
+                const response = await fetch(`/api/admin/student-profile/requests${query}`, { cache: 'no-store' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not load requests (${response.status}).`);
+                requestList.innerHTML = data.requests.length ? data.requests.map(request => {
+                    const changes = Object.keys(fieldLabels).filter(field => request.changes?.[field]).map(field => `
+                        <div class="change"><strong>${fieldLabels[field]}</strong><div class="before">Current: ${escapeHtml(request.current?.[field] || 'Not set')}</div><div class="after">Requested: ${escapeHtml(request.changes[field])}</div></div>
+                    `);
+                    if (request.changes?.picture) {
+                        changes.push(`<div class="change"><strong>Profile picture</strong><div class="photo-pair">${request.current?.picture ? `<img src="${escapeHtml(request.current.picture)}" alt="Current profile photo">` : '<span class="before">No current photo</span>'}<span aria-hidden="true">&#8594;</span><img src="${escapeHtml(request.changes.picture)}" alt="Requested profile photo"></div></div>`);
+                    }
+                    const isPending = request.status === 'pending';
+                    return `<article class="request"><div class="request-head"><div><h2>${escapeHtml(request.studentName)} · ${escapeHtml(request.studentId)}</h2><div class="meta">Submitted ${escapeHtml(new Date(request.createdAt).toLocaleString())}</div></div><span class="tag ${request.status === 'pending' ? 'pending' : request.status === 'rejected' ? 'rejected' : ''}">${escapeHtml(request.status)}</span></div><div class="changes">${changes.join('') || '<div class="change">No profile field changes.</div>'}</div>${request.hasPasswordChange ? '<div class="password-note">CBT password change requested. The password value is protected and is not visible to admins.</div>' : ''}${request.reason ? `<p class="before"><strong>Student reason:</strong> ${escapeHtml(request.reason)}</p>` : ''}${request.reviewNote ? `<p class="before"><strong>Admin note:</strong> ${escapeHtml(request.reviewNote)}</p>` : ''}${isPending ? `<label class="review-note">Review note (optional)<textarea class="note" rows="2" maxlength="500" data-review-note="${escapeHtml(request._id)}" placeholder="Explain rejection or approval details"></textarea></label><div class="actions"><button class="button" type="button" data-review-id="${escapeHtml(request._id)}" data-decision="approved">Approve</button><button class="button reject" type="button" data-review-id="${escapeHtml(request._id)}" data-decision="rejected">Reject</button></div>` : ''}</article>`;
+                }).join('') : '<div class="empty">No requests in this status.</div>';
+                requestList.querySelectorAll('[data-review-id]').forEach(button => button.addEventListener('click', () => reviewRequest(button)));
+            } catch (error) {
+                requestList.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Could not load requests.')}</div>`;
+            }
+        }
+
+        async function reviewRequest(button) {
+            const requestId = button.dataset.reviewId;
+            const decision = button.dataset.decision;
+            const reviewNote = document.querySelector(`[data-review-note="${CSS.escape(requestId)}"]`)?.value.trim() || '';
+            if (decision === 'rejected' && !window.confirm('Reject this student request?')) return;
+            button.disabled = true;
+            pageStatus.textContent = 'Saving review...';
+            try {
+                const response = await fetch(`/api/admin/student-profile/requests/${encodeURIComponent(requestId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision, reviewNote })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not review request (${response.status}).`);
+                pageStatus.textContent = `Request ${decision}.`;
+                await loadRequests();
+            } catch (error) {
+                pageStatus.textContent = error.message || 'Could not save review.';
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('requestFilter').addEventListener('change', loadRequests);
+        void loadRequests();
+    </script>
+</body>
+</html>

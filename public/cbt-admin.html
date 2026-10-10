@@ -25,15 +25,9 @@
                     }
                 }
             }
-        }
+        };
     </script>
     <!-- Font Awesome Icons & Google Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <link rel="stylesheet" href="dgc-loader.css">
     <script src="device-detector.js" defer></script>
     <style>
@@ -967,7 +961,6 @@
 
                 <button id="studentAnnouncementButton" type="button" class="relative inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-800 shadow-sm transition hover:bg-blue-50" aria-label="Messages" title="Messages">
                     <i class="fa-solid fa-message text-sm sm:text-base"></i>
-                    <span id="studentAnnouncementUnreadBadgeButton" class="absolute -right-1 -top-1 hidden min-w-[1.1rem] rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">0</span>
                 </button>
 
                 <!-- Profile Badge -->
@@ -2718,57 +2711,69 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
-                if (!response.ok) {
-                    const data = await response.json().catch(() => ({}));
-                    if (response.status !== 404) console.warn('Could not mark CBT announcement as seen:', data.message || response.statusText);
-                }
+                if (response.ok) return true;
+                const data = await response.json().catch(() => ({}));
+                if (response.status !== 404) console.warn('Could not mark CBT announcement as seen:', data.message || response.statusText);
             } catch (err) {
                 console.warn('CBT announcement read tracking failed:', err);
             }
+            return false;
         }
 
-        function renderAnnouncementCards(announcements) {
+        function escapeAnnouncementHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[character]));
+        }
+
+        let activeStudentAnnouncementId = null;
+        const studentAnnouncementSeenOverrides = new Set();
+
+        function renderAnnouncementSubjects(announcements) {
             return announcements.length ? announcements.map(announcement => `
-                <div class="rounded-xl border border-blue-200 bg-white px-3 py-2 shadow-sm">
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">${announcement.title || 'Class update'}</p>
-                            <p class="mt-1 text-sm text-gray-700 leading-relaxed">${String(announcement.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>
-                        </div>
-                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-800">${announcement.seen ? 'Seen' : 'New'}</span>
-                    </div>
-                    <p class="mt-2 text-[10px] text-gray-500">Available until ${new Date(announcement.expiresAt).toLocaleString()}</p>
-                </div>
+                <button type="button" data-announcement-id="${escapeAnnouncementHtml(announcement._id)}" class="flex w-full items-center justify-between gap-3 rounded-lg border border-blue-200 bg-white px-4 py-3 text-left font-semibold text-slate-800 shadow-sm hover:bg-blue-50">
+                    <span class="min-w-0 truncate">${escapeAnnouncementHtml(announcement.title || 'Class update')}</span>
+                    <span class="flex shrink-0 items-center gap-2"><span class="text-amber-700">${announcement.isPinned ? 'Urgent' : ''}</span><span aria-hidden="true" class="text-blue-700">›</span></span>
+                </button>
             `).join('') : '<p class="text-sm text-gray-500">No class updates right now.</p>';
         }
 
-        function updateStudentAnnouncementSummary() {
+        function renderAnnouncementDetail(announcement) {
+            return `
+                <button type="button" data-announcement-back class="mb-4 text-sm font-semibold text-blue-700 hover:underline">&larr; Back to messages</button>
+                <article class="rounded-lg border border-blue-200 bg-white p-4">
+                    <h4 class="text-base font-bold text-slate-900">${escapeAnnouncementHtml(announcement.title || 'Class update')}</h4>
+                    <p class="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700">${escapeAnnouncementHtml(announcement.message || '')}</p>
+                    <p class="mt-4 text-xs text-gray-500">Available until ${escapeAnnouncementHtml(new Date(announcement.expiresAt).toLocaleString())}</p>
+                </article>
+            `;
+        }
+
+        function renderStudentAnnouncementModal() {
+            const list = document.getElementById('studentAnnouncementModalList');
+            if (!list) return;
             const announcements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
-            const unreadCount = announcements.filter(item => !item.seen).length;
-            const badge = document.getElementById('studentAnnouncementUnreadBadge');
-            const buttonBadge = document.getElementById('studentAnnouncementUnreadBadgeButton');
-            const button = document.getElementById('studentAnnouncementButton');
-            if (badge) {
-                if (unreadCount > 0) {
-                    badge.textContent = String(unreadCount);
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.textContent = '0';
-                    badge.classList.add('hidden');
-                }
-            }
-            if (buttonBadge) {
-                if (unreadCount > 0) {
-                    buttonBadge.textContent = String(unreadCount);
-                    buttonBadge.classList.remove('hidden');
-                } else {
-                    buttonBadge.textContent = '0';
-                    buttonBadge.classList.add('hidden');
-                }
-            }
-            if (button) {
-                button.title = unreadCount > 0 ? `${unreadCount} unread messages` : 'Messages';
-            }
+            const selected = announcements.find(item => String(item._id) === String(activeStudentAnnouncementId));
+            list.innerHTML = selected ? renderAnnouncementDetail(selected) : renderAnnouncementSubjects(announcements);
+        }
+
+        function openStudentAnnouncementDetail(announcementId) {
+            const announcements = Array.isArray(window.studentAnnouncementData) ? window.studentAnnouncementData : [];
+            const announcement = announcements.find(item => String(item._id) === String(announcementId));
+            if (!announcement) return;
+            activeStudentAnnouncementId = String(announcement._id);
+            renderStudentAnnouncementModal();
+            if (announcement.seen) return;
+
+            announcement.seen = true;
+            studentAnnouncementSeenOverrides.add(String(announcement._id));
+            renderStudentAnnouncementModal();
+            void markStudentAnnouncementSeen(announcement._id).then(saved => {
+                if (saved) return;
+                studentAnnouncementSeenOverrides.delete(String(announcement._id));
+                const current = (window.studentAnnouncementData || []).find(item => String(item._id) === String(announcement._id));
+                if (current) current.seen = false;
+            });
         }
 
         function openStudentAnnouncementModal() {
@@ -2780,10 +2785,17 @@
                 closeStudentAnnouncementModal();
                 return;
             }
-            list.innerHTML = renderAnnouncementCards(announcements);
+            if (modal.parentElement !== document.body) document.body.appendChild(modal);
+            activeStudentAnnouncementId = null;
+            renderStudentAnnouncementModal();
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             modal.style.display = 'flex';
+            modal.style.position = 'fixed';
+            modal.style.inset = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '10000';
             modal.style.alignItems = 'center';
             modal.style.justifyContent = 'center';
         }
@@ -2796,6 +2808,7 @@
             modal.style.display = 'none';
             modal.style.alignItems = '';
             modal.style.justifyContent = '';
+            activeStudentAnnouncementId = null;
         }
 
         let studentAnnouncementPollTimer = null;
@@ -2803,7 +2816,7 @@
         function startStudentAnnouncementPolling() {
             if (studentAnnouncementPollTimer !== null) return;
             studentAnnouncementPollTimer = window.setInterval(() => {
-                if (currentCandidate.studentId && !document.hidden) void loadStudentAnnouncements(true);
+                if (currentCandidate.studentId && !document.hidden) void loadStudentAnnouncements(false);
             }, 15000);
         }
 
@@ -2819,27 +2832,16 @@
                 }
                 if (!response.ok) throw new Error('Could not load class announcements.');
                 const data = await response.json().catch(() => ({}));
-                const announcements = Array.isArray(data.announcements) ? data.announcements : [];
+                const announcements = (Array.isArray(data.announcements) ? data.announcements : []).map(item => ({
+                    ...item,
+                    seen: item.seen || studentAnnouncementSeenOverrides.has(String(item._id))
+                }));
                 const shouldAutoOpen = autoOpenPopup && announcements.some(item => !item.seen);
                 window.studentAnnouncementData = announcements;
                 if (panel) panel.classList.remove('hidden');
-                if (list) list.innerHTML = renderAnnouncementCards(announcements);
-                updateStudentAnnouncementSummary();
-                for (const announcement of announcements.filter(item => !item.seen)) {
-                    await markStudentAnnouncementSeen(announcement._id);
-                }
-                const refreshed = await fetch(`${API_BASE_URL}/cbt/announcements`, { cache: 'no-store' });
-                if (refreshed.ok) {
-                    const refreshedData = await refreshed.json().catch(() => ({}));
-                    const refreshedAnnouncements = Array.isArray(refreshedData.announcements) ? refreshedData.announcements : [];
-                    window.studentAnnouncementData = refreshedAnnouncements;
-                    if (panel) panel.classList.remove('hidden');
-                    if (list) list.innerHTML = renderAnnouncementCards(refreshedAnnouncements);
-                    updateStudentAnnouncementSummary();
-                    if (shouldAutoOpen && refreshedAnnouncements.length > 0) {
-                        openStudentAnnouncementModal();
-                    }
-                }
+                if (list) list.innerHTML = renderAnnouncementSubjects(announcements);
+                if (shouldAutoOpen) openStudentAnnouncementModal();
+                if (modalIsOpen()) renderStudentAnnouncementModal();
             } catch (err) {
                 console.warn('CBT announcements could not be loaded:', err);
                 if (panel) panel.classList.add('hidden');
@@ -2857,6 +2859,16 @@
                 }
             }
             openStudentAnnouncementModal();
+        });
+        document.getElementById('studentAnnouncementModalList')?.addEventListener('click', event => {
+            const backButton = event.target.closest('[data-announcement-back]');
+            if (backButton) {
+                activeStudentAnnouncementId = null;
+                renderStudentAnnouncementModal();
+                return;
+            }
+            const subjectButton = event.target.closest('[data-announcement-id]');
+            if (subjectButton) openStudentAnnouncementDetail(subjectButton.dataset.announcementId);
         });
         document.getElementById('studentAnnouncementRefreshButton')?.addEventListener('click', () => { void loadStudentAnnouncements(); });
         document.getElementById('studentAnnouncementCancelButton')?.addEventListener('click', closeStudentAnnouncementModal);

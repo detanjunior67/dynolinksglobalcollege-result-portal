@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#163b3d">
+    <title>Student Profile | Dynolinks Global College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --ink: #163b3d; --muted: #647a7d; --line: #d9e7e4; --teal: #0f766e; --teal-dark: #115e59; --amber: #a4530b; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; background: #f4f8f7; color: var(--ink); font-family: 'DM Sans', sans-serif; }
+        .shell { width: min(900px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 56px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+        .brand { color: var(--ink); font: 700 1.1rem 'Space Grotesk', sans-serif; text-decoration: none; }
+        .brand small { display: block; margin-top: 3px; color: var(--muted); font: 500 .75rem 'DM Sans', sans-serif; }
+        .back { color: var(--teal-dark); font-weight: 700; text-decoration: none; }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+        h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+        .intro { margin-bottom: 20px; }
+        .intro p { margin: 8px 0 0; color: var(--muted); }
+        .panel { margin-top: 16px; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: 0 10px 28px rgba(17,63,70,.06); }
+        .panel h2 { margin: 0 0 16px; font-size: 1.15rem; }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        label { display: grid; gap: 6px; color: #496467; font-size: .82rem; font-weight: 700; }
+        input, select, textarea { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #bfd4cf; border-radius: 8px; color: var(--ink); background: #fbfdfb; font: inherit; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid rgba(15,118,110,.2); border-color: var(--teal); }
+        input[type="file"] { padding: 7px; }
+        .button { min-height: 42px; padding: 10px 15px; border: 0; border-radius: 8px; color: white; background: var(--teal); font: inherit; font-weight: 700; cursor: pointer; }
+        .button:hover { background: var(--teal-dark); }
+        .button.secondary { border: 1px solid var(--line); color: var(--teal-dark); background: white; }
+        .button:disabled { opacity: .6; cursor: wait; }
+        .wide { grid-column: 1 / -1; }
+        .photo-row { display: flex; align-items: center; gap: 14px; }
+        .photo { width: 76px; height: 76px; flex: 0 0 76px; border-radius: 10px; border: 1px solid var(--line); object-fit: cover; background: #eef5f3; }
+        .status { min-height: 1.2em; color: var(--teal-dark); font-size: .86rem; font-weight: 700; }
+        .hint { color: var(--muted); font-size: .76rem; line-height: 1.45; }
+        .request { padding: 14px 0; border-top: 1px solid var(--line); }
+        .request:first-child { border-top: 0; padding-top: 0; }
+        .request-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .request-head strong { overflow-wrap: anywhere; }
+        .tag { padding: 4px 9px; border-radius: 999px; background: #e6f4ef; color: var(--teal-dark); font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+        .tag.pending { color: #92400e; background: #fff4df; }
+        .tag.rejected { color: #991b1b; background: #fee2e2; }
+        .request p { margin: 7px 0 0; color: #465e60; font-size: .86rem; white-space: pre-wrap; }
+        [hidden] { display: none !important; }
+        @media (max-width: 600px) { .shell { width: min(100% - 20px, 900px); padding-top: 18px; } .topbar { align-items: flex-start; flex-wrap: wrap; } .back { margin-left: auto; } .grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <nav class="topbar" aria-label="Student profile navigation">
+            <a class="brand" href="/index.html">Dynolinks Global College<small>Student self-service</small></a>
+            <a class="back" href="/index.html">Back to home</a>
+        </nav>
+        <header class="intro"><h1>Student profile</h1><p>Review your details and request corrections for admin approval.</p></header>
+
+        <section class="panel" id="loginPanel" aria-labelledby="loginTitle">
+            <h2 id="loginTitle">Student sign in</h2>
+            <form id="studentLoginForm" class="grid">
+                <label>Student ID<input id="loginStudentId" autocomplete="username" required></label>
+                <label>Current CBT password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+                <div class="wide"><button class="button" id="loginButton" type="submit">Continue</button></div>
+                <div class="status wide" id="loginStatus" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <div id="profileContent" hidden>
+            <section class="panel" aria-labelledby="currentProfileTitle">
+                <h2 id="currentProfileTitle">Your current details</h2>
+                <div class="photo-row">
+                    <img class="photo" id="currentPhoto" alt="Student profile">
+                    <div><strong id="currentName"></strong><div class="hint" id="currentStudentMeta"></div></div>
+                </div>
+            </section>
+
+            <section class="panel" aria-labelledby="requestTitle">
+                <h2 id="requestTitle">Request a change</h2>
+                <form id="profileRequestForm" class="grid">
+                    <label>Full name<input id="changeName" maxlength="120" required></label>
+                    <label>Class<input id="changeClass" maxlength="40" required></label>
+                    <label>Department<input id="changeDepartment" maxlength="60" placeholder="Leave blank if not applicable"></label>
+                    <div class="wide">
+                        <label for="changePhoto">Profile picture</label>
+                        <div class="photo-row"><img class="photo" id="newPhotoPreview" alt="New profile preview" hidden><input id="changePhoto" type="file" accept="image/png,image/jpeg,image/webp"></div>
+                    </div>
+                    <label>New CBT password<input id="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Optional password change"></label>
+                    <label>Confirm new password<input id="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Re-enter new password"></label>
+                    <label class="wide">Reason for request<textarea id="requestReason" maxlength="500" rows="3" placeholder="Briefly explain the requested change"></textarea></label>
+                    <p class="hint wide">Student ID and existing profile pictures cannot be edited directly. All submitted changes require admin approval. Passwords are never shown to admins.</p>
+                    <div class="wide"><button class="button" id="submitRequestButton" type="submit">Submit for approval</button></div>
+                    <div class="status wide" id="requestStatus" role="status" aria-live="polite"></div>
+                </form>
+            </section>
+
+            <section class="panel" aria-labelledby="historyTitle">
+                <h2 id="historyTitle">Your requests</h2>
+                <div id="requestHistory" aria-live="polite">Loading requests...</div>
+            </section>
+        </div>
+    </main>
+    <script>
+        const deviceIdKey = 'dgc_student_device_id';
+        const loginPanel = document.getElementById('loginPanel');
+        const profileContent = document.getElementById('profileContent');
+        const loginStatus = document.getElementById('loginStatus');
+        const requestStatus = document.getElementById('requestStatus');
+        let currentStudent = null;
+        let selectedPhotoData = '';
+
+        function getDeviceId() {
+            let id = String(localStorage.getItem(deviceIdKey) || '').trim();
+            if (!id) {
+                id = `cbt-${crypto.getRandomValues(new Uint32Array(2)).reduce((value, part) => value + part.toString(16).padStart(8, '0'), '')}`;
+                localStorage.setItem(deviceIdKey, id);
+            }
+            return id;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+        }
+
+        async function requestJson(url, options = {}) {
+            const response = await fetch(url, { cache: 'no-store', ...options });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `Request failed (${response.status}).`);
+            return data;
+        }
+
+        async function loadProfile() {
+            const data = await requestJson('/api/student/profile');
+            currentStudent = data.student;
+            document.getElementById('currentName').textContent = currentStudent.full_name;
+            document.getElementById('currentStudentMeta').textContent = `${currentStudent.student_id} · ${currentStudent.student_class}${currentStudent.department ? ` · ${currentStudent.department}` : ''}`;
+            const photo = document.getElementById('currentPhoto');
+            if (currentStudent.picture) photo.src = currentStudent.picture;
+            else photo.hidden = true;
+            document.getElementById('changeName').value = currentStudent.full_name || '';
+            document.getElementById('changeClass').value = currentStudent.student_class || '';
+            document.getElementById('changeDepartment').value = currentStudent.department || '';
+            loginPanel.hidden = true;
+            profileContent.hidden = false;
+            await loadRequests();
+        }
+
+        async function loadRequests() {
+            const data = await requestJson('/api/student/profile/requests');
+            const history = document.getElementById('requestHistory');
+            history.innerHTML = data.requests.length ? data.requests.map(request => {
+                const requestedChanges = Object.entries(request.changes || {}).filter(([field]) => ['full_name', 'student_class', 'department'].includes(field)).map(([field, value]) => `${({ full_name: 'Name', student_class: 'Class', department: 'Department' })[field]}: ${escapeHtml(value)}`);
+                if (request.changes?.picture) requestedChanges.push('Profile picture change requested');
+                if (request.hasPasswordChange) requestedChanges.push('CBT password change requested');
+                return `<article class="request"><div class="request-head"><strong>${escapeHtml(request.createdAt ? new Date(request.createdAt).toLocaleString() : 'Request')}</strong><span class="tag ${request.status === 'pending' ? 'pending' : request.status === 'rejected' ? 'rejected' : ''}">${escapeHtml(request.status)}</span></div>${requestedChanges.map(change => `<p>${change}</p>`).join('')}${request.reason ? `<p>Reason: ${escapeHtml(request.reason)}</p>` : ''}${request.reviewNote ? `<p>Admin note: ${escapeHtml(request.reviewNote)}</p>` : ''}</article>`;
+            }).join('') : '<p class="hint">You have not submitted any requests.</p>';
+        }
+
+        document.getElementById('studentLoginForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const button = document.getElementById('loginButton');
+            button.disabled = true;
+            loginStatus.textContent = 'Signing in...';
+            try {
+                await requestJson('/api/student/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: document.getElementById('loginStudentId').value.trim(),
+                        password: document.getElementById('loginPassword').value,
+                        deviceId: getDeviceId()
+                    })
+                });
+                document.getElementById('loginPassword').value = '';
+                await loadProfile();
+            } catch (error) {
+                loginStatus.textContent = error.message || 'Could not sign in.';
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('changePhoto').addEventListener('change', event => {
+            const file = event.target.files?.[0];
+            if (!file) { selectedPhotoData = ''; return; }
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
+                requestStatus.textContent = 'Choose a PNG, JPEG, or WebP image under 4 MB.';
+                event.target.value = '';
+                selectedPhotoData = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                selectedPhotoData = String(reader.result || '');
+                const preview = document.getElementById('newPhotoPreview');
+                preview.src = selectedPhotoData;
+                preview.hidden = false;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('profileRequestForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            requestStatus.textContent = '';
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (newPassword !== confirmPassword) { requestStatus.textContent = 'The new password entries do not match.'; return; }
+            const button = document.getElementById('submitRequestButton');
+            button.disabled = true;
+            try {
+                const body = {
+                    full_name: document.getElementById('changeName').value.trim(),
+                    student_class: document.getElementById('changeClass').value.trim(),
+                    department: document.getElementById('changeDepartment').value.trim(),
+                    reason: document.getElementById('requestReason').value.trim()
+                };
+                if (selectedPhotoData) body.picture = selectedPhotoData;
+                if (newPassword) body.newPassword = newPassword;
+                await requestJson('/api/student/profile/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                requestStatus.textContent = 'Request submitted for admin approval.';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                document.getElementById('requestReason').value = '';
+                document.getElementById('changePhoto').value = '';
+                selectedPhotoData = '';
+                document.getElementById('newPhotoPreview').hidden = true;
+                await loadRequests();
+            } catch (error) {
+                requestStatus.textContent = error.message || 'Could not submit request.';
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

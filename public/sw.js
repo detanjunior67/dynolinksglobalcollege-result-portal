@@ -80,7 +80,6 @@ self.addEventListener('push', (event) => {
   const options = {
     body: payload.body || 'A new announcement is available.',
     icon: '/logo.jpg',
-    image: '/logo.jpg',
     badge: '/logo.jpg',
     tag: payload.notificationType === 'class-session'
       ? `class-session-${payload.startClientRequestId || payload.teacherName || 'new'}`

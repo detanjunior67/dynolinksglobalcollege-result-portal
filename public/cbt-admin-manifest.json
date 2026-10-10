@@ -3,7 +3,7 @@
   "name": "DGC CBT Admin",
   "short_name": "CBT Admin",
   "start_url": "/cbt-admin.html?app=1",
-  "scope": "/",
+  "scope": "/cbt-admin.html",
   "display": "standalone",
   "background_color": "#f4f8f7",
   "theme_color": "#143d3b",

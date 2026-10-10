@@ -303,6 +303,8 @@
         .admin-announcement-item-header > div { display: flex; align-items: center; gap: 8px; }
         .admin-announcement-delete { border: 1px solid #fecaca; border-radius: 7px; padding: 6px 9px; color: #991b1b; background: #fff7f7; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
         .admin-announcement-delete:hover { background: #fee2e2; }
+        .admin-announcement-pin { border: 1px solid #d9e7e4; border-radius: 7px; padding: 6px 9px; color: #26595a; background: #fff; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .admin-announcement-pin:hover { background: #edf7f5; }
         .admin-announcement-item p { margin: 8px 0; white-space: pre-wrap; }
         .admin-announcement-meta { color: var(--muted); font-size: .78rem; }
         .admin-announcement-readers { color: var(--teal-dark); font-size: .82rem; }
@@ -1481,7 +1483,7 @@
             teacherAnnouncementList.innerHTML = activeTeacherAnnouncements.length
                 ? activeTeacherAnnouncements.map(announcement => `
                     <article class="teacher-announcement-item">
-                        <h3>${escapeHtml(announcement.title || 'College announcement')}</h3>
+                        <div class="flex items-start justify-between gap-2"><h3>${escapeHtml(announcement.title || 'College announcement')}</h3>${announcement.isPinned ? '<span class="shrink-0 rounded bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase text-amber-800">Urgent</span>' : ''}</div>
                         <p>${escapeHtml(announcement.message)}</p>
                         <time>Available until ${formatDate(announcement.expiresAt)}</time>
                     </article>
@@ -1674,7 +1676,7 @@
                     <article class="admin-announcement-item ${archived ? 'admin-announcement-archived-item' : ''}">
                         <div class="admin-announcement-item-header">
                             <strong>${escapeHtml(announcement.title || 'College announcement')}</strong>
-                            <div><span class="count">${archived ? 'Archived' : 'Active'}</span><button class="admin-announcement-delete" type="button" data-announcement-id="${escapeHtml(announcement._id)}">Delete</button></div>
+                            <div><span class="count">${archived ? 'Archived' : 'Active'}</span>${announcement.isPinned ? '<span class="count">Pinned</span>' : ''}<button class="admin-announcement-pin" type="button" data-pin-announcement-id="${escapeHtml(announcement._id)}" data-pin-value="${announcement.isPinned ? 'false' : 'true'}">${announcement.isPinned ? 'Unpin' : 'Pin urgent'}</button><button class="admin-announcement-delete" type="button" data-announcement-id="${escapeHtml(announcement._id)}">Delete</button></div>
                         </div>
                         <p>${escapeHtml(announcement.message)}</p>
                         <div class="admin-announcement-meta">${archived ? 'Expired' : 'Expires'} ${formatDate(announcement.expiresAt)} · Duration ${announcement.durationValue} ${escapeHtml(announcement.durationUnit)}</div>
@@ -1685,11 +1687,33 @@
                 container.querySelectorAll('[data-announcement-id]').forEach(button => {
                     button.addEventListener('click', () => deleteTeacherAnnouncement(button));
                 });
+                container.querySelectorAll('[data-pin-announcement-id]').forEach(button => {
+                    button.addEventListener('click', () => toggleTeacherAnnouncementPin(button));
+                });
             };
 
             adminArchivedAnnouncementCount.textContent = String(archivedAnnouncements.length);
             renderRows(adminAnnouncementList, activeAnnouncements, false);
             renderRows(adminArchivedAnnouncementList, archivedAnnouncements, true);
+        }
+
+        async function toggleTeacherAnnouncementPin(button) {
+            const isPinned = button.dataset.pinValue === 'true';
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/admin/teacher-announcements/${encodeURIComponent(button.dataset.pinAnnouncementId)}/pin`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'x-teacher-admin-password': adminPassword },
+                    body: JSON.stringify({ isPinned })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || `Could not update pin (${response.status}).`);
+                adminAnnouncementStatus.textContent = isPinned ? 'Announcement pinned as urgent.' : 'Announcement unpinned.';
+                await renderAdminAnnouncements();
+            } catch (error) {
+                adminAnnouncementStatus.textContent = error.message || 'Could not update announcement pin.';
+                button.disabled = false;
+            }
         }
 
         async function deleteTeacherAnnouncement(button) {

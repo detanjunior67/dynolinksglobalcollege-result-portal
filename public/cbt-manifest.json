@@ -3,7 +3,7 @@
   "name": "DGC CBT Portal",
   "short_name": "DGC CBT",
   "start_url": "/cbt.html?app=1",
-  "scope": "/",
+  "scope": "/cbt.html",
   "display": "standalone",
   "background_color": "#f4f8f7",
   "theme_color": "#0f766e",

@@ -4707,8 +4707,8 @@
         <div class="modal-card cbt-access-card">
             <span class="close-modal" onclick="closeCBTAccessModal()" aria-label="Close CBT Access Modal">&times;</span>
             <div class="cbt-access-icon" aria-hidden="true">⌨</div>
-            <h2 id="cbtAccessTitle">Enter the CBT Portal</h2>
-            <p>Use your access password to begin the computer-based Assignment.</p>
+            <h2 id="cbtAccessTitle">Open a Portal</h2>
+            <p>Enter your access password for CBT, teacher, or profile tools.</p>
             <form id="cbtAccessForm">
                 <div class="cbt-password-wrap">
                     <input type="password" id="cbtAccessPassword" placeholder="Access password" autocomplete="off" required>
@@ -4719,7 +4719,7 @@
                 <div id="cbtPasswordError" class="cbt-password-error" role="alert">Incorrect password. Access denied.</div>
                 <div class="cbt-access-actions">
                     <button type="button" class="cbt-cancel-btn" onclick="closeCBTAccessModal()">Cancel</button>
-                    <button type="submit" class="cbt-enter-btn">Enter CBT</button>
+                    <button type="submit" class="cbt-enter-btn">Continue</button>
                 </div>
             </form>
         </div>
@@ -5038,9 +5038,11 @@
             e.preventDefault();
             const password = document.getElementById('cbtAccessPassword').value.trim().toLowerCase();
             const error = document.getElementById('cbtPasswordError');
-            const target = requestedProtectedPath || (password === 'announce'
-                ? '/announcement-admin.html'
-                : password === 'cbtaccess' ? '/cbt.html' : '/teacher.html');
+            const target = requestedProtectedPath || (password === 'profile'
+                ? '/student-profile.html'
+                : password === 'adminprofile' ? '/student-profile-admin.html'
+                    : password === 'announce' ? '/announcement-admin.html'
+                        : password === 'cbtaccess' ? '/cbt.html' : '/teacher.html');
 
             fetch('/api/page-access', {
                 method: 'POST',
@@ -5066,10 +5068,12 @@
 
         const protectedPageQuery = new URLSearchParams(window.location.search);
         const protectedScope = protectedPageQuery.get('protected');
-        if (protectedScope === 'cbt' || protectedScope === 'teacher' || protectedScope === 'announcement-admin') {
+        if (protectedScope === 'cbt' || protectedScope === 'teacher' || protectedScope === 'announcement-admin' || protectedScope === 'student-profile' || protectedScope === 'student-profile-admin') {
             requestedProtectedPath = protectedScope === 'cbt'
                 ? '/cbt.html'
-                : protectedScope === 'teacher' ? '/teacher.html' : '/announcement-admin.html';
+                : protectedScope === 'teacher' ? '/teacher.html'
+                    : protectedScope === 'announcement-admin' ? '/announcement-admin.html'
+                        : protectedScope === 'student-profile' ? '/student-profile.html' : '/student-profile-admin.html';
             setTimeout(accessCBT, 0);
         }
 
@@ -5965,6 +5969,15 @@
                     throw new Error('Student data access expired. Enter the admin student-data password, unlock again, then save.');
                 }
                 if (!response.ok || !data.success || data.savedToServer !== true) throw new Error(data.message || 'The server did not confirm the password save.');
+
+                rowInput.type = 'text';
+                const revealButton = rowInput.closest('.student-cbt-password-control')?.querySelector('.student-cbt-password-eye');
+                if (revealButton) {
+                    revealButton.setAttribute('aria-label', 'Hide saved password');
+                    revealButton.title = 'Hide saved password';
+                    revealButton.innerHTML = '<i data-lucide="eye" aria-hidden="true"></i>';
+                    if (window.lucide) lucide.createIcons();
+                }
 
                 if (rowStatus) {
                     rowStatus.textContent = 'Password set';
