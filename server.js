@@ -42,7 +42,7 @@ const CBT_AUDIT_SESSION_SECRET = process.env.CBT_AUDIT_SESSION_SECRET || crypto.
 const protectedPageAccess = {
     '/cbt.html': { scope: 'cbt', passwords: [process.env.CBT_PAGE_PASSWORD || 'cbtaccess'] },
     '/teacher.html': { scope: 'teacher', passwords: [TEACHER_PAGE_PASSWORD, 'admincheck'] },
-    '/announcement-admin.html': { scope: 'announcement-admin', passwords: [process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce', TEACHER_ADMIN_PASSWORD] },
+    '/announcement-admin.html': { scope: 'announcement-admin', passwords: [process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce1', TEACHER_ADMIN_PASSWORD] },
     '/student-profile.html': { scope: 'student-profile', passwords: [STUDENT_PROFILE_PASSWORD] },
     '/student-profile-admin.html': { scope: 'student-profile-admin', passwords: [STUDENT_PROFILE_ADMIN_PASSWORD] }
 };
@@ -845,7 +845,7 @@ const CbtAdminActivitySchema = new mongoose.Schema({
     actorName: { type: String, default: '' },
     notes: [{
         text: { type: String, required: true, maxlength: 1000 },
-        adminName: { type: String, default: 'Secret administrator' },
+        adminName: { type: String, default: 'Administrator' },
         createdAt: { type: Date, default: Date.now }
     }],
     occurredAt: { type: Date, default: Date.now }
@@ -920,7 +920,7 @@ function hasValidCbtAuditSession(req) {
 
 function requireCbtAuditAdmin(req, res, next) {
     if (!hasValidCbtAuditSession(req)) {
-        return res.status(401).json({ success: false, message: 'CBT audit session expired. Enter the secret password in the CBT admin login box.' });
+        return res.status(401).json({ success: false, message: 'CBT audit session expired. Enter the password in the CBT admin login box.' });
     }
     next();
 }
@@ -996,7 +996,7 @@ function setCbtAuditSessionCookie(req, res) {
 function verifyCbtAuditLogin(req, res, next) {
     const password = String(req.get('x-cbt-audit-password') || req.body?.password || '');
     if (!isValidCbtAuditPassword(password)) {
-        return res.status(401).json({ success: false, message: 'Invalid secret administrator password.' });
+        return res.status(401).json({ success: false, message: 'Invalid administrator password.' });
     }
     next();
 }
@@ -1025,7 +1025,7 @@ app.post('/api/cbt-admin/teachers', async (req, res) => {
         });
         res.status(201).json({ success: true, teacher: { id: teacher.id, name: teacher.name }, token });
     } catch (err) {
-        if (err.code === 11000) return res.status(409).json({ success: false, message: 'That teacher name is already registered. Contact the secret administrator if it needs to be reset.' });
+        if (err.code === 11000) return res.status(409).json({ success: false, message: 'That teacher name is already registered. Contact the administrator if it needs to be reset.' });
         console.error('CBT admin teacher registration failed:', err.message);
         res.status(500).json({ success: false, message: 'Could not save the teacher name.' });
     }
@@ -1199,13 +1199,13 @@ app.post('/api/cbt-admin/audit/activities/:id/notes', requireCbtAuditAdmin, asyn
     try {
         const metadata = getCbtAuditRequestMetadata(req);
         const activity = await CbtAdminActivity.findByIdAndUpdate(req.params.id, {
-            $push: { notes: { text, adminName: 'Secret administrator', createdAt: new Date() } }
+            $push: { notes: { text, adminName: 'Administrator', createdAt: new Date() } }
         }, { new: true }).lean();
         if (!activity) return res.status(404).json({ success: false, message: 'Activity record not found.' });
         await CbtAdminActivity.create({
             teacherName: activity.teacherName,
             action: 'audit_note_added',
-            actorName: 'Secret administrator',
+            actorName: 'Administrator',
             details: { activityId: activity._id, notedAction: activity.action },
             detailsSearch: `note added ${activity.teacherName} ${activity.action}`,
             ...metadata
@@ -1265,7 +1265,7 @@ app.delete('/api/cbt-admin/audit/teachers/:id', requireCbtAuditAdmin, async (req
         await CbtAdminActivity.create({
             teacherName: teacher.name,
             action: 'teacher_registration_removed',
-            actorName: 'Secret administrator',
+            actorName: 'Administrator',
             details: { targetTeacherId: String(teacher._id), targetTeacherName: teacher.name },
             detailsSearch: `teacher registration removed ${teacher.name}`,
             ...metadata
@@ -1444,8 +1444,8 @@ function requireAnnouncementAdmin(req, res, next) {
     const allowedPasswords = new Set([
         String(TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
         String(process.env.TEACHER_ADMIN_PASSWORD || '').trim().toLowerCase(),
-        String(process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce').trim().toLowerCase(),
-        'announce',
+        String(process.env.ANNOUNCEMENT_ADMIN_PASSWORD || 'announce1').trim().toLowerCase(),
+        'announce1',
         'admincheck'
     ]);
     if (allowedPasswords.has(normalizedPassword) || hasPageAccess(req, 'announcement-admin')) return next();
