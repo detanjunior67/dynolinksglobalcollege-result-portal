@@ -811,20 +811,23 @@
             installPrompt = event;
         });
 
-        installAppButton.addEventListener('click', async () => {
+        async function installTeacherApp() {
             if (!installPrompt) {
                 installStatus.textContent = 'Use your browser menu and choose Install app or Add to Home Screen.';
                 return;
             }
             installPrompt.prompt();
             const choice = await installPrompt.userChoice;
-            installStatus.textContent = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
+            const message = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
+            installStatus.textContent = message;
             if (choice.outcome === 'accepted') {
                 localStorage.setItem(teacherAppInstalledKey, '1');
                 installAppButton.hidden = true;
             }
             installPrompt = null;
-        });
+        }
+
+        installAppButton.addEventListener('click', installTeacherApp);
 
         window.addEventListener('appinstalled', () => {
             localStorage.setItem(teacherAppInstalledKey, '1');
