@@ -707,6 +707,72 @@
                 flex-basis: 2.4rem;
             }
         }
+
+        @media (max-width: 640px) {
+            header {
+                top: 0;
+                padding: .35rem .65rem !important;
+            }
+
+            header > div.max-w-7xl {
+                row-gap: .2rem;
+                padding-block: .25rem;
+            }
+
+            header > div.max-w-7xl > div:first-child > img {
+                width: 2.1rem;
+                height: 2.1rem;
+            }
+
+            .header-controls {
+                gap: .25rem !important;
+            }
+
+            .header-controls .mobile-secondary-nav,
+            .header-controls #portalToggleBtn,
+            .header-controls #studentAnnouncementButton {
+                width: 2.15rem;
+                height: 2.15rem;
+                flex-basis: 2.15rem;
+            }
+        }
+
+        @media (min-width: 480px) and (max-width: 900px) {
+            header {
+                padding: .2rem .65rem !important;
+            }
+
+            header > div.max-w-7xl {
+                flex-wrap: nowrap;
+                min-height: 0;
+                column-gap: .4rem;
+                row-gap: 0;
+                padding-block: .1rem;
+            }
+
+            header > div.max-w-7xl > div:first-child {
+                flex: 0 1 auto;
+                gap: .4rem;
+            }
+
+            header > div.max-w-7xl > div:first-child > img {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            .header-controls {
+                flex: 0 0 auto;
+                gap: .2rem !important;
+            }
+
+            .header-controls .mobile-secondary-nav,
+            .header-controls #portalToggleBtn,
+            .header-controls #studentAnnouncementButton {
+                width: 2.05rem;
+                height: 2.05rem;
+                flex-basis: 2.05rem;
+            }
+        }
     </style>
 </head>
 

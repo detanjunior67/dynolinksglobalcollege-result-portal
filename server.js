@@ -1905,22 +1905,27 @@ app.post('/api/admin/teacher-announcements', requireAnnouncementAdmin, async (re
             expiresAt: getTeacherAnnouncementExpiry(durationValue, durationUnit, createdAt)
         });
 
-        const pushDelivery = { configured: WEB_PUSH_CONFIGURED, sent: 0, failed: 0, queued: true };
-        res.status(201).json({ success: true, announcement, pushDelivery });
+        let pushDelivery;
+        try {
+            pushDelivery = await sendTeacherAnnouncementPush(announcement);
+        } catch (err) {
+            console.error('Teacher announcement push delivery failed:', err.message);
+            pushDelivery = { configured: WEB_PUSH_CONFIGURED, sent: 0, failed: 0, error: true };
+        }
 
-        void sendTeacherAnnouncementPush(announcement).then(async delivery => {
-            await TeacherAnnouncement.updateOne({ _id: announcement._id }, { $set: {
-                pushDeliveryStatus: delivery?.configured ? 'complete' : 'disabled',
-                pushSentCount: delivery?.sent || 0,
-                pushFailedCount: delivery?.failed || 0
-            } });
-            if (!delivery || !delivery.configured) return;
-            console.log(`Announcement push delivery queued for ${delivery.sent} of ${Math.max(delivery.sent + delivery.failed, 0)} matching subscriptions.`);
-        }).catch(err => {
-            void TeacherAnnouncement.updateOne({ _id: announcement._id }, { $set: { pushDeliveryStatus: 'failed' } })
-                .catch(updateError => console.error('Could not save announcement push status:', updateError.message));
-            console.error('Teacher announcement push delivery failed in background:', err.message);
-        });
+        const pushDeliveryStatus = pushDelivery.error
+            ? 'failed'
+            : pushDelivery.configured ? 'complete' : 'disabled';
+        await TeacherAnnouncement.updateOne({ _id: announcement._id }, { $set: {
+            pushDeliveryStatus,
+            pushSentCount: pushDelivery.sent || 0,
+            pushFailedCount: pushDelivery.failed || 0
+        } }).catch(err => console.error('Could not save announcement push status:', err.message));
+
+        if (pushDelivery.configured) {
+            console.log(`Announcement push delivery completed for ${pushDelivery.sent} of ${pushDelivery.sent + pushDelivery.failed} matching subscriptions.`);
+        }
+        res.status(201).json({ success: true, announcement, pushDelivery });
     } catch (err) {
         console.error('Create teacher announcement error:', err.message);
         res.status(500).json({ success: false, message: 'Could not publish announcement.' });

@@ -1791,6 +1791,10 @@
                 const pushDelivery = data.pushDelivery || {};
                 adminAnnouncementStatus.textContent = !pushDelivery.configured
                     ? 'Published. Add VAPID keys to the server to enable browser alerts.'
+                    : pushDelivery.error
+                        ? 'Published, but browser alert delivery failed. Check the server logs.'
+                        : !pushDelivery.sent && !pushDelivery.failed
+                            ? 'Published, but no devices have browser alerts enabled for this audience.'
                     : pushDelivery.failed
                         ? `Published. Alerts sent to ${pushDelivery.sent} devices; ${pushDelivery.failed} failed.`
                         : `Published. Browser alerts sent to ${pushDelivery.sent} devices.`;
