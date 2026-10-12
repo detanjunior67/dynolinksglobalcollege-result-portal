@@ -634,6 +634,79 @@
                 transition: none !important;
             }
         }
+
+        @media (max-width: 1365px) {
+            header > div.max-w-7xl {
+                height: auto;
+                min-height: 4rem;
+                flex-wrap: wrap;
+                row-gap: .5rem;
+                padding-block: .55rem;
+            }
+
+            header > div.max-w-7xl > div:first-child,
+            .header-controls {
+                flex: 1 0 100%;
+                min-width: 0;
+            }
+
+            header > div.max-w-7xl > div:first-child > div {
+                min-width: 0;
+            }
+
+            header > div.max-w-7xl > div:first-child > div > span:first-child {
+                display: block;
+                font-size: 1rem;
+                line-height: 1.2;
+                white-space: normal;
+            }
+
+            header > div.max-w-7xl > div:first-child > div > span + span {
+                display: none;
+            }
+
+            .header-controls {
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: .5rem !important;
+            }
+
+            .header-controls .mobile-secondary-nav span,
+            .header-controls #portalToggleBtn span {
+                display: none;
+            }
+
+            .header-controls .mobile-secondary-nav,
+            .header-controls #portalToggleBtn {
+                display: inline-flex;
+                width: 2.6rem;
+                height: 2.6rem;
+                padding: 0;
+                flex: 0 0 2.6rem;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header-controls #studentAnnouncementButton {
+                width: 2.6rem;
+                height: 2.6rem;
+                flex: 0 0 2.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-controls {
+                gap: .35rem !important;
+            }
+
+            .header-controls .mobile-secondary-nav,
+            .header-controls #portalToggleBtn,
+            .header-controls #studentAnnouncementButton {
+                width: 2.4rem;
+                height: 2.4rem;
+                flex-basis: 2.4rem;
+            }
+        }
     </style>
 </head>
 
@@ -642,7 +715,7 @@
 
     <!-- Navigation Header -->
     <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <!-- Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
                 <img src="/logo.jpg" alt="Dynolinks Global College logo"
@@ -662,13 +735,13 @@
                 <!-- Home Navigation -->
                 <a href="/index.html"
                     class="mobile-secondary-nav px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0"
-                    title="Go to home page">
+                    title="Go to home page" aria-label="Home">
                     <i class="fa-solid fa-house text-blue-600"></i>
                     <span>Home</span>
                 </a>
                 <a href="cbt.html" onclick="showDashboard()"
                     class="mobile-secondary-nav px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0"
-                    title="Open student CBT portal">
+                    title="Open student CBT portal" aria-label="Student portal">
                     <i class="fa-solid fa-laptop-code text-blue-600"></i>
                     <span>Student Portal</span>
                 </a>
@@ -681,7 +754,8 @@
 
                 <!-- Dedicated Admin Console Link -->
                 <button type="button" id="portalToggleBtn" onclick="openAdminAuthModal()"
-                    class="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0">
+                    class="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] sm:text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0"
+                    aria-label="Admin console" title="Admin console">
                     <i class="fa-solid fa-lock text-amber-500"></i>
                     <span id="portalToggleText">Admin Console</span>
                 </button>
