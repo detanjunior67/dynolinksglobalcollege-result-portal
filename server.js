@@ -95,7 +95,8 @@ app.post('/api/page-access', (req, res) => {
 
 app.use((req, res, next) => {
     const requestedPage = protectedPageAccess[req.path];
-    if (req.method === 'GET' && requestedPage && !hasPageAccess(req, requestedPage.scope)) {
+    const isTeacherAppLaunch = req.path === '/teacher.html' && req.query.app === '1';
+    if (req.method === 'GET' && requestedPage && !isTeacherAppLaunch && !hasPageAccess(req, requestedPage.scope)) {
         const returnTo = `${req.path}${req.originalUrl.includes('?') ? req.originalUrl.slice(req.path.length) : ''}`;
         return res.redirect(`/?protected=${requestedPage.scope}&returnTo=${encodeURIComponent(returnTo)}`);
     }
@@ -682,6 +683,7 @@ const StudentProfileChangeRequestSchema = new mongoose.Schema({
         department: { type: String, default: '' },
         picture: { type: String, default: '' }
     },
+    newPassword: { type: String, default: '' },
     passwordHash: { type: String, default: '' },
     passwordChangeRequested: { type: Boolean, default: false },
     reason: { type: String, default: '', maxlength: 500 },
@@ -698,12 +700,6 @@ function matchesConfiguredSecret(providedValue, expectedValue) {
     const provided = Buffer.from(String(providedValue || ''));
     const expected = Buffer.from(String(expectedValue || ''));
     return expected.length > 0 && provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
-}
-
-function hashCbtPassword(password) {
-    const salt = crypto.randomBytes(16);
-    const hash = crypto.scryptSync(String(password), salt, 64);
-    return `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
 }
 
 function verifyCbtPassword(savedPassword, providedPassword) {
@@ -1457,6 +1453,19 @@ function normalizeAnnouncementClassKey(value) {
     if (/^SS[1-3]$/.test(compact)) return `SSS${compact.slice(2)}`;
     if (/^JSS[1-3]$/.test(compact) || /^SSS[1-3]$/.test(compact)) return compact;
     return '';
+}
+
+function normalizeCbtStudentClassKey(value, classConfigs = {}) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return '';
+    const compactValue = rawValue.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const configuredClass = Object.entries(classConfigs).find(([key, config]) => {
+        const label = String(config?.label || key).trim();
+        return key.toUpperCase() === rawValue.toUpperCase()
+            || label.toLowerCase() === rawValue.toLowerCase()
+            || label.toUpperCase().replace(/[^A-Z0-9]/g, '') === compactValue;
+    });
+    return normalizeAnnouncementClassKey(configuredClass?.[0] || rawValue);
 }
 
 function getAnnouncementClassOptions(classConfigs = {}) {
@@ -2696,9 +2705,6 @@ app.post('/api/student/login', async (req, res) => {
         if (!isAdminOverride && !verifyCbtPassword(savedPassword, password)) {
             return res.status(401).json({ success: false, message: 'Incorrect CBT password.' });
         }
-        if (!isAdminOverride && !isHashedCbtPassword(savedPassword)) {
-            await Student.updateOne({ _id: student._id }, { $set: { cbt_password: hashCbtPassword(password) } });
-        }
         if (isAdminOverride) {
             console.warn(`CBT admin override login for student ${student.student_id} from ${req.ip || 'unknown IP'}.`);
             void CbtAdminActivity.create({
@@ -2712,7 +2718,8 @@ app.post('/api/student/login', async (req, res) => {
             }).catch(err => console.error('Could not audit CBT admin override login:', err.message));
         }
 
-        const classKey = normalizeAnnouncementClassKey(student.student_class);
+        const cbtConfig = await CbtConfig.findOne({ key: 'default' }).select('classConfigs').lean();
+        const classKey = normalizeCbtStudentClassKey(student.student_class, cbtConfig?.classConfigs || {});
         if (!classKey) return res.status(403).json({ success: false, message: 'Your student record does not have a supported class.' });
         const enrolledDevice = await CbtAnnouncementDevice.findOneAndUpdate(
             { deviceId },
@@ -2773,7 +2780,7 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
                 _id: request._id,
                 changes: request.changes,
                 current: request.current,
-                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash),
+                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash || request.newPassword),
                 status: request.status,
                 reason: request.reason,
                 reviewNote: request.reviewNote,
@@ -2819,18 +2826,17 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
                 if (compressedPicture !== student.picture) changes.picture = compressedPicture;
             }
 
-            let passwordHash = '';
+            let newPassword = '';
             if (input.newPassword !== undefined) {
-                const newPassword = String(input.newPassword).trim();
+                newPassword = String(input.newPassword).trim();
                 if (newPassword.length < 8 || newPassword.length > 128) {
                     return res.status(400).json({ success: false, message: 'A new CBT password must be 8 to 128 characters.' });
                 }
                 if (verifyCbtPassword(student.cbt_password, newPassword)) {
                     return res.status(400).json({ success: false, message: 'Choose a password different from your current password.' });
                 }
-                passwordHash = hashCbtPassword(newPassword);
             }
-            if (!Object.keys(changes).length && !passwordHash) {
+            if (!Object.keys(changes).length && !newPassword) {
                 return res.status(400).json({ success: false, message: 'Enter at least one profile change.' });
             }
             const existingRequest = await StudentProfileChangeRequest.findOne({ studentId: student.student_id, status: 'pending' }).select('_id').lean();
@@ -2846,7 +2852,7 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
                     department: student.department || '',
                     picture: student.picture || ''
                 },
-                passwordHash,
+                newPassword,
                 reason: String(input.reason || '').trim().slice(0, 500)
             });
             res.status(201).json({ success: true, requestId: request._id, status: request.status });
@@ -2873,7 +2879,7 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
                 studentName: request.studentName,
                 changes: request.changes,
                 current: request.current,
-                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash),
+                hasPasswordChange: Boolean(request.passwordChangeRequested || request.passwordHash || request.newPassword),
                 status: request.status,
                 reason: request.reason,
                 reviewNote: request.reviewNote,
@@ -2901,14 +2907,16 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
                 for (const field of ['full_name', 'student_class', 'department', 'picture']) {
                     if (request.changes?.[field] !== undefined && request.changes[field] !== '') student[field] = request.changes[field];
                 }
-                if (request.passwordHash) student.cbt_password = request.passwordHash;
+                if (request.newPassword) student.cbt_password = request.newPassword;
+                else if (request.passwordHash) student.cbt_password = request.passwordHash;
                 await student.save();
             }
 
             request.status = decision;
             request.reviewNote = reviewNote;
             request.reviewedAt = new Date();
-            if (request.passwordHash) request.passwordChangeRequested = true;
+            if (request.passwordHash || request.newPassword) request.passwordChangeRequested = true;
+            request.newPassword = '';
             request.passwordHash = '';
             await request.save();
             res.json({ success: true, status: request.status });
@@ -2928,7 +2936,8 @@ app.get('/api/student/profile', requireCbtStudentSession, async (req, res) => {
         }
 
         const student = await Student.findOne(buildStudentQuery(studentId)).select('student_id student_class department +cbt_password').lean();
-        if (!student || !verifyCbtPassword(student.cbt_password, password)) {
+        const isAdminOverride = matchesConfiguredSecret(password, CBT_STUDENT_ADMIN_OVERRIDE_PASSWORD);
+        if (!student || (!isAdminOverride && !verifyCbtPassword(student.cbt_password, password))) {
             return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
         }
         if (!String(student.student_class || '').toUpperCase().startsWith('SSS')) {
@@ -2972,9 +2981,16 @@ app.post('/api/admin/student-password', requireStudentDataPassword, async (req, 
 
         const updated = await Student.findOneAndUpdate(
             { _id: existingStudent._id },
-            { $set: { cbt_password: hashCbtPassword(password) } },
+            { $set: { cbt_password: password } },
             { new: true, runValidators: true }
         );
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Student record not found. Select an existing student from the table.' });
+        }
+        const savedStudent = await Student.findById(updated._id).select('+cbt_password').lean();
+        if (savedStudent?.cbt_password !== password) {
+            return res.status(500).json({ success: false, message: 'The new password could not be verified in the student record.' });
+        }
 
         res.json({
             success: true,
@@ -3068,7 +3084,8 @@ app.get('/api/admin/student-data', requireStudentDataPassword, async (req, res) 
                 has_picture: Boolean(student.picture),
                 picture: summaryOnly ? '' : (student.picture || ''),
                 has_password: summaryOnly ? false : Boolean(String(student.cbt_password || '').trim()),
-                cbt_password: '',
+                password_needs_reset: !summaryOnly && isHashedCbtPassword(student.cbt_password),
+                cbt_password: summaryOnly || isHashedCbtPassword(student.cbt_password) ? '' : String(student.cbt_password || ''),
                 show_result: student.show_result !== false,
                 status: student.status || 'Authorized'
             }));
@@ -4575,11 +4592,9 @@ app.post('/api/student/cbt-result', async (req, res) => {
         const student = await Student.findOne(buildStudentQuery(studentId))
             .select('student_id full_name student_class show_result picture +cbt_password')
             .lean();
-        if (!student || !verifyCbtPassword(student.cbt_password, password)) {
+        const isAdminOverride = matchesConfiguredSecret(password, CBT_STUDENT_ADMIN_OVERRIDE_PASSWORD);
+        if (!student || (!isAdminOverride && !verifyCbtPassword(student.cbt_password, password))) {
             return res.status(401).json({ success: false, message: 'Invalid student credentials.' });
-        }
-        if (!isHashedCbtPassword(student.cbt_password)) {
-            await Student.updateOne({ _id: student._id }, { $set: { cbt_password: hashCbtPassword(password) } });
         }
         if (student.show_result === false) {
             return res.status(403).json({ success: false, resultAvailable: false, message: 'Your result is not yet available.' });

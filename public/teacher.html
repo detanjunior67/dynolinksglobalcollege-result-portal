@@ -712,10 +712,9 @@
         let hadServiceWorkerController = Boolean(navigator.serviceWorker?.controller);
         let reloadingForServiceWorkerUpdate = false;
         let teacherPushConfig = null;
-        const teacherAppInstalledKey = 'dgc_teacher_app_installed';
 
         function isTeacherAppInstalled() {
-            return localStorage.getItem(teacherAppInstalledKey) === '1';
+            return Boolean(window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true);
         }
 
         installAppButton.hidden = isTeacherAppInstalled();
@@ -816,21 +815,25 @@
                 installStatus.textContent = 'Use your browser menu and choose Install app or Add to Home Screen.';
                 return;
             }
-            installPrompt.prompt();
-            const choice = await installPrompt.userChoice;
-            const message = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
-            installStatus.textContent = message;
-            if (choice.outcome === 'accepted') {
-                localStorage.setItem(teacherAppInstalledKey, '1');
-                installAppButton.hidden = true;
+            const promptEvent = installPrompt;
+            installAppButton.disabled = true;
+            try {
+                await promptEvent.prompt();
+                const choice = await promptEvent.userChoice;
+                installStatus.textContent = choice.outcome === 'accepted' ? 'App installed.' : 'Installation cancelled.';
+                if (choice.outcome === 'accepted') installAppButton.hidden = true;
+            } catch (error) {
+                console.warn('Teacher app installation prompt failed:', error);
+                installStatus.textContent = 'Use your browser menu and choose Install app or Add to Home Screen.';
+            } finally {
+                installPrompt = null;
+                installAppButton.disabled = false;
             }
-            installPrompt = null;
         }
 
         installAppButton.addEventListener('click', installTeacherApp);
 
         window.addEventListener('appinstalled', () => {
-            localStorage.setItem(teacherAppInstalledKey, '1');
             installAppButton.hidden = true;
             installStatus.textContent = 'App installed.';
         });

@@ -2000,10 +2000,13 @@
                     body: JSON.stringify({ studentId, password, deviceId: getStudentDeviceId() })
                 });
                 const data = await response.json().catch(() => ({}));
-                return response.ok && !!data.success;
+                return {
+                    valid: response.ok && !!data.success,
+                    message: response.ok ? '' : (data.message || `Could not verify CBT password (HTTP ${response.status}).`)
+                };
             } catch (err) {
                 console.warn('Student CBT password verification failed:', err);
-                return false;
+                return { valid: false, message: 'Could not reach the server to verify your CBT password. Check your connection and try again.' };
             }
         }
 
@@ -2263,9 +2266,9 @@
                 return;
             }
 
-            const passwordValid = await verifyStudentPasswordOnServer(currentCandidate.studentId, password);
-            if (!passwordValid) {
-                errorMessage.textContent = 'The CBT password is incorrect. Please try again.';
+            const passwordCheck = await verifyStudentPasswordOnServer(currentCandidate.studentId, password);
+            if (!passwordCheck.valid) {
+                errorMessage.textContent = passwordCheck.message;
                 errorMessage.classList.remove('hidden');
                 return;
             }
@@ -2487,9 +2490,9 @@
                 return showCustomAlert('Validation Error', 'Please select the student department for this SSS class before continuing.');
             }
 
-            const passwordValid = await verifyStudentPasswordOnServer(studentId, studentPassword);
-            if (!passwordValid) {
-                return showCustomAlert('Access Denied', 'This CBT password is incorrect or has not been set for this student ID yet. Please contact the admin to set/update it.');
+            const passwordCheck = await verifyStudentPasswordOnServer(studentId, studentPassword);
+            if (!passwordCheck.valid) {
+                return showCustomAlert('Access Denied', passwordCheck.message);
             }
 
             let effectiveDepartment = normalizeDepartmentName(savedProfile?.department || selectedDepartment || '');

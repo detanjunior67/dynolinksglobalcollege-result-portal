@@ -5625,6 +5625,13 @@
                     body: JSON.stringify({ studentId, password: newPassword })
                 });
                 const data = await response.json().catch(() => ({}));
+                if (response.status === 401) {
+                    persistStudentDataPassword('');
+                    document.getElementById('studentDataGate').style.display = 'block';
+                    document.getElementById('studentDataManager').style.display = 'none';
+                    document.getElementById('studentDataPassword').focus();
+                    throw new Error('Student data access expired. Enter the admin student-data password, unlock again, then save.');
+                }
                 if (!response.ok || !data.success || data.savedToServer !== true) throw new Error(data.message || 'The server did not confirm the password save.');
 
                 statusBox.textContent = `CBT password saved for ${studentId}.`;
@@ -5632,9 +5639,11 @@
                 document.getElementById('studentPasswordManagerId').value = '';
                 document.getElementById('studentPasswordManagerNew').value = '';
                 document.getElementById('studentPasswordManagerConfirm').value = '';
+                window.alert(`CBT password saved for ${studentId}.`);
             } catch (err) {
                 statusBox.textContent = err.message || 'Could not save the student CBT password.';
                 statusBox.style.color = '#b42318';
+                window.alert(err.message || 'Could not save the student CBT password.');
             } finally {
                 if (window.hideDatabaseLoader) {
                     window.hideDatabaseLoader();
@@ -5746,6 +5755,10 @@
                 studentDataView.classList.add('active');
                 btnStudentData.classList.add('active');
                 dashboardTitle.innerText = 'Student Data Manager';
+                const studentDataManager = document.getElementById('studentDataManager');
+                if (studentDataPassword && studentDataManager?.style.display !== 'none') {
+                    void loadStudentData();
+                }
             }
         }
 
@@ -5780,6 +5793,8 @@
 
         async function loadStudentData(page = 1) {
             if (!studentDataPassword) return;
+            const tbody = document.getElementById('studentDataListBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7">Loading student records...</td></tr>';
             if (window.showDatabaseLoader) {
                 window.showDatabaseLoader('Loading Student Data...', 'Retrieving the latest student records...');
             }
@@ -5790,11 +5805,10 @@
                 headers: { 'x-student-data-password': studentDataPassword }
             });
             const data = await response.json().catch(() => ({}));
-            const tbody = document.getElementById('studentDataListBody');
             if (!response.ok || !data.success) {
-                tbody.innerHTML = `<tr><td colspan="5">${escapeHtml(data.message || 'Could not load students.')}</td></tr>`;
-                return;
+                throw new Error(data.message || `Could not load students (HTTP ${response.status}).`);
             }
+            if (!Array.isArray(data.students)) throw new Error('The server returned an invalid student list.');
 
             tbody.innerHTML = data.students.length ? data.students.map(student => {
                 const studentId = String(student.student_id || '').trim();
@@ -5804,7 +5818,7 @@
                 const studentDepartment = String(student.department || '').trim();
                 const hasPassword = student.has_password === true;
                 const savedCbtPassword = String(student.cbt_password || '');
-                const passwordStatusText = hasPassword ? 'Password set' : 'Not set';
+                const passwordStatusText = student.password_needs_reset ? 'Reset required' : (hasPassword ? 'Password set' : 'Not set');
                 const passwordStatusClass = hasPassword ? 'student-cbt-status set' : 'student-cbt-status not-set';
                 return `
                 <tr data-student-id="${escapeHtml(studentId)}" data-full-name="${escapeHtml(fullName)}" data-student-class="${escapeHtml(studentClass)}" data-department="${escapeHtml(studentDepartment)}">
@@ -5822,8 +5836,8 @@
                     <td>
                         <div class="student-cbt-password-editor" style="display: flex; flex-direction: column; gap: 8px; min-width: 190px;">
                             <div class="student-cbt-password-control">
-                                <input type="password" class="student-cbt-password-input" data-password-control-skip="true" data-student-id="${escapeHtml(studentId)}" value="${escapeHtml(savedCbtPassword)}" placeholder="Type CBT password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
-                                <button type="button" class="student-cbt-password-eye" data-student-id="${escapeHtml(studentId)}" onclick="toggleStudentCbtPassword('${escapeHtml(studentId)}')" aria-label="Show saved password" title="Show saved password"><i data-lucide="eye-off" aria-hidden="true"></i></button>
+                                <input type="password" class="student-cbt-password-input" data-password-control-skip="true" data-student-id="${escapeHtml(studentId)}" value="${escapeHtml(savedCbtPassword)}" placeholder="${student.password_needs_reset ? 'Reset hashed password' : (hasPassword ? 'Set a new CBT password' : 'Type CBT password')}" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #fff; color: var(--text-light); font-weight: 700;">
+                                <button type="button" class="student-cbt-password-eye" data-student-id="${escapeHtml(studentId)}" onclick="toggleStudentCbtPassword('${escapeHtml(studentId)}')" aria-label="Show password" title="Show password"><i data-lucide="eye-off" aria-hidden="true"></i></button>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                 <button type="button" class="student-cbt-save-btn" data-student-id="${escapeHtml(studentId)}" onclick="saveStudentPasswordFromTable('${escapeHtml(studentId)}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; padding: 8px 10px; font-weight: 800; cursor: pointer; font-size: 0.72rem; min-width: 90px;">Save</button>
@@ -5855,6 +5869,10 @@
                     </span>`;
             }
             return data;
+            } catch (err) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(err.message || 'Could not load student records.')}</td></tr>`;
+                console.error('Load student data error:', err);
+                return null;
             } finally {
                 if (window.hideDatabaseLoader) {
                     window.hideDatabaseLoader();
@@ -5870,8 +5888,8 @@
 
             const willReveal = input.type === 'password';
             input.type = willReveal ? 'text' : 'password';
-            button.setAttribute('aria-label', willReveal ? 'Hide saved password' : 'Show saved password');
-            button.title = willReveal ? 'Hide saved password' : 'Show saved password';
+            button.setAttribute('aria-label', willReveal ? 'Hide password' : 'Show password');
+            button.title = willReveal ? 'Hide password' : 'Show password';
             button.innerHTML = `<i data-lucide="${willReveal ? 'eye' : 'eye-off'}" aria-hidden="true"></i>`;
             if (window.lucide) lucide.createIcons();
         }
@@ -5973,21 +5991,23 @@
                 rowInput.type = 'text';
                 const revealButton = rowInput.closest('.student-cbt-password-control')?.querySelector('.student-cbt-password-eye');
                 if (revealButton) {
-                    revealButton.setAttribute('aria-label', 'Hide saved password');
-                    revealButton.title = 'Hide saved password';
+                    revealButton.setAttribute('aria-label', 'Hide password');
+                    revealButton.title = 'Hide password';
                     revealButton.innerHTML = '<i data-lucide="eye" aria-hidden="true"></i>';
                     if (window.lucide) lucide.createIcons();
                 }
 
                 if (rowStatus) {
-                    rowStatus.textContent = 'Password set';
+                    rowStatus.textContent = 'Password saved';
                     rowStatus.className = 'student-cbt-status set';
                 }
+                window.alert(`CBT password saved for ${studentId}.`);
             } catch (err) {
                 if (rowStatus) {
                     rowStatus.textContent = err.message || 'Save failed';
                     rowStatus.className = 'student-cbt-status not-set';
                 }
+                window.alert(err.message || 'Could not save the student CBT password.');
                 console.error(err);
             } finally {
                 if (window.hideDatabaseLoader) {

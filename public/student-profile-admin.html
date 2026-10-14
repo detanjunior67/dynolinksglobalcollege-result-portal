@@ -37,8 +37,16 @@
         .change strong { display: block; margin-bottom: 6px; font-size: .78rem; }
         .before { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
         .after { margin-top: 4px; color: var(--ink); font-size: .88rem; font-weight: 700; overflow-wrap: anywhere; }
-        .photo-pair { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .photo-pair img { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--line); border-radius: 8px; }
+        .photo-pair { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .photo-pair figure { display: grid; justify-items: start; gap: 6px; margin: 0; }
+        .photo-pair figcaption { color: var(--muted); font-size: .72rem; font-weight: 700; }
+        .photo-preview-button { width: 112px; height: 112px; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #eef5f3; cursor: zoom-in; }
+        .photo-preview-button img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .photo-preview-dialog { width: min(900px, calc(100% - 28px)); max-width: 900px; max-height: calc(100% - 28px); padding: 16px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: white; }
+        .photo-preview-dialog::backdrop { background: rgba(13, 33, 34, .72); }
+        .photo-preview-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .photo-preview-dialog h2 { margin: 0; font-size: 1rem; }
+        .photo-preview-dialog img { display: block; max-width: 100%; max-height: 75vh; margin: 0 auto; object-fit: contain; }
         .password-note { padding: 11px 12px; border-radius: 8px; color: #70420d; background: #fff7e8; font-size: .84rem; }
         .review-note { display: grid; gap: 6px; margin-top: 14px; color: #496467; font-size: .78rem; font-weight: 700; }
         .note { width: 100%; resize: vertical; }
@@ -64,20 +72,32 @@
         <div class="toolbar">
             <label for="requestFilter" class="meta">Show</label>
             <select id="requestFilter"><option value="pending">Pending requests</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All requests</option></select>
+            <button class="button" id="refreshRequestsButton" type="button">Refresh</button>
         </div>
         <div class="status" id="pageStatus" role="status" aria-live="polite"></div>
         <section class="list" id="requestList" aria-live="polite"><div class="empty">Loading requests...</div></section>
     </main>
+    <dialog class="photo-preview-dialog" id="photoPreviewDialog" aria-labelledby="photoPreviewTitle">
+        <header><h2 id="photoPreviewTitle">Profile photo</h2><button class="button reject" type="button" id="closePhotoPreviewButton">Close</button></header>
+        <img id="photoPreviewImage" alt="Expanded profile photo">
+    </dialog>
     <script>
         const fieldLabels = { full_name: 'Full name', student_class: 'Class', department: 'Department' };
         const pageStatus = document.getElementById('pageStatus');
         const requestList = document.getElementById('requestList');
+        const photoPreviewDialog = document.getElementById('photoPreviewDialog');
+        const photoPreviewImage = document.getElementById('photoPreviewImage');
+        const photoPreviewTitle = document.getElementById('photoPreviewTitle');
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
         }
 
         async function loadRequests() {
+            if (requestList.dataset.loading === 'true') return;
+            requestList.dataset.loading = 'true';
+            const reviewNotes = new Map([...requestList.querySelectorAll('[data-review-note]')]
+                .map(note => [note.dataset.reviewNote, note.value]));
             requestList.innerHTML = '<div class="empty">Loading requests...</div>';
             try {
                 const status = document.getElementById('requestFilter').value;
@@ -90,14 +110,19 @@
                         <div class="change"><strong>${fieldLabels[field]}</strong><div class="before">Current: ${escapeHtml(request.current?.[field] || 'Not set')}</div><div class="after">Requested: ${escapeHtml(request.changes[field])}</div></div>
                     `);
                     if (request.changes?.picture) {
-                        changes.push(`<div class="change"><strong>Profile picture</strong><div class="photo-pair">${request.current?.picture ? `<img src="${escapeHtml(request.current.picture)}" alt="Current profile photo">` : '<span class="before">No current photo</span>'}<span aria-hidden="true">&#8594;</span><img src="${escapeHtml(request.changes.picture)}" alt="Requested profile photo"></div></div>`);
+                        changes.push(`<div class="change"><strong>Profile picture</strong><div class="photo-pair"><figure>${request.current?.picture ? `<figcaption>Current photo</figcaption><button class="photo-preview-button" type="button" data-photo-label="Current profile photo" aria-label="View current profile photo"><img src="${escapeHtml(request.current.picture)}" alt="Current profile photo"></button>` : '<figcaption>Current photo</figcaption><span class="before">No current photo</span>'}</figure><span aria-hidden="true">&#8594;</span><figure><figcaption>Requested photo</figcaption><button class="photo-preview-button" type="button" data-photo-label="Requested profile photo" aria-label="View requested profile photo"><img src="${escapeHtml(request.changes.picture)}" alt="Requested profile photo"></button></figure></div></div>`);
                     }
                     const isPending = request.status === 'pending';
                     return `<article class="request"><div class="request-head"><div><h2>${escapeHtml(request.studentName)} · ${escapeHtml(request.studentId)}</h2><div class="meta">Submitted ${escapeHtml(new Date(request.createdAt).toLocaleString())}</div></div><span class="tag ${request.status === 'pending' ? 'pending' : request.status === 'rejected' ? 'rejected' : ''}">${escapeHtml(request.status)}</span></div><div class="changes">${changes.join('') || '<div class="change">No profile field changes.</div>'}</div>${request.hasPasswordChange ? '<div class="password-note">CBT password change requested. The password value is protected and is not visible to admins.</div>' : ''}${request.reason ? `<p class="before"><strong>Student reason:</strong> ${escapeHtml(request.reason)}</p>` : ''}${request.reviewNote ? `<p class="before"><strong>Admin note:</strong> ${escapeHtml(request.reviewNote)}</p>` : ''}${isPending ? `<label class="review-note">Review note (optional)<textarea class="note" rows="2" maxlength="500" data-review-note="${escapeHtml(request._id)}" placeholder="Explain rejection or approval details"></textarea></label><div class="actions"><button class="button" type="button" data-review-id="${escapeHtml(request._id)}" data-decision="approved">Approve</button><button class="button reject" type="button" data-review-id="${escapeHtml(request._id)}" data-decision="rejected">Reject</button></div>` : ''}</article>`;
                 }).join('') : '<div class="empty">No requests in this status.</div>';
+                requestList.querySelectorAll('[data-review-note]').forEach(note => {
+                    if (reviewNotes.has(note.dataset.reviewNote)) note.value = reviewNotes.get(note.dataset.reviewNote);
+                });
                 requestList.querySelectorAll('[data-review-id]').forEach(button => button.addEventListener('click', () => reviewRequest(button)));
             } catch (error) {
                 requestList.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Could not load requests.')}</div>`;
+            } finally {
+                delete requestList.dataset.loading;
             }
         }
 
@@ -124,7 +149,20 @@
             }
         }
 
+        requestList.addEventListener('click', event => {
+            const previewButton = event.target.closest('.photo-preview-button');
+            if (!previewButton) return;
+            photoPreviewTitle.textContent = previewButton.dataset.photoLabel || 'Profile photo';
+            photoPreviewImage.src = previewButton.querySelector('img')?.src || '';
+            photoPreviewDialog.showModal();
+        });
+        document.getElementById('closePhotoPreviewButton').addEventListener('click', () => photoPreviewDialog.close());
+        photoPreviewDialog.addEventListener('close', () => { photoPreviewImage.removeAttribute('src'); });
         document.getElementById('requestFilter').addEventListener('change', loadRequests);
+        document.getElementById('refreshRequestsButton').addEventListener('click', loadRequests);
+        window.setInterval(() => {
+            if (!document.hidden) void loadRequests();
+        }, 20000);
         void loadRequests();
     </script>
 </body>

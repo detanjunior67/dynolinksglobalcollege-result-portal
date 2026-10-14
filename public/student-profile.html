@@ -23,6 +23,8 @@
         .intro p { margin: 8px 0 0; color: var(--muted); }
         .panel { margin-top: 16px; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: 0 10px 28px rgba(17,63,70,.06); }
         .panel h2 { margin: 0 0 16px; font-size: 1.15rem; }
+        .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+        .section-heading h2 { margin: 0; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         label { display: grid; gap: 6px; color: #496467; font-size: .82rem; font-weight: 700; }
         input, select, textarea { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #bfd4cf; border-radius: 8px; color: var(--ink); background: #fbfdfb; font: inherit; }
@@ -96,7 +98,7 @@
             </section>
 
             <section class="panel" aria-labelledby="historyTitle">
-                <h2 id="historyTitle">Your requests</h2>
+                <div class="section-heading"><h2 id="historyTitle">Your requests</h2><button class="button secondary" id="refreshRequestHistoryButton" type="button">Refresh</button></div>
                 <div id="requestHistory" aria-live="polite">Loading requests...</div>
             </section>
         </div>
@@ -147,14 +149,22 @@
         }
 
         async function loadRequests() {
-            const data = await requestJson('/api/student/profile/requests');
             const history = document.getElementById('requestHistory');
-            history.innerHTML = data.requests.length ? data.requests.map(request => {
-                const requestedChanges = Object.entries(request.changes || {}).filter(([field]) => ['full_name', 'student_class', 'department'].includes(field)).map(([field, value]) => `${({ full_name: 'Name', student_class: 'Class', department: 'Department' })[field]}: ${escapeHtml(value)}`);
-                if (request.changes?.picture) requestedChanges.push('Profile picture change requested');
-                if (request.hasPasswordChange) requestedChanges.push('CBT password change requested');
-                return `<article class="request"><div class="request-head"><strong>${escapeHtml(request.createdAt ? new Date(request.createdAt).toLocaleString() : 'Request')}</strong><span class="tag ${request.status === 'pending' ? 'pending' : request.status === 'rejected' ? 'rejected' : ''}">${escapeHtml(request.status)}</span></div>${requestedChanges.map(change => `<p>${change}</p>`).join('')}${request.reason ? `<p>Reason: ${escapeHtml(request.reason)}</p>` : ''}${request.reviewNote ? `<p>Admin note: ${escapeHtml(request.reviewNote)}</p>` : ''}</article>`;
-            }).join('') : '<p class="hint">You have not submitted any requests.</p>';
+            history.textContent = 'Loading requests...';
+            try {
+                const data = await requestJson('/api/student/profile/requests');
+                if (!Array.isArray(data.requests)) throw new Error('The server returned an invalid request history.');
+                history.innerHTML = data.requests.length ? data.requests.map(request => {
+                    const requestedChanges = Object.entries(request.changes || {}).filter(([field]) => ['full_name', 'student_class', 'department'].includes(field)).map(([field, value]) => `${({ full_name: 'Name', student_class: 'Class', department: 'Department' })[field]}: ${escapeHtml(value)}`);
+                    if (request.changes?.picture) requestedChanges.push('Profile picture change requested');
+                    if (request.hasPasswordChange) requestedChanges.push('CBT password change requested');
+                    return `<article class="request"><div class="request-head"><strong>${escapeHtml(request.createdAt ? new Date(request.createdAt).toLocaleString() : 'Request')}</strong><span class="tag ${request.status === 'pending' ? 'pending' : request.status === 'rejected' ? 'rejected' : ''}">${escapeHtml(request.status)}</span></div>${requestedChanges.map(change => `<p>${change}</p>`).join('')}${request.reason ? `<p>Reason: ${escapeHtml(request.reason)}</p>` : ''}${request.reviewNote ? `<p>Admin note: ${escapeHtml(request.reviewNote)}</p>` : ''}</article>`;
+                }).join('') : '<p class="hint">You have not submitted any requests.</p>';
+                return data.requests;
+            } catch (error) {
+                history.innerHTML = `<p class="hint">${escapeHtml(error.message || 'Could not load your requests.')}</p>`;
+                return null;
+            }
         }
 
         document.getElementById('studentLoginForm').addEventListener('submit', async event => {
@@ -217,25 +227,29 @@
                 };
                 if (selectedPhotoData) body.picture = selectedPhotoData;
                 if (newPassword) body.newPassword = newPassword;
-                await requestJson('/api/student/profile/requests', {
+                const submittedRequest = await requestJson('/api/student/profile/requests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
-                requestStatus.textContent = 'Request submitted for admin approval.';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
                 document.getElementById('requestReason').value = '';
                 document.getElementById('changePhoto').value = '';
                 selectedPhotoData = '';
                 document.getElementById('newPhotoPreview').hidden = true;
-                await loadRequests();
+                const historyRequests = await loadRequests();
+                requestStatus.textContent = historyRequests?.some(request => String(request._id) === String(submittedRequest.requestId))
+                    ? 'Request submitted for admin approval.'
+                    : 'Request was submitted, but could not be confirmed in your history. Use Refresh to check again.';
             } catch (error) {
                 requestStatus.textContent = error.message || 'Could not submit request.';
             } finally {
                 button.disabled = false;
             }
         });
+
+        document.getElementById('refreshRequestHistoryButton').addEventListener('click', () => void loadRequests());
     </script>
 </body>
 </html>
