@@ -36,6 +36,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <link rel="stylesheet" href="dgc-loader.css">
     <script src="device-detector.js" defer></script>
+    <script src="scientific-calculator.js" defer></script>
     <style>
         html,
         body {
@@ -773,6 +774,77 @@
                 flex-basis: 2.05rem;
             }
         }
+
+        #scientificCalculatorPanel {
+            width: min(360px, calc(100vw - 1rem));
+            max-width: calc(100vw - 1rem);
+            max-height: calc(100vh - 1rem);
+            max-height: calc(100dvh - max(1rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+            right: max(.5rem, env(safe-area-inset-right));
+            bottom: max(.5rem, env(safe-area-inset-bottom));
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #scientificCalculatorPanel button {
+            min-width: 0;
+            min-height: 2.5rem;
+            touch-action: manipulation;
+        }
+
+        #calculatorDisplay {
+            min-width: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 480px) {
+            #scientificCalculatorPanel {
+                right: max(.5rem, env(safe-area-inset-right));
+                bottom: max(.5rem, env(safe-area-inset-bottom));
+                padding: .65rem;
+                border-radius: 1.25rem;
+            }
+
+            #scientificCalculatorPanel .grid {
+                gap: .375rem;
+            }
+
+            #scientificCalculatorPanel .grid button {
+                min-height: 2.75rem;
+                padding-inline: .25rem;
+            }
+
+            #calculatorDisplay {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-height: 520px) {
+            #scientificCalculatorPanel {
+                padding: .5rem;
+                border-radius: 1rem;
+            }
+
+            #scientificCalculatorPanel > div:first-child {
+                margin-bottom: .4rem;
+            }
+
+            #scientificCalculatorPanel > div:nth-child(2),
+            #scientificCalculatorPanel > div:nth-child(3) {
+                margin-bottom: .5rem;
+            }
+
+            #scientificCalculatorPanel .grid {
+                gap: .3rem;
+            }
+
+            #scientificCalculatorPanel .grid button {
+                min-height: 2rem;
+                padding-block: .25rem;
+            }
+        }
     </style>
 </head>
 
@@ -1142,6 +1214,10 @@
                     <div
                         class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
+                            <button id="toggleCalculatorBtn" type="button"
+                                class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:border-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 dark:hover:bg-cyan-900/50 transition">
+                                <i class="fa-solid fa-calculator mr-1"></i> Calculator
+                            </button>
                             <button onclick="clearResponse()"
                                 class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Clear Selection
@@ -1201,6 +1277,74 @@
                 </div>
             </div>
         </section>
+
+        <div id="scientificCalculatorPanel" class="hidden fixed bottom-5 right-5 z-40 w-[360px] max-w-[calc(100vw-1.5rem)] rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <div class="text-sm font-black tracking-tight text-slate-800 dark:text-slate-100">Scientific Calculator</div>
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Exam Tool</div>
+                </div>
+                <button id="closeCalculatorBtn" type="button" class="h-8 w-8 rounded-full bg-slate-100 text-lg leading-none text-slate-500 transition hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white">×</button>
+            </div>
+
+            <div class="mb-3 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-2.5 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                    <button id="calculatorModeToggle" type="button" class="rounded-lg bg-cyan-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-cyan-700">
+                        DEG
+                    </button>
+                    <div class="flex items-center gap-1.5 rounded-lg bg-white/70 px-2 py-1 text-[10px] font-bold text-slate-600 shadow-sm dark:bg-slate-700/80 dark:text-slate-200">
+                        <span>M</span>
+                        <span id="calculatorMemoryDisplay" class="font-mono text-slate-700 dark:text-slate-100">0</span>
+                    </div>
+                </div>
+                <input id="calculatorDisplay" type="text" value="0" class="w-full border-0 bg-transparent text-right text-2xl font-semibold tracking-tight text-slate-800 outline-none dark:text-white" readonly>
+            </div>
+
+            <div class="mb-3 grid grid-cols-5 gap-2 text-[11px] font-black">
+                <button type="button" data-memory-action="mc" class="calculator-memory-btn rounded-lg bg-slate-200 px-2 py-2 text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">MC</button>
+                <button type="button" data-memory-action="mr" class="calculator-memory-btn rounded-lg bg-slate-200 px-2 py-2 text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">MR</button>
+                <button type="button" data-memory-action="mplus" class="calculator-memory-btn rounded-lg bg-slate-200 px-2 py-2 text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">M+</button>
+                <button type="button" data-memory-action="mminus" class="calculator-memory-btn rounded-lg bg-slate-200 px-2 py-2 text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">M−</button>
+                <button type="button" data-action="ans" class="calculator-action-btn rounded-lg bg-violet-100 px-2 py-2 text-violet-700 transition hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-200 dark:hover:bg-violet-900/50">Ans</button>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 text-sm">
+                <button type="button" data-value="sin(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">sin</button>
+                <button type="button" data-value="cos(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">cos</button>
+                <button type="button" data-value="tan(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">tan</button>
+                <button type="button" data-value="sqrt(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">√</button>
+                <button type="button" data-action="clear" class="calculator-action-btn rounded-xl bg-rose-100 px-2 py-2 font-bold text-rose-700 transition hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:hover:bg-rose-900/50">AC</button>
+
+                <button type="button" data-value="log(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">log</button>
+                <button type="button" data-value="ln(" class="calculator-fn-btn rounded-xl bg-slate-100 px-2 py-2 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">ln</button>
+                <button type="button" data-action="square" class="calculator-action-btn rounded-xl bg-amber-100 px-2 py-2 font-semibold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50">x²</button>
+                <button type="button" data-value="(" class="calculator-operator-btn rounded-xl bg-slate-200 px-2 py-2 font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">(</button>
+                <button type="button" data-action="delete" class="calculator-action-btn rounded-xl bg-slate-200 px-2 py-2 font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">DEL</button>
+
+                <button type="button" data-value="7" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">7</button>
+                <button type="button" data-value="8" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">8</button>
+                <button type="button" data-value="9" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">9</button>
+                <button type="button" data-value="/" class="calculator-operator-btn rounded-xl bg-amber-100 px-2 py-2 font-bold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50">÷</button>
+                <button type="button" data-value=")" class="calculator-operator-btn rounded-xl bg-slate-200 px-2 py-2 font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">)</button>
+
+                <button type="button" data-value="4" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">4</button>
+                <button type="button" data-value="5" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">5</button>
+                <button type="button" data-value="6" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">6</button>
+                <button type="button" data-value="*" class="calculator-operator-btn rounded-xl bg-amber-100 px-2 py-2 font-bold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50">×</button>
+                <button type="button" data-value="PI" class="calculator-constant-btn rounded-xl bg-indigo-100 px-2 py-2 font-bold text-indigo-700 transition hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50">π</button>
+
+                <button type="button" data-value="1" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">1</button>
+                <button type="button" data-value="2" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">2</button>
+                <button type="button" data-value="3" class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">3</button>
+                <button type="button" data-value="-" class="calculator-operator-btn rounded-xl bg-amber-100 px-2 py-2 font-bold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50">−</button>
+                <button type="button" data-value="E" class="calculator-constant-btn rounded-xl bg-indigo-100 px-2 py-2 font-bold text-indigo-700 transition hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50">e</button>
+
+                <button type="button" data-value="0" class="calculator-number-btn col-span-2 rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">0</button>
+                <button type="button" data-value="." class="calculator-number-btn rounded-xl bg-white px-2 py-2 font-semibold text-slate-800 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">.</button>
+                <button type="button" data-value="+" class="calculator-operator-btn rounded-xl bg-amber-100 px-2 py-2 font-bold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50">+</button>
+                <button type="button" data-action="evaluate" class="calculator-action-btn rounded-xl bg-emerald-500 px-2 py-2 font-black text-white transition hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500">=</button>
+            </div>
+        </div>
 
         <!-- ========================================== -->
         <!-- VIEW 4: PRIVATE SUBMISSION CONFIRMATION -->
@@ -2207,6 +2351,227 @@
         document.getElementById('cbtNotificationToggleButton')?.addEventListener('click', () => {
             requestCbtNotificationsPermissionIfNeeded(true);
         });
+
+        const scientificCalculatorState = {
+            expression: '',
+            mode: 'deg',
+            memory: 0,
+            lastAnswer: 0
+        };
+
+        function updateCalculatorDisplay() {
+            const display = document.getElementById('calculatorDisplay');
+            if (!display) return;
+            display.value = scientificCalculatorState.expression || '0';
+        }
+
+        function updateCalculatorMemoryDisplay() {
+            const memoryDisplay = document.getElementById('calculatorMemoryDisplay');
+            if (!memoryDisplay) return;
+            memoryDisplay.textContent = scientificCalculatorState.memory === 0 ? '0' : String(scientificCalculatorState.memory);
+        }
+
+        function setCalculatorMode(mode) {
+            scientificCalculatorState.mode = mode;
+            const button = document.getElementById('calculatorModeToggle');
+            if (!button) return;
+            button.textContent = mode.toUpperCase();
+            button.classList.toggle('bg-cyan-600', mode === 'deg');
+            button.classList.toggle('bg-violet-600', mode === 'rad');
+        }
+
+        function appendCalculatorValue(value) {
+            if (scientificCalculatorState.expression === 'Error') {
+                scientificCalculatorState.expression = '';
+            }
+            scientificCalculatorState.expression += value;
+            updateCalculatorDisplay();
+        }
+
+        function getCurrentCalculatorValue() {
+            if (!scientificCalculatorState.expression || scientificCalculatorState.expression === 'Error') {
+                return 0;
+            }
+            const parsed = Number(scientificCalculatorState.expression);
+            if (Number.isFinite(parsed)) {
+                return parsed;
+            }
+            try {
+                const result = ScientificCalculator.evaluateScientificExpression(scientificCalculatorState.expression, scientificCalculatorState.mode);
+                scientificCalculatorState.lastAnswer = Number.isFinite(result) ? result : 0;
+                return scientificCalculatorState.lastAnswer;
+            } catch (error) {
+                return 0;
+            }
+        }
+
+        function applyCalculatorMemory(action) {
+            const value = getCurrentCalculatorValue();
+
+            if (action === 'mc') {
+                scientificCalculatorState.memory = 0;
+                updateCalculatorMemoryDisplay();
+                return;
+            }
+            if (action === 'mr') {
+                scientificCalculatorState.expression = String(scientificCalculatorState.memory || 0);
+                updateCalculatorDisplay();
+                return;
+            }
+            if (action === 'mplus') {
+                scientificCalculatorState.memory += value;
+            }
+            if (action === 'mminus') {
+                scientificCalculatorState.memory -= value;
+            }
+            if (action === 'ms') {
+                scientificCalculatorState.memory = value;
+            }
+            updateCalculatorMemoryDisplay();
+        }
+
+        function evaluateScientificCalculator() {
+            if (!scientificCalculatorState.expression) {
+                scientificCalculatorState.expression = '0';
+                updateCalculatorDisplay();
+                return;
+            }
+
+            try {
+                const result = ScientificCalculator.evaluateScientificExpression(scientificCalculatorState.expression, scientificCalculatorState.mode);
+                if (!Number.isFinite(result)) {
+                    throw new Error('Invalid result');
+                }
+                scientificCalculatorState.lastAnswer = result;
+                scientificCalculatorState.expression = String(result);
+                updateCalculatorDisplay();
+            } catch (error) {
+                scientificCalculatorState.expression = 'Error';
+                updateCalculatorDisplay();
+                showToast('Calculator Error: check your expression', 'error');
+            }
+        }
+
+        function toggleScientificCalculator() {
+            const panel = document.getElementById('scientificCalculatorPanel');
+            if (!panel) return;
+            panel.classList.toggle('hidden');
+        }
+
+        function clearCalculatorExpression() {
+            scientificCalculatorState.expression = '';
+            updateCalculatorDisplay();
+        }
+
+        function deleteCalculatorCharacter() {
+            scientificCalculatorState.expression = scientificCalculatorState.expression.slice(0, -1);
+            updateCalculatorDisplay();
+        }
+
+        function squareCurrentExpression() {
+            const current = getCurrentCalculatorValue();
+            scientificCalculatorState.expression = String(current * current);
+            scientificCalculatorState.lastAnswer = current * current;
+            updateCalculatorDisplay();
+        }
+
+        function negateCurrentExpression() {
+            if (!scientificCalculatorState.expression || scientificCalculatorState.expression === 'Error') {
+                scientificCalculatorState.expression = '-';
+                updateCalculatorDisplay();
+                return;
+            }
+            scientificCalculatorState.expression = scientificCalculatorState.expression.startsWith('-')
+                ? scientificCalculatorState.expression.slice(1)
+                : `-${scientificCalculatorState.expression}`;
+            updateCalculatorDisplay();
+        }
+
+        function handleCalculatorAction(action) {
+            if (action === 'clear') {
+                clearCalculatorExpression();
+                return;
+            }
+            if (action === 'delete') {
+                deleteCalculatorCharacter();
+                return;
+            }
+            if (action === 'evaluate') {
+                evaluateScientificCalculator();
+                return;
+            }
+            if (action === 'ans') {
+                appendCalculatorValue(String(scientificCalculatorState.lastAnswer ?? 0));
+                return;
+            }
+            if (action === 'square') {
+                squareCurrentExpression();
+                return;
+            }
+            if (action === 'toggle-sign') {
+                negateCurrentExpression();
+            }
+        }
+
+        function handleCalculatorKeyboardInput(event) {
+            if (event.target && ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return;
+            if (event.key === 'Escape') {
+                toggleScientificCalculator();
+                return;
+            }
+            if (event.key === 'Enter') {
+                evaluateScientificCalculator();
+                return;
+            }
+            if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '-', '*', '/', '.', '^', '(', ')'].includes(event.key)) {
+                appendCalculatorValue(event.key);
+            }
+            if (event.key === 'Backspace') {
+                deleteCalculatorCharacter();
+            }
+            if (event.key.toLowerCase() === 's') {
+                appendCalculatorValue('sin(');
+            }
+            if (event.key.toLowerCase() === 'c') {
+                appendCalculatorValue('cos(');
+            }
+            if (event.key.toLowerCase() === 't') {
+                appendCalculatorValue('tan(');
+            }
+        }
+
+        document.getElementById('toggleCalculatorBtn')?.addEventListener('click', toggleScientificCalculator);
+        document.getElementById('closeCalculatorBtn')?.addEventListener('click', toggleScientificCalculator);
+        document.getElementById('calculatorModeToggle')?.addEventListener('click', () => {
+            setCalculatorMode(scientificCalculatorState.mode === 'deg' ? 'rad' : 'deg');
+        });
+
+        document.querySelectorAll('.calculator-number-btn, .calculator-operator-btn, .calculator-constant-btn, .calculator-fn-btn, .calculator-memory-btn, .calculator-action-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const action = button.dataset.action;
+                const memoryAction = button.dataset.memoryAction;
+                const value = button.dataset.value;
+
+                if (memoryAction) {
+                    applyCalculatorMemory(memoryAction);
+                    return;
+                }
+
+                if (action) {
+                    handleCalculatorAction(action);
+                    return;
+                }
+
+                if (value) {
+                    appendCalculatorValue(value);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', handleCalculatorKeyboardInput);
+        updateCalculatorDisplay();
+        updateCalculatorMemoryDisplay();
+        setCalculatorMode('deg');
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
