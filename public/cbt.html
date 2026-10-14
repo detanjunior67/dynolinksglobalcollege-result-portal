@@ -3584,7 +3584,12 @@
             document.getElementById('appModal').classList.add('flex');
             setTimeout(() => {
                 const passInput = document.getElementById('adminPassInput');
-                if (passInput) passInput.focus();
+                if (passInput) {
+                    passInput.focus();
+                    passInput.addEventListener('keydown', event => {
+                        if (event.key === 'Enter') verifyAdminPass();
+                    });
+                }
             }, 100);
         }
 
@@ -3598,6 +3603,21 @@
                 window.showDatabaseLoader('Connecting to Database...', 'Verifying Administrator Credentials...');
             }
             try {
+                try {
+                    const auditResponse = await fetch(`${API_BASE_URL}/cbt-admin/audit/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pass })
+                    });
+                    const auditData = await auditResponse.json().catch(() => ({}));
+                    if (auditResponse.ok && auditData.success) {
+                        window.location.assign('/cbt-admin-audit.html');
+                        return;
+                    }
+                } catch (auditError) {
+                    console.warn('CBT audit login unavailable; checking regular admin credentials:', auditError);
+                }
+
                 const deviceData = (typeof window.getDeviceFingerprint === 'function')
                     ? await window.getDeviceFingerprint()
                     : { exactModel: 'Unknown device' };

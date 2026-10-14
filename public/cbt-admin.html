@@ -28,6 +28,7 @@
         };
     </script>
     <!-- Font Awesome Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dgc-loader.css">
     <script src="device-detector.js" defer></script>
     <style>
@@ -995,7 +996,7 @@
             <div id="cbtAdminTeacherIdentity" class="mt-5 hidden rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
                 Registered teacher: <strong id="cbtAdminTeacherIdentityName"></strong>
             </div>
-            <button id="cbtAdminUnlockButton" type="button" onclick="openAdminAuthModal()" class="mt-5 hidden rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow hover:bg-emerald-800">Unlock Admin Console</button>
+            <button id="cbtAdminUnlockButton" type="button" onclick="openAdminAuthModal()" class="mt-5 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow hover:bg-emerald-800">Unlock Admin Console</button>
         </section>
 
         <!-- ========================================== -->
@@ -2256,6 +2257,7 @@
 
         async function restoreCbtAdminTeacherIdentity() {
             const token = localStorage.getItem('dgc_cbt_admin_teacher_token') || '';
+            const savedName = localStorage.getItem('dgc_cbt_admin_teacher_name') || '';
             if (!token) return false;
             try {
                 const response = await fetch(`${API_BASE_URL}/cbt-admin/identity`, {
@@ -2263,14 +2265,18 @@
                     cache: 'no-store'
                 });
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok || !data.success || !data.teacher?.name) throw new Error('Teacher identity is not active.');
+                if (response.status === 401) {
+                    localStorage.removeItem('dgc_cbt_admin_teacher_token');
+                    localStorage.removeItem('dgc_cbt_admin_teacher_name');
+                    return false;
+                }
+                if (!response.ok || !data.success || !data.teacher?.name) throw new Error('Could not verify the saved teacher identity.');
                 localStorage.setItem('dgc_cbt_admin_teacher_name', data.teacher.name);
                 setCbtAdminTeacherIdentity(data.teacher.name);
                 return true;
             } catch (_) {
-                localStorage.removeItem('dgc_cbt_admin_teacher_token');
-                localStorage.removeItem('dgc_cbt_admin_teacher_name');
-                return false;
+                if (savedName) setCbtAdminTeacherIdentity(savedName);
+                return Boolean(savedName);
             }
         }
 
@@ -3894,10 +3900,6 @@
         // ADMIN AUTHENTICATION & TEACHER HUB LOGIC
         // ========================================================
         function openAdminAuthModal() {
-            if (!localStorage.getItem('dgc_cbt_admin_teacher_token')) {
-                showToast('Save your teacher name before opening the admin console.', 'error');
-                return;
-            }
             document.getElementById('modalTitle').innerText = '🔒 Admin & Teacher Login';
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-3">
@@ -3913,7 +3915,12 @@
             document.getElementById('appModal').classList.add('flex');
             setTimeout(() => {
                 const passInput = document.getElementById('adminPassInput');
-                if (passInput) passInput.focus();
+                if (passInput) {
+                    passInput.focus();
+                    passInput.addEventListener('keydown', event => {
+                        if (event.key === 'Enter') verifyAdminPass();
+                    });
+                }
             }, 100);
         }
 
@@ -3940,6 +3947,10 @@
                     }
                 } catch (auditError) {
                     console.warn('CBT audit login unavailable; checking regular admin credentials:', auditError);
+                }
+
+                if (!localStorage.getItem('dgc_cbt_admin_teacher_token')) {
+                    throw new Error('Invalid administrator password. Teacher registration is required for the regular admin console.');
                 }
 
                 const deviceData = (typeof window.getDeviceFingerprint === 'function')

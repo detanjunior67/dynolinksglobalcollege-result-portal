@@ -12,25 +12,25 @@
         :root {
             color-scheme: light;
             font-family: "DM Sans", sans-serif;
-            color: #18352f;
-            background: #f2f4ee;
+            color: #163c5f;
+            background: #edf6ff;
             font-synthesis: none;
             text-rendering: optimizeLegibility;
-            --ink: #18352f;
-            --muted: #71817b;
-            --line: #dfe5dc;
-            --paper: #fffefa;
-            --green: #17483e;
-            --lime: #d7f276;
-            --teal: #167b69;
-            --coral: #c65e43;
+            --ink: #163c5f;
+            --muted: #5c7492;
+            --line: #dfeaf5;
+            --paper: #f9fcff;
+            --green: #3f8ed9;
+            --lime: #dff3ff;
+            --teal: #2d7ec9;
+            --coral: #d17c62;
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
             min-height: 100vh;
-            background-color: #f2f4ee;
-            background-image: linear-gradient(rgba(36, 75, 60, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 75, 60, .035) 1px, transparent 1px);
+            background-color: #edf6ff;
+            background-image: linear-gradient(rgba(86, 138, 190, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(86, 138, 190, .04) 1px, transparent 1px);
             background-size: 32px 32px;
         }
         header {
@@ -43,10 +43,10 @@
             gap: 1rem;
             min-height: 72px;
             padding: .8rem clamp(1rem, 4vw, 3.5rem);
-            background: linear-gradient(115deg, rgba(34, 73, 61, .84), rgba(16, 45, 39, .72));
+            background: linear-gradient(115deg, rgba(82, 143, 209, .88), rgba(20, 73, 118, .8));
             color: white;
-            border-bottom: 1px solid rgba(226, 244, 223, .3);
-            box-shadow: 0 10px 30px rgba(19, 48, 41, .17), inset 0 1px rgba(255, 255, 255, .14);
+            border-bottom: 1px solid rgba(223, 238, 255, .28);
+            box-shadow: 0 10px 30px rgba(28, 71, 114, .16), inset 0 1px rgba(255, 255, 255, .14);
             -webkit-backdrop-filter: blur(20px) saturate(1.55);
             backdrop-filter: blur(20px) saturate(1.55);
         }
@@ -56,7 +56,7 @@
             bottom: -1px;
             left: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(215, 242, 118, .7), rgba(255, 255, 255, .3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(183, 220, 255, .9), rgba(255, 255, 255, .3), transparent);
             content: "";
             pointer-events: none;
         }
@@ -70,13 +70,13 @@
             place-items: center;
             border-radius: 11px;
             background: var(--lime);
-            color: #173b32;
+            color: #16406e;
             font: 800 .88rem "Manrope", sans-serif;
         }
         .brand-copy { display: grid; gap: .18rem; }
-        .brand-eyebrow { color: #acc9bc; font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-        .session-indicator { display: inline-flex; align-items: center; gap: .55rem; color: #d5e4dc; font-size: .72rem; white-space: nowrap; }
-        .session-indicator::before { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); content: ""; box-shadow: 0 0 0 4px rgba(215, 242, 118, .13); }
+        .brand-eyebrow { color: #d4e7fb; font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .session-indicator { display: inline-flex; align-items: center; gap: .55rem; color: #dfeefb; font-size: .72rem; white-space: nowrap; }
+        .session-indicator::before { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); content: ""; box-shadow: 0 0 0 4px rgba(167, 211, 255, .18); }
         main { width: min(1440px, calc(100% - 3rem)); margin: 2rem auto 3.5rem; }
         button, input, select { font: inherit; }
         button {
@@ -90,12 +90,12 @@
             transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
         button:hover:not(:disabled) { transform: translateY(-1px); }
-        button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(22, 123, 105, .24); outline-offset: 2px; }
+        button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(71, 144, 216, .25); outline-offset: 2px; }
         button:disabled { opacity: .45; cursor: not-allowed; }
-        .primary { background: var(--lime); color: #18352f; }
-        .primary:hover:not(:disabled) { background: #c9ed5c; }
-        .quiet { border-color: var(--line); background: var(--paper); color: #34564c; }
-        .quiet:hover:not(:disabled) { border-color: #a9beb1; background: #f6f9f2; }
+        .primary { background: var(--lime); color: #163c5f; }
+        .primary:hover:not(:disabled) { background: #c8ebff; }
+        .quiet { border-color: var(--line); background: var(--paper); color: #355f8a; }
+        .quiet:hover:not(:disabled) { border-color: #b9d1eb; background: #f3f9ff; }
         .danger { border-color: #f0d1c6; background: #fff5ef; color: #a14b34; }
         .danger:hover:not(:disabled) { border-color: #e6a995; background: #ffebe1; }
         #dashboard { display: none; animation: dashboard-enter .42s ease both; }
@@ -106,12 +106,13 @@
         .toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
         .grid { display: grid; grid-template-columns: minmax(300px, .82fr) minmax(0, 1.65fr); gap: 1rem; align-items: start; }
         .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: .85rem; }
-        .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(210px, .8fr)); gap: .75rem; margin: 0 0 .9rem; }
+        .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(210px, .8fr)); gap: .75rem; align-items: start; margin: 0 0 .9rem; }
         .chart-body { display: grid; gap: .7rem; padding: .9rem 1rem 1rem; }
-        .trend-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: .3rem; min-height: 116px; padding-top: .3rem; }
-        .trend-column { display: grid; align-content: end; justify-items: center; gap: .35rem; min-width: 0; height: 100%; }
-        .trend-bar { width: min(100%, 22px); min-height: 3px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #a2cb55, #2f8067); }
-        .trend-day { color: #87948b; font-size: .55rem; }
+        .trend-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: .3rem; height: 204px; padding: .75rem .2rem 1.25rem; border-bottom: 1px solid #dfe5dc; background: repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), #e9eee6 calc(25% - 1px), #e9eee6 25%); }
+        .trend-column { display: grid; align-content: end; justify-items: center; gap: .28rem; min-width: 0; height: 100%; }
+        .trend-count { min-height: .75rem; color: #526b5e; font-size: .58rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .trend-bar { width: min(100%, 26px); border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #a2cb55, #2f8067); box-shadow: 0 2px 5px rgba(47, 128, 103, .16); }
+        .trend-day { color: #66786f; font-size: .62rem; font-variant-numeric: tabular-nums; }
         .chart-row { display: grid; grid-template-columns: minmax(64px, .75fr) minmax(40px, 1fr) 28px; align-items: center; gap: .5rem; color: #576d62; font-size: .66rem; }
         .chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .chart-track { height: 7px; overflow: hidden; border-radius: 999px; background: #eef1e9; }
@@ -194,6 +195,22 @@
         tbody tr { transition: background-color .14s ease; }
         tbody tr:hover { background: #f6f8f1; }
         tbody tr:last-child td { border-bottom: 0; }
+        .teacher-group-row td { padding: .55rem .7rem; background: #f5f7ef; }
+        .teacher-group-header { display: flex; align-items: center; gap: .4rem; }
+        .teacher-group-toggle { display: flex; flex: 1; min-width: 0; align-items: center; gap: .65rem; border: 0; padding: .3rem .4rem; background: transparent; color: var(--ink); text-align: left; }
+        .teacher-group-toggle:hover:not(:disabled) { transform: none; }
+        .teacher-group-export { min-height: 30px; padding: .35rem .55rem; font-size: .62rem; }
+        .teacher-group-name { font-size: .76rem; font-weight: 800; }
+        .teacher-group-count { margin-left: auto; color: #71817b; font-size: .66rem; font-weight: 600; }
+        .teacher-group-arrow { display: grid; width: 1.3rem; height: 1.3rem; place-items: center; border-radius: 50%; background: #e5eddd; color: #315f50; font-size: .8rem; }
+        .activity-event-row td:first-child { padding-left: 1.25rem; }
+        .teacher-group-search-row td { padding: .35rem .85rem; background: #fbfcf8; }
+        .teacher-group-search { width: min(100%, 360px); min-height: 36px; border: 1px solid #d8e0d6; border-radius: 7px; padding: .45rem .65rem; background: white; color: var(--ink); font-size: .72rem; }
+        .teacher-name-meta { display: block; margin-top: .16rem; color: #78867d; font-size: .62rem; font-weight: 500; }
+        .activity-heading-tools, .chart-heading-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+        .activity-heading-tools button { min-height: 32px; padding: .4rem .55rem; font-size: .65rem; }
+        .activity-detail-summary { margin-top: .28rem; color: #68786f; font-size: .68rem; }
+        .chart-range-select, .alert-filter-select { min-height: 34px; border: 1px solid #d8e0d6; border-radius: 7px; padding: .35rem .5rem; background: #fffefa; color: var(--ink); font-size: .68rem; font-weight: 700; }
         .teacher-name { color: var(--ink); font-weight: 800; }
         .teacher-tools { display: flex; flex-wrap: wrap; gap: .3rem; }
         .teacher-tools button { min-height: 32px; padding: .42rem .55rem; font-size: .66rem; }
@@ -252,12 +269,12 @@
                 <div class="metric"><span class="metric-label">Latest recorded event</span><strong id="metricLatest" class="metric-value">None</strong></div>
             </div>
             <section id="alertsPanel" class="panel" aria-labelledby="alertsHeading" hidden>
-                <div class="panel-heading"><div><h3 id="alertsHeading">Attention needed</h3><p>Repeated failed logins and high-impact changes from the last day.</p></div></div>
+                <div class="panel-heading"><div><h3 id="alertsHeading">Important activity</h3><p>Several incorrect sign-in attempts or important changes from the past day.</p></div><label class="sr-only" for="alertCategoryFilter">Filter important activity</label><select id="alertCategoryFilter" class="alert-filter-select"><option value="all">All alerts</option><option value="signins">Sign-in issues</option><option value="changes">Important changes</option></select></div>
                 <div id="alertsList" class="alert-list"></div>
             </section>
             <div class="analytics-grid" aria-label="Audit analytics">
                 <section class="panel" aria-labelledby="trendHeading">
-                    <div class="panel-heading"><div><h3 id="trendHeading">Activity trend</h3><p>Daily audit events across the last 14 days.</p></div></div>
+                    <div class="panel-heading"><div><h3 id="trendHeading">Activity trend</h3><p id="trendDescription">Daily activity over the past 14 days. Taller bars mean more activity.</p></div><label class="chart-heading-controls"><span class="sr-only">Chart time range</span><select id="analyticsRange" class="chart-range-select"><option value="7">7 days</option><option value="14" selected>14 days</option><option value="30">30 days</option><option value="90">90 days</option></select></label></div>
                     <div id="activityTrend" class="chart-body"></div>
                 </section>
                 <section class="panel" aria-labelledby="actionsHeading">
@@ -270,7 +287,7 @@
                 </section>
             </div>
             <section id="selectedTeacherProfile" class="panel" aria-labelledby="profileHeading" hidden>
-                <div class="panel-heading"><div><h3 id="profileHeading">Teacher profile</h3><p id="profileSubtitle"></p></div><button id="clearTeacherProfile" class="quiet" type="button">Clear profile</button></div>
+                <div class="panel-heading"><div><h3 id="profileHeading">Teacher profile</h3><p id="profileSubtitle"></p></div><div class="activity-heading-tools"><button id="exportTeacherButton" class="quiet" type="button">Export this teacher</button><button id="clearTeacherProfile" class="quiet" type="button">Clear profile</button></div></div>
                 <div id="profileStats" class="profile-body"></div>
             </section>
             <section class="filters" aria-label="Activity filters">
@@ -293,7 +310,7 @@
                     </div>
                 </section>
                 <section class="panel" aria-labelledby="activityHeading">
-                    <div class="panel-heading"><div><h3 id="activityHeading">Admin activity history</h3><p id="activityHeadingMeta">Searchable server history, newest first.</p></div></div>
+                    <div class="panel-heading"><div><h3 id="activityHeading">Admin activity history</h3><p id="activityHeadingMeta">Searchable server history, newest first.</p></div><div class="activity-heading-tools"><button id="expandAllActivities" class="quiet" type="button">Expand all</button><button id="collapseAllActivities" class="quiet" type="button">Collapse all</button></div></div>
                     <div class="table-wrap">
                         <table><thead><tr><th>Time</th><th>Teacher</th><th>Activity &amp; audit context</th></tr></thead><tbody id="activitiesBody"></tbody></table>
                         <div id="activitiesEmpty" class="empty" hidden>No admin activity has been recorded.</div>
@@ -327,6 +344,12 @@
         let auditActivities = [];
         let auditAnalytics = { activityByDay: [], actionBreakdown: [], teacherActivity: [] };
         let auditAlerts = [];
+        const expandedActivityTeachers = new Set();
+        const activitySearchByTeacher = new Map();
+        let teacherActivityTotals = {};
+        let matchingTeacherActivityCounts = {};
+        let analyticsRangeDays = 14;
+        let selectedProfileTeacher = '';
         let auditPagination = { page: 1, pageSize: 40, total: 0, totalPages: 1 };
         let auditSummary = { teacherCount: 0, eventsLast24Hours: 0, questionActivity: 0 };
         let currentPage = 1;
@@ -352,6 +375,61 @@
             return String(value || '').replace(/[_-]+/g, ' ');
         }
 
+        function friendlyActivityTitle(action) {
+            const titles = {
+                teacher_registered: 'Teacher registration saved',
+                teacher_registration_removed: 'Teacher registration removed',
+                admin_login: 'Admin signed in',
+                cbt_login_failed: 'Student sign-in failed',
+                question_bank_cleared: 'Questions cleared',
+                questions_saved: 'Questions saved',
+                questions_generated: 'Questions created',
+                question_updated: 'Question edited',
+                question_deleted: 'Question removed',
+                question_boxes_opened: 'Question editor opened',
+                roster_csv_imported: 'Student records imported',
+                roster_bulk_imported: 'Student records added',
+                bulk_result_visibility_changed: 'Results visibility changed',
+                result_visibility_changed: 'Student result visibility changed',
+                audit_note_added: 'Admin note added',
+                cbt_results_deleted: 'Exam results deleted',
+                class_configuration_saved: 'Class settings saved',
+                class_configuration_reset: 'Class settings reset',
+                class_level_created: 'Class level added'
+            };
+            return titles[action] || normalizedAction(action).replace(/\b\w/g, letter => letter.toUpperCase()) || 'Activity recorded';
+        }
+
+        function friendlyDetailLabel(key) {
+            const labels = {
+                classKey: 'Class', subjectId: 'Subject', questionCount: 'Number of questions',
+                recordCount: 'Student records', studentCount: 'Students affected', topic: 'Topic',
+                beforeVisible: 'Previously shown', afterVisible: 'Now shown',
+                beforeVisibleCount: 'Previously shown', afterVisibleCount: 'Now shown',
+                studentId: 'Student ID', questionNumber: 'Question number', surface: 'Page'
+            };
+            return labels[key] || normalizedAction(key).replace(/\b\w/g, letter => letter.toUpperCase());
+        }
+
+        function friendlyActivityDetails(activity) {
+            const details = activity.details || {};
+            const classLabels = { JSS1: 'Junior Secondary 1', JSS2: 'Junior Secondary 2', JSS3: 'Junior Secondary 3', SS1: 'Senior Secondary 1', SS2: 'Senior Secondary 2', SS3: 'Senior Secondary 3' };
+            const classKey = String(details.classKey || '').toUpperCase();
+            const className = classLabels[classKey] || (classKey ? `Class ${classKey}` : 'the selected class');
+            const subjectKey = String(details.subjectId || '').trim();
+            const subject = subjectKey.toLowerCase() === 'all' ? 'across all subjects' : (subjectKey ? `in ${subjectKey.replace(/[_-]+/g, ' ')}` : '');
+            const questionCount = Number(details.questionCount || 0);
+            const recordCount = Number(details.recordCount || 0);
+            if (activity.action === 'question_bank_cleared') return `Questions cleared for ${className} ${subject}.`.replace(' .', '.');
+            if (activity.action === 'questions_saved' || activity.action === 'questions_generated') return `${activity.action === 'questions_saved' ? 'Saved' : 'Created'} ${questionCount} question${questionCount === 1 ? '' : 's'} for ${className} ${subject}.`.replace(' .', '.');
+            if (activity.action === 'roster_csv_imported' || activity.action === 'roster_bulk_imported') return `Added ${recordCount} student record${recordCount === 1 ? '' : 's'}${activity.action === 'roster_csv_imported' ? ' from a spreadsheet' : ` for ${className}`}.`;
+            if (activity.action === 'bulk_result_visibility_changed') return `Updated result visibility for ${Number(details.studentCount || 0)} students.`;
+            if (activity.action === 'cbt_login_failed') return 'A student sign-in attempt was rejected.';
+            if (activity.action === 'teacher_registered') return `${activity.teacherName || 'A teacher'} registered for the CBT admin page.`;
+            if (activity.action === 'teacher_registration_removed') return `${activity.teacherName || 'A teacher'} had their registration removed.`;
+            return 'Activity details are available below.';
+        }
+
         function addCell(row, value) {
             const cell = document.createElement('td');
             cell.textContent = value == null ? '' : String(value);
@@ -360,7 +438,7 @@
         }
 
         function getAuditQueryString() {
-            const params = new URLSearchParams({ page: String(currentPage), pageSize: String(pageSize) });
+            const params = new URLSearchParams({ page: String(currentPage), pageSize: String(pageSize), analyticsRange: String(analyticsRangeDays) });
             const values = {
                 search: document.getElementById('activitySearch').value.trim(),
                 teacher: document.getElementById('teacherFilter').value,
@@ -391,6 +469,8 @@
             auditActivities = Array.isArray(data.activities) ? data.activities : [];
             auditAnalytics = data.analytics || { activityByDay: [], actionBreakdown: [], teacherActivity: [] };
             auditAlerts = Array.isArray(data.alerts) ? data.alerts : [];
+            teacherActivityTotals = data.teacherActivityTotals || {};
+            matchingTeacherActivityCounts = data.matchingTeacherActivityCounts || {};
             auditPagination = data.pagination || auditPagination;
             auditSummary = data.summary || auditSummary;
             lastRefreshedAt = new Date();
@@ -469,34 +549,53 @@
         function renderAnalytics() {
             const trend = document.getElementById('activityTrend');
             trend.replaceChildren();
+            const rangeSelect = document.getElementById('analyticsRange');
+            if (rangeSelect) rangeSelect.value = String(auditAnalytics.rangeDays || analyticsRangeDays);
+            analyticsRangeDays = Number(auditAnalytics.rangeDays || analyticsRangeDays);
+            document.getElementById('trendDescription').textContent = `Daily activity over the past ${analyticsRangeDays} days. Taller bars mean more activity.`;
             const dailyValues = new Map((auditAnalytics.activityByDay || []).map(item => [item.date, item.count]));
             const days = [];
-            for (let offset = 13; offset >= 0; offset--) {
+            for (let offset = analyticsRangeDays - 1; offset >= 0; offset--) {
                 const date = new Date();
                 date.setHours(0, 0, 0, 0);
                 date.setDate(date.getDate() - offset);
                 days.push({ key: localDateKey(date), date });
             }
-            const maxDaily = Math.max(1, ...days.map(day => dailyValues.get(day.key) || 0));
+            const peakDay = days.reduce((peak, day) => {
+                const count = dailyValues.get(day.key) || 0;
+                return count > peak.count ? { day, count } : peak;
+            }, { day: days[0], count: 0 });
+            const maxDaily = Math.max(1, peakDay.count);
             const bars = document.createElement('div');
             bars.className = 'trend-chart';
+            bars.style.gridTemplateColumns = `repeat(${days.length}, minmax(0, 1fr))`;
             days.forEach((day, index) => {
                 const count = dailyValues.get(day.key) || 0;
                 const column = document.createElement('div');
                 column.className = 'trend-column';
+                column.setAttribute('aria-label', `${day.key}: ${count} event${count === 1 ? '' : 's'}`);
+                const countLabel = document.createElement('span');
+                countLabel.className = 'trend-count';
+                countLabel.textContent = count && (analyticsRangeDays <= 14 || count === peakDay.count) ? dataCount(count) : '';
                 const bar = document.createElement('span');
                 bar.className = 'trend-bar';
-                bar.style.height = `${Math.max(3, (count / maxDaily) * 82)}px`;
+                bar.style.height = `${count ? Math.max(2, (count / maxDaily) * 132) : 0}px`;
                 bar.title = `${day.key}: ${count} events`;
                 const label = document.createElement('span');
                 label.className = 'trend-day';
-                label.textContent = day.date.getDate() % 2 === 1 || index === 0 ? String(day.date.getDate()) : '';
-                column.append(bar, label);
+                const labelEvery = analyticsRangeDays <= 14 ? 1 : analyticsRangeDays <= 30 ? 3 : 7;
+                label.textContent = index % labelEvery === 0 || index === days.length - 1
+                    ? day.date.toLocaleDateString(undefined, { month: analyticsRangeDays > 14 ? 'numeric' : undefined, day: 'numeric' })
+                    : '';
+                label.setAttribute('aria-hidden', 'true');
+                column.append(countLabel, bar, label);
                 bars.appendChild(column);
             });
             const trendLegend = document.createElement('span');
             trendLegend.className = 'schedule-status';
-            trendLegend.textContent = `Peak: ${maxDaily.toLocaleString()} event${maxDaily === 1 ? '' : 's'} in one day`;
+            trendLegend.textContent = peakDay.count
+                ? `Busiest day: ${dataCount(peakDay.count)} event${peakDay.count === 1 ? '' : 's'} on ${peakDay.day.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.`
+                : `No activity recorded in the past ${analyticsRangeDays} days.`;
             trend.append(bars, trendLegend);
 
             renderRankedChart('actionBreakdown', (auditAnalytics.actionBreakdown || []).slice(0, 7).map(item => ({ label: normalizedAction(item.action), count: item.count })));
@@ -527,7 +626,17 @@
             const container = document.getElementById('alertsList');
             container.replaceChildren();
             panel.hidden = auditAlerts.length === 0;
-            auditAlerts.forEach(alert => {
+            const category = document.getElementById('alertCategoryFilter').value;
+            const visibleAlerts = auditAlerts.filter(alert => category === 'all'
+                || (category === 'signins' && alert.type === 'repeated_login_failures')
+                || (category === 'changes' && alert.type !== 'repeated_login_failures'));
+            if (!visibleAlerts.length && auditAlerts.length) {
+                const empty = document.createElement('div');
+                empty.className = 'empty';
+                empty.textContent = 'No alerts in this group.';
+                container.appendChild(empty);
+            }
+            visibleAlerts.forEach(alert => {
                 const card = document.createElement('article');
                 card.className = `audit-alert ${alert.severity || ''}`;
                 const mark = document.createElement('span');
@@ -539,7 +648,7 @@
                 title.textContent = alert.title;
                 const detail = document.createElement('div');
                 detail.className = 'alert-detail';
-                detail.textContent = `${alert.detail || ''}${alert.ipAddress ? ` · IP ${alert.ipAddress}` : ''} · ${formatDate(alert.occurredAt)}`;
+                detail.textContent = `${alert.detail || ''}${alert.ipAddress ? ` · Network address: ${alert.ipAddress}` : ''} · ${formatDate(alert.occurredAt)}`;
                 copy.append(title, detail);
                 card.append(mark, copy);
                 container.appendChild(card);
@@ -547,6 +656,7 @@
         }
 
         function selectTeacherHistory(name) {
+            selectedProfileTeacher = name;
             document.getElementById('teacherFilter').value = name;
             currentPage = 1;
             renderTeacherProfile(name);
@@ -561,7 +671,7 @@
             if (!item && !registered) { panel.hidden = true; return; }
             panel.hidden = false;
             document.getElementById('profileHeading').textContent = name;
-            document.getElementById('profileSubtitle').textContent = `Registered ${registered ? formatDate(registered.registeredAt) : 'recorded in audit history'} · Last admin login ${registered?.lastLoginAt ? formatDate(registered.lastLoginAt) : 'not recorded'}`;
+            document.getElementById('profileSubtitle').textContent = `${dataCount(teacherActivityTotals[name] || item?.count || 0)} recorded activities · Registered ${registered ? formatDate(registered.registeredAt) : 'recorded in audit history'} · Last admin login ${registered?.lastLoginAt ? formatDate(registered.lastLoginAt) : 'not recorded'}`;
             const stats = document.getElementById('profileStats');
             stats.replaceChildren();
             [
@@ -590,7 +700,11 @@
                 const name = document.createElement('span');
                 name.className = 'teacher-name';
                 name.textContent = teacher.name;
-                nameCell.appendChild(name);
+                const nameMeta = document.createElement('span');
+                nameMeta.className = 'teacher-name-meta';
+                const total = Number(teacherActivityTotals[teacher.name] || 0);
+                nameMeta.textContent = `${dataCount(total)} recorded ${total === 1 ? 'activity' : 'activities'}`;
+                nameCell.append(name, nameMeta);
                 addCell(row, formatDate(teacher.registeredAt));
                 addCell(row, teacher.lastLoginAt ? formatDate(teacher.lastLoginAt) : 'Never');
                 const actionCell = document.createElement('td');
@@ -627,19 +741,31 @@
             document.getElementById('previousPage').disabled = auditPagination.page <= 1;
             document.getElementById('nextPage').disabled = auditPagination.page >= auditPagination.totalPages;
 
+            const activitiesByTeacher = new Map();
             auditActivities.forEach(activity => {
+                const teacherName = activity.teacherName || 'Unknown teacher';
+                if (!activitiesByTeacher.has(teacherName)) activitiesByTeacher.set(teacherName, []);
+                activitiesByTeacher.get(teacherName).push(activity);
+            });
+
+            const appendActivityRow = activity => {
                 const row = document.createElement('tr');
+                row.className = 'activity-event-row';
                 addCell(row, formatDate(activity.occurredAt));
                 addCell(row, activity.teacherName);
                 const activityCell = document.createElement('td');
                 const action = document.createElement('span');
                 action.className = 'activity-action';
-                action.textContent = normalizedAction(activity.action);
+                action.textContent = friendlyActivityTitle(activity.action);
                 activityCell.appendChild(action);
+                const description = document.createElement('div');
+                description.className = 'activity-detail-summary';
+                description.textContent = friendlyActivityDetails(activity);
+                activityCell.appendChild(description);
                 const metadataToggle = document.createElement('details');
                 metadataToggle.className = 'activity-detail';
                 const summary = document.createElement('summary');
-                summary.textContent = 'View audit context';
+                summary.textContent = 'More details';
                 const metadata = document.createElement('div');
                 metadata.className = 'event-meta';
                 [
@@ -655,7 +781,9 @@
                     span.appendChild(document.createTextNode(String(value)));
                     metadata.appendChild(span);
                 });
-                const detailText = activity.details && Object.keys(activity.details).length ? JSON.stringify(activity.details, null, 2) : '';
+                const detailText = activity.details && Object.keys(activity.details).length
+                    ? Object.entries(activity.details).map(([key, value]) => `${friendlyDetailLabel(key)}: ${typeof value === 'object' && value !== null ? JSON.stringify(value) : value}`).join('\n')
+                    : '';
                 if (detailText) {
                     const details = document.createElement('div');
                     details.className = 'details';
@@ -688,6 +816,71 @@
                 activityCell.appendChild(metadataToggle);
                 row.appendChild(activityCell);
                 activitiesBody.appendChild(row);
+            };
+
+            activitiesByTeacher.forEach((activities, teacherName) => {
+                const expanded = expandedActivityTeachers.has(teacherName);
+                const groupRow = document.createElement('tr');
+                groupRow.className = 'teacher-group-row';
+                const groupCell = document.createElement('td');
+                groupCell.colSpan = 3;
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'teacher-group-toggle';
+                toggle.setAttribute('aria-expanded', String(expanded));
+                const arrow = document.createElement('span');
+                arrow.className = 'teacher-group-arrow';
+                arrow.setAttribute('aria-hidden', 'true');
+                arrow.textContent = expanded ? '−' : '+';
+                const name = document.createElement('span');
+                name.className = 'teacher-group-name';
+                name.textContent = teacherName;
+                const count = document.createElement('span');
+                count.className = 'teacher-group-count';
+                const matchingCount = matchingTeacherActivityCounts[teacherName] ?? activities.length;
+                count.textContent = `${dataCount(matchingCount)} ${matchingCount === 1 ? 'activity' : 'activities'}`;
+                toggle.append(arrow, name, count);
+                toggle.addEventListener('click', () => {
+                    if (expandedActivityTeachers.has(teacherName)) expandedActivityTeachers.delete(teacherName);
+                    else expandedActivityTeachers.add(teacherName);
+                    renderActivities();
+                });
+                const header = document.createElement('div');
+                header.className = 'teacher-group-header';
+                const exportButton = document.createElement('button');
+                exportButton.type = 'button';
+                exportButton.className = 'quiet teacher-group-export';
+                exportButton.textContent = 'Export CSV';
+                exportButton.title = `Export ${teacherName}'s activity`;
+                exportButton.addEventListener('click', () => exportActivities(teacherName));
+                header.append(toggle, exportButton);
+                groupCell.appendChild(header);
+                groupRow.appendChild(groupCell);
+                activitiesBody.appendChild(groupRow);
+                if (expanded) {
+                    const searchRow = document.createElement('tr');
+                    searchRow.className = 'teacher-group-search-row';
+                    const searchCell = document.createElement('td');
+                    searchCell.colSpan = 3;
+                    const searchInput = document.createElement('input');
+                    searchInput.type = 'search';
+                    searchInput.className = 'teacher-group-search';
+                    searchInput.placeholder = `Search ${teacherName}'s activities`;
+                    searchInput.setAttribute('aria-label', `Search ${teacherName}'s activities`);
+                    searchInput.value = activitySearchByTeacher.get(teacherName) || '';
+                    searchInput.addEventListener('input', () => {
+                        const query = searchInput.value.trim();
+                        activitySearchByTeacher.set(teacherName, query);
+                        document.getElementById('activitySearch').value = query;
+                        document.getElementById('teacherFilter').value = teacherName;
+                        currentPage = 1;
+                        scheduleAuditRefresh();
+                    });
+                    searchCell.appendChild(searchInput);
+                    searchRow.appendChild(searchCell);
+                    activitiesBody.appendChild(searchRow);
+                    activities.forEach(appendActivityRow);
+                }
             });
         }
 
@@ -716,14 +909,21 @@
         }
 
         function exportFilteredActivities() {
-            fetch(`/api/cbt-admin/audit/export?${getAuditQueryString()}`, { cache: 'no-store' })
+            exportActivities();
+        }
+
+        function exportActivities(teacherName = '') {
+            const params = getAuditQueryString();
+            if (teacherName) params.set('teacher', teacherName);
+            fetch(`/api/cbt-admin/audit/export?${params}`, { cache: 'no-store' })
                 .then(async response => {
                     if (!response.ok) throw new Error('Could not export matching activity.');
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `cbt-admin-activity-${new Date().toISOString().slice(0, 10)}.csv`;
+                    const filePrefix = teacherName ? teacherName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'all';
+                    link.download = `cbt-admin-activity-${filePrefix}-${new Date().toISOString().slice(0, 10)}.csv`;
                     link.click();
                     URL.revokeObjectURL(url);
                 })
@@ -835,8 +1035,26 @@
         });
         document.getElementById('lockButton').addEventListener('click', lockAuditSession);
         document.getElementById('exportButton').addEventListener('click', exportFilteredActivities);
+        document.getElementById('exportTeacherButton').addEventListener('click', () => exportActivities(selectedProfileTeacher));
+        document.getElementById('expandAllActivities').addEventListener('click', () => {
+            auditActivities.forEach(activity => expandedActivityTeachers.add(activity.teacherName || 'Unknown teacher'));
+            renderActivities();
+        });
+        document.getElementById('collapseAllActivities').addEventListener('click', () => {
+            expandedActivityTeachers.clear();
+            renderActivities();
+        });
+        document.getElementById('alertCategoryFilter').addEventListener('change', renderAlerts);
+        document.getElementById('analyticsRange').addEventListener('change', event => {
+            analyticsRangeDays = Number(event.target.value) || 14;
+            currentPage = 1;
+            void loadAuditData().catch(error => {
+                if (!showSessionExpired(error)) window.alert(error.message || 'Could not update the activity graph.');
+            });
+        });
         document.getElementById('clearTeacherProfile').addEventListener('click', () => {
             document.getElementById('selectedTeacherProfile').hidden = true;
+            selectedProfileTeacher = '';
             document.getElementById('teacherFilter').value = '';
             currentPage = 1;
             void loadAuditData();

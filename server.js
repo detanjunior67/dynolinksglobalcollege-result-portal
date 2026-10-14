@@ -1081,12 +1081,14 @@ app.get('/api/cbt-admin/audit', requireCbtAuditAdmin, async (req, res) => {
         const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
         const pageSize = Math.min(100, Math.max(10, Number.parseInt(req.query.pageSize, 10) || 40));
         const activityFilter = buildCbtAuditActivityFilter(req.query);
+        const requestedAnalyticsRange = Number.parseInt(req.query.analyticsRange, 10) || 14;
+        const analyticsRangeDays = [7, 14, 30, 90].includes(requestedAnalyticsRange) ? requestedAnalyticsRange : 14;
         const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const last14Days = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+        const analyticsStart = new Date(Date.now() - analyticsRangeDays * 24 * 60 * 60 * 1000);
         const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const lastHour = new Date(Date.now() - 60 * 60 * 1000);
         const questionActions = ['question_boxes_opened', 'questions_generated', 'questions_saved', 'question_updated', 'question_deleted', 'question_bank_cleared'];
-        const [teachers, activities, total, teacherCount, eventsLast24Hours, questionActivity, activityByDay, actionBreakdown, teacherActivity, failedLogins, bulkChanges, reportSchedule] = await Promise.all([
+        const [teachers, activities, total, teacherCount, eventsLast24Hours, questionActivity, activityByDay, actionBreakdown, teacherActivity, failedLogins, bulkChanges, allTeacherCounts, matchingTeacherCounts, reportSchedule] = await Promise.all([
             CbtAdminTeacher.find({}).select('name createdAt lastLoginAt').sort({ createdAt: -1 }).lean(),
             CbtAdminActivity.find(activityFilter).sort({ occurredAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
             CbtAdminActivity.countDocuments(activityFilter),
@@ -1094,7 +1096,7 @@ app.get('/api/cbt-admin/audit', requireCbtAuditAdmin, async (req, res) => {
             CbtAdminActivity.countDocuments({ occurredAt: { $gte: last24Hours } }),
             CbtAdminActivity.countDocuments({ action: { $in: questionActions } }),
             CbtAdminActivity.aggregate([
-                { $match: { occurredAt: { $gte: last14Days } } },
+                { $match: { occurredAt: { $gte: analyticsStart } } },
                 { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$occurredAt' } }, count: { $sum: 1 } } },
                 { $sort: { _id: 1 } }
             ]),
@@ -1123,22 +1125,67 @@ app.get('/api/cbt-admin/audit', requireCbtAuditAdmin, async (req, res) => {
                 { $limit: 20 },
                 { $project: { _id: 1, action: 1, teacherName: 1, details: 1, ipAddress: 1, occurredAt: 1 } }
             ]),
+            CbtAdminActivity.aggregate([
+                { $group: { _id: '$teacherName', count: { $sum: 1 } } }
+            ]),
+            CbtAdminActivity.aggregate([
+                { $match: activityFilter },
+                { $group: { _id: '$teacherName', count: { $sum: 1 } } }
+            ]),
             CbtAuditReportSchedule.findOne({ key: 'default' }).select('recipient cadence hourUtc weekdayUtc enabled nextSendAt lastSentAt lastError').lean()
         ]);
+        const classNames = {
+            JSS1: 'Junior Secondary 1',
+            JSS2: 'Junior Secondary 2',
+            JSS3: 'Junior Secondary 3',
+            SS1: 'Senior Secondary 1',
+            SS2: 'Senior Secondary 2',
+            SS3: 'Senior Secondary 3'
+        };
+        const getAlertDescription = event => {
+            const details = event.details || {};
+            const classKey = String(details.classKey || '').toUpperCase();
+            const className = classNames[classKey] || (classKey ? `class ${classKey}` : 'the selected class');
+            const subjectId = String(details.subjectId || '').trim();
+            const subject = subjectId.toLowerCase() === 'all'
+                ? ' across all subjects'
+                : (subjectId ? ` in ${subjectId.replace(/[_-]+/g, ' ')}` : '');
+            const teacherName = event.teacherName || 'A teacher';
+            const count = Number(details.recordCount || details.questionCount || 0);
+
+            if (event.action === 'question_bank_cleared') {
+                return { title: 'Questions cleared', detail: `${teacherName} cleared the questions for ${className}${subject}.` };
+            }
+            if (event.action === 'questions_saved') {
+                return { title: 'Questions saved', detail: `${teacherName} saved ${count} question${count === 1 ? '' : 's'} for ${className}${subject}.` };
+            }
+            if (event.action === 'roster_csv_imported' || event.action === 'roster_bulk_imported') {
+                const source = event.action === 'roster_csv_imported' ? 'from a spreadsheet' : `for ${className}`;
+                return { title: 'Student records added', detail: `${teacherName} added ${count} student record${count === 1 ? '' : 's'} ${source}.` };
+            }
+            if (event.action === 'bulk_result_visibility_changed') {
+                const studentCount = Number(details.studentCount || 0);
+                const visibility = Number(details.afterVisibleCount || 0) === 0 ? 'hidden' : 'shown';
+                return {
+                    title: 'Student results updated',
+                    detail: `${teacherName} changed whether results are shown for ${studentCount} student${studentCount === 1 ? '' : 's'}. Results are now ${visibility}.`
+                };
+            }
+            return { title: 'Important activity', detail: `${teacherName} made an important change.` };
+        };
         const alerts = [
             ...failedLogins.map(group => ({
                 severity: 'critical',
                 type: 'repeated_login_failures',
-                title: `${group.count} failed logins from ${group._id || 'unknown IP'}`,
-                detail: (group.teacherNames || []).slice(0, 3).join(', '),
+                title: `${group.count} unsuccessful sign-in attempts`,
+                detail: 'Someone entered the wrong sign-in details several times.',
                 occurredAt: group.latestAt,
                 ipAddress: group._id || ''
             })),
             ...bulkChanges.filter(event => event.action !== 'cbt_login_failed').map(event => ({
                 severity: ['question_bank_cleared', 'bulk_result_visibility_changed'].includes(event.action) ? 'high' : 'notice',
                 type: event.action,
-                title: event.action.replace(/[_-]+/g, ' '),
-                detail: `${event.teacherName}: ${JSON.stringify(event.details || {})}`,
+                ...getAlertDescription(event),
                 occurredAt: event.occurredAt,
                 ipAddress: event.ipAddress || ''
             }))
@@ -1150,10 +1197,13 @@ app.get('/api/cbt-admin/audit', requireCbtAuditAdmin, async (req, res) => {
             pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
             summary: { teacherCount, eventsLast24Hours, questionActivity },
             analytics: {
+                rangeDays: analyticsRangeDays,
                 activityByDay: activityByDay.map(item => ({ date: item._id, count: item.count })),
                 actionBreakdown: actionBreakdown.map(item => ({ action: item._id, count: item.count })),
                 teacherActivity: teacherActivity.map(item => ({ name: item._id, count: item.count, latestAt: item.latestAt, failedLogins: item.failedLogins }))
             },
+            teacherActivityTotals: Object.fromEntries(allTeacherCounts.map(item => [item._id || 'Unknown teacher', item.count])),
+            matchingTeacherActivityCounts: Object.fromEntries(matchingTeacherCounts.map(item => [item._id || 'Unknown teacher', item.count])),
             alerts,
             reportSchedule: reportSchedule || null
         });
