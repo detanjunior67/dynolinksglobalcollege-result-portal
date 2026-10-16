@@ -1,0 +1,308 @@
+:root {
+    --dyno-spectrum: linear-gradient(115deg, rgba(89, 202, 235, .72), rgba(131, 139, 241, .64), rgba(222, 125, 190, .58), rgba(247, 187, 111, .64));
+}
+
+.ai-liquid-panel {
+    --dyno-blue: #52add5;
+    --dyno-blue-deep: #2c8fb9;
+    --dyno-blue-ink: #10364b;
+    --dyno-blue-line: rgba(41, 137, 178, .2);
+    --dyno-blue-shadow: rgba(25, 104, 143, .15);
+}
+
+.ai-liquid-panel {
+    --liquid-x: 50%;
+    --liquid-y: 16%;
+    position: relative;
+    isolation: isolate;
+    color: var(--dyno-blue-ink) !important;
+    background:
+        radial-gradient(ellipse at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, .78), transparent 52%),
+        linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(246, 246, 246, .68)) !important;
+    border: 1px solid rgba(255, 255, 255, .92) !important;
+    outline: 1px solid rgba(41, 137, 178, .12);
+    -webkit-backdrop-filter: blur(24px) saturate(1.22);
+    backdrop-filter: blur(24px) saturate(1.22);
+    box-shadow: 0 26px 76px rgba(25, 104, 143, .15), 0 4px 18px rgba(25, 104, 143, .08), inset 0 1px rgba(255, 255, 255, .98), inset 0 -1px rgba(41, 137, 178, .06);
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.ai-liquid-panel::before,
+.ai-liquid-panel::after {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    border-radius: inherit;
+    content: "";
+    pointer-events: none;
+}
+
+.ai-liquid-panel::before {
+    background:
+        radial-gradient(220px circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, .82), transparent 68%),
+        linear-gradient(130deg, rgba(255, 255, 255, .74), transparent 36%, rgba(41, 137, 178, .035) 72%, rgba(255, 255, 255, .58));
+    opacity: .82;
+    transition: opacity .25s ease;
+}
+
+.ai-liquid-panel::after {
+    inset: 1px;
+    border: 1px solid rgba(41, 137, 178, .08);
+}
+
+.ai-liquid-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.ai-liquid-panel.is-pointer-active {
+    border-color: rgba(41, 137, 178, .26) !important;
+    box-shadow: 0 28px 82px rgba(25, 104, 143, .18), 0 0 28px rgba(255, 255, 255, .52), inset 0 1px #fff;
+}
+
+.ai-liquid-panel > div:first-child {
+    color: var(--dyno-blue-ink) !important;
+    background: linear-gradient(115deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .38)) !important;
+    border-color: rgba(41, 137, 178, .14) !important;
+}
+
+.ai-liquid-panel h2,
+.ai-liquid-panel h2 + p,
+.ai-liquid-panel > div:nth-child(2) {
+    color: rgba(22, 75, 100, .78) !important;
+}
+
+.ai-liquid-panel > div:nth-child(2) {
+    background: rgba(255, 255, 255, .35) !important;
+    border-color: rgba(41, 137, 178, .12) !important;
+}
+
+.ai-liquid-panel > form {
+    background: rgba(255, 255, 255, .42) !important;
+    border-color: rgba(41, 137, 178, .16) !important;
+}
+
+.ai-liquid-panel input,
+.ai-liquid-panel textarea {
+    color: var(--dyno-blue-ink) !important;
+    background: rgba(255, 255, 255, .62) !important;
+    border-color: rgba(41, 137, 178, .25) !important;
+    box-shadow: inset 0 1px 3px rgba(25, 104, 143, .07), inset 0 1px #fff;
+    font-weight: 500;
+}
+
+.ai-liquid-panel input::placeholder,
+.ai-liquid-panel textarea::placeholder { color: rgba(22, 75, 100, .56) !important; }
+.ai-liquid-panel input:focus,
+.ai-liquid-panel textarea:focus { background: rgba(255, 255, 255, .9) !important; border-color: rgba(41, 137, 178, .58) !important; box-shadow: 0 0 0 2px rgba(41, 137, 178, .12), inset 0 1px #fff !important; }
+
+.ai-liquid-panel .cbt-faq-message.is-assistant {
+    color: var(--dyno-blue-ink) !important;
+    background:
+        radial-gradient(ellipse at 90% 8%, rgba(160, 154, 245, .14), transparent 58%),
+        linear-gradient(145deg, rgba(255, 255, 255, .58), rgba(247, 249, 255, .42)) !important;
+    border-color: rgba(255, 255, 255, .9) !important;
+    border-bottom-color: rgba(131, 139, 241, .28) !important;
+    border-radius: 1.25rem 1.25rem 1.25rem .42rem;
+    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+    backdrop-filter: blur(12px) saturate(1.15);
+    box-shadow: 0 5px 18px rgba(25, 104, 143, .08), inset 0 1px rgba(255, 255, 255, .88) !important;
+}
+
+.ai-liquid-panel .cbt-faq-message.is-teacher,
+.ai-liquid-panel .cbt-faq-message.is-student {
+    color: #102f3e !important;
+    background: linear-gradient(115deg, rgba(112, 211, 237, .68), rgba(153, 157, 242, .58), rgba(234, 154, 199, .48), rgba(252, 206, 142, .52)) !important;
+    border-color: rgba(255, 255, 255, .78) !important;
+    border-bottom-color: rgba(131, 139, 241, .46) !important;
+    border-radius: 1.25rem 1.25rem .42rem 1.25rem;
+    -webkit-backdrop-filter: blur(12px) saturate(1.1);
+    backdrop-filter: blur(12px) saturate(1.1);
+    box-shadow: 0 6px 20px rgba(31, 117, 158, .14), inset 0 1px rgba(255, 255, 255, .62) !important;
+}
+
+.ai-liquid-panel .cbt-faq-message {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    font-weight: 500;
+}
+
+.ai-liquid-panel .cbt-faq-message.is-assistant { border-radius: 1.25rem 1.25rem 1.25rem .42rem; }
+.ai-liquid-panel .cbt-faq-message.is-teacher,
+.ai-liquid-panel .cbt-faq-message.is-student { border-radius: 1.25rem 1.25rem .42rem 1.25rem; }
+.ai-liquid-panel .cbt-faq-message.is-teacher,
+.ai-liquid-panel .cbt-faq-message.is-student { color: #0b2e40 !important; font-weight: 600; }
+
+.ai-liquid-panel .chat-message-edit {
+    color: var(--dyno-blue-ink) !important;
+    background: rgba(255, 255, 255, .9) !important;
+    border-color: rgba(41, 137, 178, .36) !important;
+    box-shadow: 0 2px 8px rgba(25, 104, 143, .14), inset 0 1px #fff;
+    font-weight: 700;
+}
+
+.ai-liquid-panel .cbt-faq-message::before,
+.ai-liquid-panel .cbt-faq-message::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    content: "";
+    pointer-events: none;
+}
+
+.ai-liquid-panel .cbt-faq-message::before {
+    z-index: 0;
+    background:
+        radial-gradient(150px circle at var(--bubble-x, 50%) var(--bubble-y, 12%), rgba(255, 255, 255, .66), transparent 72%),
+        linear-gradient(115deg, rgba(89, 202, 235, .1), rgba(131, 139, 241, .09), rgba(222, 125, 190, .085), rgba(247, 187, 111, .1));
+    opacity: .64;
+    transition: opacity .2s ease;
+}
+
+.ai-liquid-panel .cbt-faq-message::after {
+    inset: 1px;
+    z-index: 0;
+    border: 1px solid transparent;
+    background: linear-gradient(rgba(255, 255, 255, .08), rgba(255, 255, 255, .08)) padding-box, var(--dyno-spectrum) border-box;
+    opacity: .62;
+}
+
+.ai-liquid-panel .cbt-faq-message.is-water-active::before { opacity: .95; }
+.ai-liquid-panel .cbt-faq-message > :not(.chat-message-edit) { position: relative; z-index: 1; }
+.ai-liquid-panel .cbt-faq-message .chat-message-edit { z-index: 2; }
+
+.ai-liquid-panel .ai-response-step-title { color: var(--dyno-blue-deep) !important; }
+.ai-liquid-panel .ai-response-emphasis { color: var(--dyno-blue-deep) !important; background: rgba(82, 173, 213, .14) !important; }
+.ai-liquid-panel .ai-response-equation { color: var(--dyno-blue-ink) !important; border-left-color: var(--dyno-blue) !important; background: rgba(255, 255, 255, .98) !important; }
+.ai-liquid-panel .ai-response-inline-code { color: var(--dyno-blue-ink) !important; background: rgba(82, 173, 213, .12) !important; }
+.ai-liquid-panel #cbtFaqClose,
+.ai-liquid-panel #adminChatClose { color: var(--dyno-blue-deep) !important; background: rgba(82, 173, 213, .08); border: 1px solid rgba(41, 137, 178, .16); }
+.ai-liquid-panel #cbtFaqTyping,
+.ai-liquid-panel #adminChatTyping { color: rgba(22, 75, 100, .78) !important; background: rgba(255, 255, 255, .7) !important; border-color: rgba(41, 137, 178, .16) !important; }
+.ai-liquid-panel .cbt-faq-typing-dots span { background: var(--dyno-blue-deep) !important; }
+
+.ai-liquid-panel #cbtFaqSend,
+.ai-liquid-panel #adminChatSend {
+    color: var(--dyno-blue-ink) !important;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .84), rgba(231, 244, 255, .66)) !important;
+    border: 1px solid transparent !important;
+    background-image: linear-gradient(145deg, rgba(255, 255, 255, .9), rgba(239, 246, 255, .68)), var(--dyno-spectrum) !important;
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 8px 22px rgba(25, 104, 143, .12), inset 0 1px rgba(255, 255, 255, .82) !important;
+    transition: transform .2s cubic-bezier(.2, .85, .25, 1.25), box-shadow .2s ease;
+}
+
+.ai-liquid-panel #cbtFaqSend:hover,
+.ai-liquid-panel #adminChatSend:hover { transform: translateY(-2px) scale(1.045); box-shadow: 0 12px 28px rgba(25, 104, 143, .28), inset 0 1px rgba(255, 255, 255, .42) !important; }
+.ai-liquid-panel #cbtFaqSend:active,
+.ai-liquid-panel #adminChatSend:active { transform: scale(.94); }
+
+#cbtFaqToggle,
+#adminChatToggle {
+    color: #273544 !important;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(230, 234, 239, .78)) !important;
+    background-image: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(230, 234, 239, .78)) !important;
+    border: 1px solid rgba(255, 255, 255, .92) !important;
+    border-radius: 1.15rem !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.12);
+    backdrop-filter: blur(18px) saturate(1.12);
+    box-shadow: 0 10px 30px rgba(21, 36, 51, .16), 0 0 18px rgba(255, 255, 255, .34), inset 0 1px rgba(255, 255, 255, .98) !important;
+    transition: transform .22s cubic-bezier(.2, .85, .25, 1.25), box-shadow .2s ease;
+}
+
+#cbtFaqToggle:hover,
+#cbtFaqToggle:focus-visible,
+#adminChatToggle:hover,
+#adminChatToggle:focus-visible {
+    color: #273544 !important;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(230, 234, 239, .78)) !important;
+    background-image: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(230, 234, 239, .78)) !important;
+    border-color: rgba(255, 255, 255, .92) !important;
+    transform: translateY(-2px) scale(1.035);
+    box-shadow: 0 14px 34px rgba(21, 36, 51, .2), 0 0 20px rgba(255, 255, 255, .44), inset 0 1px #fff !important;
+}
+
+#cbtFaqToggle:focus-visible,
+#adminChatToggle:focus-visible { outline: 2px solid rgba(39, 53, 68, .62); outline-offset: 3px; }
+
+#cbtFaqToggle:active,
+#adminChatToggle:active { transform: scale(.94); }
+
+.ai-liquid-panel:not(.hidden) { animation: aiPanelPop .42s cubic-bezier(.2, .85, .25, 1.18) both; }
+.ai-liquid-panel .cbt-faq-message { animation: aiMessagePop .28s cubic-bezier(.2, .85, .25, 1.18) both; }
+
+@keyframes aiPanelPop {
+    from { opacity: 0; transform: translateY(14px) scale(.965); }
+    72% { opacity: 1; transform: translateY(-2px) scale(1.008); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes aiMessagePop {
+    from { opacity: 0; transform: translateY(7px) scale(.985); }
+    72% { opacity: 1; transform: translateY(-1px) scale(1.004); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ai-liquid-ripple {
+    position: absolute;
+    z-index: 2;
+    width: 5rem;
+    aspect-ratio: 1;
+    border: 1px solid rgba(44, 143, 185, .38);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(82, 173, 213, .12), transparent 68%);
+    box-shadow: 0 0 0 5px rgba(44, 143, 185, .11), 0 0 0 12px rgba(44, 143, 185, .055), inset 0 0 18px rgba(255, 255, 255, .82);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.18);
+    animation: aiLiquidRipple .85s ease-out forwards;
+}
+
+@keyframes aiLiquidRipple {
+    12% { opacity: .72; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(3.2); }
+}
+
+.ai-liquid-panel.is-low-power {
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+    backdrop-filter: blur(10px) saturate(1.05);
+    box-shadow: 0 16px 38px rgba(25, 104, 143, .16), inset 0 1px rgba(255, 255, 255, .82);
+    transition: none;
+}
+
+.ai-liquid-panel.is-low-power:not(.hidden),
+.ai-liquid-panel.is-low-power .cbt-faq-message { animation: none !important; }
+.ai-liquid-panel.is-low-power .cbt-faq-message::before { background: linear-gradient(130deg, rgba(255, 255, 255, .2), transparent 52%); }
+.ai-liquid-panel.is-low-power::before { background: linear-gradient(130deg, rgba(255, 255, 255, .7), transparent 42%, rgba(41, 137, 178, .035)); }
+
+.ai-liquid-panel.is-static-glass,
+.ai-liquid-panel.is-static-glass::before { transition: none !important; }
+
+@media (max-width: 640px), (pointer: coarse) {
+    .ai-liquid-panel { -webkit-backdrop-filter: blur(12px) saturate(1.08); backdrop-filter: blur(12px) saturate(1.08); }
+    .ai-liquid-panel::before { background: linear-gradient(130deg, rgba(255, 255, 255, .68), transparent 46%, rgba(41, 137, 178, .035)); }
+    .ai-liquid-panel {
+        right: max(.65rem, env(safe-area-inset-right)) !important;
+        bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+        width: calc(100vw - 1.3rem) !important;
+        max-height: min(74dvh, 42rem) !important;
+        border-radius: 1.45rem !important;
+    }
+    .ai-liquid-panel > form { padding-bottom: calc(.75rem + env(safe-area-inset-bottom)) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-liquid-panel,
+    .ai-liquid-panel::before,
+    .ai-liquid-panel #cbtFaqSend,
+    .ai-liquid-panel #adminChatSend,
+    #cbtFaqToggle,
+    #adminChatToggle { transition: none !important; }
+    .ai-liquid-panel:not(.hidden),
+    .ai-liquid-panel .cbt-faq-message,
+    .ai-liquid-panel .cbt-faq-message::before { animation: none !important; transition: none !important; }
+    .ai-liquid-ripple { display: none !important; animation: none !important; }
+}

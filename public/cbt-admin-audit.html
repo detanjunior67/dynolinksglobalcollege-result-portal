@@ -106,6 +106,16 @@
         .toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
         .grid { display: grid; grid-template-columns: minmax(300px, .82fr) minmax(0, 1.65fr); gap: 1rem; align-items: start; }
         .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: .85rem; }
+        .usage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0 0 1rem; }
+        .usage-card { display: grid; gap: .8rem; min-height: 170px; padding: 1rem 1.05rem; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(180deg, #ffffff, #f4f9ff); box-shadow: 0 8px 18px rgba(22, 60, 95, .04); }
+        .usage-card-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+        .usage-card-title { margin: 0; color: var(--ink); font: 800 .82rem "Manrope", sans-serif; }
+        .usage-tag { display: inline-flex; align-items: center; min-height: 24px; border-radius: 999px; padding: .22rem .55rem; background: #e6f3ff; color: #115592; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+        .usage-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+        .usage-stat { padding: .72rem .7rem; border-radius: 8px; background: #f4f9ff; border: 1px solid #dfeaf7; }
+        .usage-stat-label { display: block; color: #6f81a2; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+        .usage-stat-value { display: block; margin-top: .38rem; color: var(--ink); font: 800 1.1rem/1.2 "Manrope", sans-serif; }
+        .usage-footnote { margin: 0; color: #5e6f87; font-size: .68rem; line-height: 1.5; }
         .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(210px, .8fr)); gap: .75rem; align-items: start; margin: 0 0 .9rem; }
         .chart-body { display: grid; gap: .7rem; padding: .9rem 1rem 1rem; }
         .trend-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: .3rem; height: 204px; padding: .75rem .2rem 1.25rem; border-bottom: 1px solid #dfe5dc; background: repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), #e9eee6 calc(25% - 1px), #e9eee6 25%); }
@@ -276,6 +286,10 @@
                 <div class="metric"><span class="metric-label">Question activity</span><strong id="metricQuestions" class="metric-value">0</strong></div>
                 <div class="metric"><span class="metric-label">Latest recorded event</span><strong id="metricLatest" class="metric-value">None</strong></div>
             </div>
+            <section class="panel" aria-labelledby="aiUsageHeading">
+                <div class="panel-heading"><div><h3 id="aiUsageHeading">AI daily usage</h3><p>Remaining requests and tokens for the active day.</p></div></div>
+                <div id="aiUsageGrid" class="usage-grid" aria-live="polite"></div>
+            </section>
             <section id="alertsPanel" class="panel" aria-labelledby="alertsHeading" hidden>
                 <div class="panel-heading"><div><h3 id="alertsHeading">Important activity</h3><p>Several incorrect sign-in attempts or important changes from the past day.</p></div><label class="sr-only" for="alertCategoryFilter">Filter important activity</label><select id="alertCategoryFilter" class="alert-filter-select"><option value="all">All alerts</option><option value="signins">Sign-in issues</option><option value="changes">Important changes</option></select></div>
                 <div id="alertsList" class="alert-list"></div>
@@ -522,6 +536,7 @@
             document.getElementById('sessionIndicator').textContent = `Secure session · refreshed ${lastRefreshedAt.toLocaleTimeString()}`;
             populateFilters();
             renderSummary();
+            renderAiUsage(data.aiUsage || []);
             renderTeachers();
             renderActivities();
             renderAnalytics();
@@ -557,6 +572,65 @@
             document.getElementById('metricQuestions').textContent = dataCount(auditSummary.questionActivity);
             document.getElementById('metricLatest').textContent = auditActivities.length ? formatDate(auditActivities[0].occurredAt) : 'No matches';
             document.getElementById('dataSummary').textContent = `${auditPagination.total.toLocaleString()} matching events · Updated ${formatDate(lastRefreshedAt)}`;
+        }
+
+        function renderAiUsage(aiUsage) {
+            const container = document.getElementById('aiUsageGrid');
+            if (!container) return;
+            container.replaceChildren();
+            const botNames = { cbt: 'Dyno AI (CBT)', cbtadmin: 'Dyno AI (CBT Admin)' };
+            const items = Array.isArray(aiUsage) ? aiUsage : [];
+            if (!items.length) {
+                const empty = document.createElement('div');
+                empty.className = 'usage-card';
+                empty.innerHTML = '<div class="usage-card-header"><h4 class="usage-card-title">No AI usage yet</h4><span class="usage-tag">Idle</span></div><p class="usage-footnote">Requests have not been sent for the current day yet.</p>';
+                container.appendChild(empty);
+                return;
+            }
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'usage-card';
+                const botKey = String(item.bot || 'cbt');
+                const requestCount = Number(item.requestCount || 0);
+                const requestLimit = Number(item.requestLimit || 0);
+                const reportedTokenCount = Number(item.reportedTokenCount || 0);
+                const estimatedTokenCount = Number(item.estimatedTokenCount || 0);
+                const legacyUnverifiedTokenCount = Number(item.legacyUnverifiedTokenCount || 0);
+                const tokenLimit = Number(item.tokenLimit || 0);
+                const tokensRemaining = Number(item.tokensRemaining || 0);
+                const requestsRemaining = Number(item.requestsRemaining || 0);
+                const reservedTokens = Number(item.reservedTokens || 0);
+                card.innerHTML = `
+                    <div class="usage-card-header">
+                        <h4 class="usage-card-title">${botNames[botKey] || 'AI Bot'}</h4>
+                        <span class="usage-tag">${requestsRemaining > 0 ? 'Available' : 'Reached'}</span>
+                    </div>
+                    <div class="usage-metrics">
+                        <div class="usage-stat">
+                            <span class="usage-stat-label">Requests</span>
+                            <span class="usage-stat-value">${requestCount.toLocaleString()} / ${requestLimit.toLocaleString()}</span>
+                        </div>
+                        <div class="usage-stat">
+                            <span class="usage-stat-label">Remaining</span>
+                            <span class="usage-stat-value">${requestsRemaining.toLocaleString()}</span>
+                        </div>
+                        <div class="usage-stat">
+                            <span class="usage-stat-label">Provider-reported</span>
+                            <span class="usage-stat-value">${reportedTokenCount.toLocaleString()} / ${tokenLimit.toLocaleString()}</span>
+                        </div>
+                        <div class="usage-stat">
+                            <span class="usage-stat-label">Estimated, unreported</span>
+                            <span class="usage-stat-value">${estimatedTokenCount.toLocaleString()}</span>
+                        </div>
+                        <div class="usage-stat">
+                            <span class="usage-stat-label">Tokens left</span>
+                            <span class="usage-stat-value">${tokensRemaining.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <p class="usage-footnote">Remaining budget includes provider-reported usage, estimates when providers omit usage, and active reservations (${reservedTokens.toLocaleString()}).${legacyUnverifiedTokenCount ? ` Older unverified records: ${legacyUnverifiedTokenCount.toLocaleString()} tokens.` : ''}</p>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function dataCount(value) { return Number(value || 0).toLocaleString(); }

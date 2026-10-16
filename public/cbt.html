@@ -316,7 +316,6 @@
             header>div {
                 min-width: 0;
             }
-
             header>div:first-child {
                 gap: 0.5rem;
             }
@@ -845,7 +844,226 @@
                 padding-block: .25rem;
             }
         }
+
+        .cbt-faq-panel {
+            position: relative;
+            isolation: isolate;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .78), rgba(226, 250, 247, .68)) !important;
+            border: 1px solid rgba(255, 255, 255, .88) !important;
+            outline: 1px solid rgba(13, 148, 136, .2);
+            -webkit-backdrop-filter: blur(30px) saturate(1.65);
+            backdrop-filter: blur(30px) saturate(1.65);
+            box-shadow: 0 24px 70px rgba(15, 118, 110, .2), 0 5px 18px rgba(15, 118, 110, .1), inset 0 1px rgba(255, 255, 255, .96), inset 0 -1px rgba(13, 148, 136, .1);
+        }
+
+        .cbt-faq-panel::before {
+            position: absolute;
+            z-index: 0;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(125deg, rgba(255, 255, 255, .48), transparent 38%, rgba(153, 246, 228, .12));
+            content: "";
+            pointer-events: none;
+        }
+
+        .cbt-faq-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cbt-faq-panel > div:first-child {
+            background: linear-gradient(115deg, rgba(204, 251, 241, .82), rgba(240, 253, 250, .56)) !important;
+            border-color: rgba(255, 255, 255, .72) !important;
+        }
+
+        .cbt-faq-panel > form {
+            background: rgba(240, 253, 250, .58);
+            border-color: rgba(255, 255, 255, .76) !important;
+        }
+
+        .cbt-faq-panel input {
+            border-color: rgba(13, 148, 136, .26) !important;
+            background: rgba(255, 255, 255, .78);
+            color: #123f46;
+            box-shadow: inset 0 1px 3px rgba(15, 118, 110, .06);
+        }
+
+        .cbt-faq-message {
+            border: 1px solid transparent;
+            border-radius: .9rem;
+            padding: .65rem .8rem;
+        }
+
+        .cbt-faq-message.is-assistant {
+            color: #174348;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .78), rgba(240, 253, 250, .58));
+            border-color: rgba(255, 255, 255, .86);
+            box-shadow: 0 4px 14px rgba(15, 118, 110, .08), inset 0 1px rgba(255, 255, 255, .86);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            line-height: 1.62;
+        }
+
+        #cbtFaqMessages .ai-response-paragraph { margin: 0; }
+        #cbtFaqMessages .ai-response-paragraph + .ai-response-paragraph { margin-top: .35rem; }
+        #cbtFaqMessages .ai-response-step-title {
+            margin: .7rem 0 .2rem;
+            color: #0f766e;
+            font-size: .92rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        #cbtFaqMessages .ai-response-step-title:first-child { margin-top: 0; }
+        #cbtFaqMessages .ai-response-emphasis {
+            padding: 0 .14rem;
+            color: #0f766e;
+            background: rgba(20, 184, 166, .12);
+            border-radius: .2rem;
+            font-weight: 700;
+        }
+        #cbtFaqMessages .ai-response-equation {
+            display: block;
+            width: fit-content;
+            max-width: 100%;
+            margin: .35rem 0;
+            padding: .32rem .55rem;
+            color: #164e63;
+            background: #fff;
+            border-left: 3px solid #0f766e;
+            border-radius: .25rem;
+            font-family: "Cambria Math", "Times New Roman", serif;
+            font-size: .96rem;
+            overflow-wrap: anywhere;
+        }
+        #cbtFaqMessages sup,
+        #cbtFaqMessages sub {
+            position: relative;
+            vertical-align: baseline;
+            font-size: .72em;
+            line-height: 0;
+        }
+        #cbtFaqMessages sup { top: -.48em; }
+        #cbtFaqMessages sub { bottom: -.18em; }
+        #cbtFaqMessages .ai-response-root {
+            display: inline-flex;
+            align-items: baseline;
+            white-space: nowrap;
+        }
+        #cbtFaqMessages .ai-response-root > span:first-child {
+            font-size: 1.2em;
+            line-height: 1;
+        }
+        #cbtFaqMessages .ai-response-radicand {
+            margin-left: -.08rem;
+            padding: 0 .04rem;
+            border-top: 1px solid currentColor;
+        }
+        #cbtFaqMessages .ai-response-fraction {
+            display: inline-grid;
+            grid-template-rows: auto auto;
+            margin: 0 .12em;
+            vertical-align: middle;
+            text-align: center;
+            font-size: .9em;
+            line-height: 1.2;
+        }
+        #cbtFaqMessages .ai-response-numerator {
+            padding: 0 .18em .08em;
+            border-bottom: 1px solid currentColor;
+        }
+        #cbtFaqMessages .ai-response-denominator { padding: .08em .18em 0; }
+        #cbtFaqMessages .ai-response-list {
+            margin: .35rem 0;
+            padding-left: 1.35rem;
+        }
+        #cbtFaqMessages ul.ai-response-list { list-style: disc; }
+        #cbtFaqMessages ol.ai-response-list { list-style: decimal; }
+        #cbtFaqMessages .ai-response-list li + li { margin-top: .2rem; }
+        #cbtFaqMessages .ai-response-inline-code {
+            padding: .05rem .25rem;
+            color: #155e75;
+            background: rgba(20, 184, 166, .1);
+            border-radius: .2rem;
+            font-family: Consolas, monospace;
+            font-size: .92em;
+        }
+
+        .cbt-faq-message.is-student {
+            margin-left: auto;
+            color: #fff;
+            background: linear-gradient(135deg, rgba(13, 148, 136, .88), rgba(8, 126, 137, .78));
+            border-color: rgba(255, 255, 255, .68);
+            box-shadow: 0 5px 16px rgba(13, 148, 136, .18), inset 0 1px rgba(255, 255, 255, .36);
+        }
+        .cbt-faq-message.is-student.is-editable { position: relative; padding-right: 3.35rem; cursor: pointer; transition: box-shadow .16s ease, transform .16s ease; }
+        .cbt-faq-message.is-student.is-editable:hover,
+        .cbt-faq-message.is-student.is-editable.is-edit-action-visible { box-shadow: 0 7px 20px rgba(13, 148, 136, .25), inset 0 1px rgba(255, 255, 255, .4); }
+        #cbtFaqMessages .chat-message-edit { position: absolute; right: .45rem; bottom: .4rem; padding: .2rem .55rem; color: #fff; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .58); border-radius: .4rem; font-size: .68rem; font-weight: 700; opacity: 0; pointer-events: none; transform: translateY(2px); transition: opacity .16s ease, transform .16s ease, background .16s ease; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+        #cbtFaqMessages .is-edit-action-visible .chat-message-edit,
+        #cbtFaqMessages .chat-message-edit:focus-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        #cbtFaqMessages .chat-message-edit:hover { background: rgba(255, 255, 255, .3); }
+        #cbtFaqMessages .chat-message-edit:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+        #cbtFaqToggle,
+        #cbtFaqSend {
+            background: linear-gradient(145deg, rgba(13, 148, 136, .9), rgba(8, 126, 137, .78)) !important;
+            border: 1px solid rgba(255, 255, 255, .72);
+            -webkit-backdrop-filter: blur(14px) saturate(1.4);
+            backdrop-filter: blur(14px) saturate(1.4);
+            box-shadow: 0 10px 28px rgba(15, 118, 110, .24), inset 0 1px rgba(255, 255, 255, .42);
+        }
+
+        #cbtFaqToggle:hover,
+        #cbtFaqSend:hover { background: linear-gradient(145deg, rgba(15, 118, 110, .96), rgba(6, 95, 105, .9)) !important; }
+
+        #cbtFaqTyping {
+            align-items: center;
+            gap: .55rem;
+            width: fit-content;
+            padding: .55rem .8rem;
+            color: #315d78;
+            background: rgba(239, 248, 255, .92);
+            border: 1px solid rgba(186, 230, 253, .7);
+            border-radius: .9rem;
+            font-size: .78rem;
+        }
+
+        .cbt-faq-typing-dots {
+            display: inline-flex;
+            gap: .22rem;
+            align-items: center;
+        }
+
+        .cbt-faq-typing-dots span {
+            width: .35rem;
+            height: .35rem;
+            border-radius: 50%;
+            background: #168bd0;
+            animation: cbtFaqDot 1s ease-in-out infinite;
+        }
+
+        .cbt-faq-typing-dots span:nth-child(2) { animation-delay: .14s; }
+        .cbt-faq-typing-dots span:nth-child(3) { animation-delay: .28s; }
+
+        @keyframes cbtFaqDot {
+            0%, 60%, 100% { opacity: .38; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        .cbt-faq-message {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 480px) {
+            .cbt-faq-panel {
+                right: 1rem;
+                bottom: 5rem;
+                width: calc(100vw - 2rem);
+                max-height: min(70dvh, 34rem);
+            }
+        }
     </style>
+    <link rel="stylesheet" href="/dyno-ai-glass.css">
 </head>
 
 <body
@@ -3766,6 +3984,36 @@
         }
 
     </script>
+    <section id="cbtFaqPanel" class="cbt-faq-panel ai-liquid-panel fixed bottom-24 right-6 z-40 hidden w-[min(24rem,calc(100vw-2rem))] max-h-[min(70vh,34rem)] flex-col overflow-hidden rounded-xl border border-teal-200 bg-white text-slate-900 shadow-2xl" aria-labelledby="cbtFaqTitle" aria-hidden="true">
+        <div class="flex items-center justify-between border-b border-teal-100 bg-teal-50 px-4 py-3">
+            <div>
+                <h2 id="cbtFaqTitle" class="font-bold text-teal-950">Dyno AI</h2>
+                <p class="text-xs text-teal-800">Subject explanations and portal help</p>
+            </div>
+            <button id="cbtFaqClose" type="button" class="flex h-9 w-9 items-center justify-center rounded-lg text-teal-900 hover:bg-teal-100" aria-label="Close Dyno AI">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div id="cbtFaqMessages" class="min-h-32 flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite" aria-busy="false">
+            <p class="cbt-faq-message is-assistant max-w-[90%] text-sm">Ask a subject question for a detailed explanation, or ask about the CBT portal. Never enter a password here.</p>
+            <div id="cbtFaqTyping" class="hidden" role="status" aria-label="Assistant is thinking">
+                <span></span>
+                <span class="cbt-faq-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </div>
+        </div>
+        <form id="cbtFaqForm" class="flex gap-2 border-t border-slate-200 p-3">
+            <label class="sr-only" for="cbtFaqInput">Ask Dyno AI a question</label>
+            <input id="cbtFaqInput" type="text" maxlength="500" autocomplete="off" class="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" placeholder="Ask a subject or portal question" required>
+            <button id="cbtFaqSend" type="submit" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-50" aria-label="Send question" title="Send question">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            </button>
+        </form>
+    </section>
+    <button id="cbtFaqToggle" type="button" class="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal-800 text-white shadow-lg transition hover:-translate-y-1 hover:bg-teal-900" aria-label="Open Dyno AI" aria-controls="cbtFaqPanel" aria-expanded="false" title="Dyno AI">
+        <i class="fa-solid fa-circle-question text-xl" aria-hidden="true"></i>
+    </button>
+    <script src="cbt-faq.js" defer></script>
+    <script src="dyno-ai-glass.js" defer></script>
     <script src="password-controls.js"></script>
 </body>
 

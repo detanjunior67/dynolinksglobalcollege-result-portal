@@ -908,7 +908,58 @@
         body.cbt-admin-standalone #cbtAdminGate[hidden] { display: none !important; }
         body.cbt-admin-standalone > main { width: 100%; max-width: 100%; min-height: calc(100dvh - 4rem); }
         body.cbt-admin-standalone #viewAdminPortal { width: min(100%, 1320px); margin: 0 auto; }
+
+        .cbt-faq-panel {
+            position: relative;
+            isolation: isolate;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .78), rgba(226, 242, 255, .68)) !important;
+            border: 1px solid rgba(255, 255, 255, .88) !important;
+            outline: 1px solid rgba(14, 116, 180, .2);
+            -webkit-backdrop-filter: blur(30px) saturate(1.65);
+            backdrop-filter: blur(30px) saturate(1.65);
+            box-shadow: 0 24px 70px rgba(14, 116, 180, .2), 0 5px 18px rgba(14, 116, 180, .1), inset 0 1px rgba(255, 255, 255, .96), inset 0 -1px rgba(14, 116, 180, .1);
+        }
+        .cbt-faq-panel::before {
+            position: absolute;
+            z-index: 0;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(125deg, rgba(255, 255, 255, .48), transparent 38%, rgba(147, 197, 253, .12));
+            content: "";
+            pointer-events: none;
+        }
+        .cbt-faq-panel > * { position: relative; z-index: 1; }
+        .cbt-faq-panel > div:first-child { background: linear-gradient(115deg, rgba(219, 234, 254, .84), rgba(239, 248, 255, .56)) !important; border-color: rgba(255, 255, 255, .72) !important; }
+        .cbt-faq-panel > form { background: rgba(239, 248, 255, .58); border-color: rgba(255, 255, 255, .76) !important; }
+        .cbt-faq-panel input, .cbt-faq-panel textarea { border-color: rgba(14, 116, 180, .26) !important; background: rgba(255, 255, 255, .78); color: #0c3552; box-shadow: inset 0 1px 3px rgba(14, 116, 180, .06); }
+        .cbt-faq-panel input:focus, .cbt-faq-panel textarea:focus { background: rgba(255, 255, 255, .94); }
+        .cbt-faq-message { border: 1px solid transparent; border-radius: .9rem; padding: .65rem .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .cbt-faq-message.is-assistant { color: #173b59; background: linear-gradient(145deg, rgba(255, 255, 255, .78), rgba(239, 248, 255, .58)); border-color: rgba(255, 255, 255, .86); box-shadow: 0 4px 14px rgba(14, 116, 180, .08), inset 0 1px rgba(255, 255, 255, .86); }
+        .cbt-faq-message.is-teacher { margin-left: auto; color: #fff; background: linear-gradient(135deg, rgba(37, 99, 235, .88), rgba(14, 116, 180, .78)); border-color: rgba(255, 255, 255, .68); box-shadow: 0 5px 16px rgba(14, 116, 180, .18), inset 0 1px rgba(255, 255, 255, .36); }
+        .cbt-faq-message.is-teacher.is-editable { position: relative; padding-right: 3.35rem; cursor: pointer; transition: box-shadow .16s ease, transform .16s ease; }
+        .cbt-faq-message.is-teacher.is-editable:hover,
+        .cbt-faq-message.is-teacher.is-editable.is-edit-action-visible { box-shadow: 0 7px 20px rgba(14, 116, 180, .24), inset 0 1px rgba(255, 255, 255, .4); }
+        .chat-message-edit { position: absolute; right: .45rem; bottom: .4rem; padding: .2rem .55rem; color: #fff; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .55); border-radius: .4rem; font-size: .68rem; font-weight: 700; opacity: 0; pointer-events: none; transform: translateY(2px); transition: opacity .16s ease, transform .16s ease, background .16s ease; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+        .is-edit-action-visible .chat-message-edit,
+        .chat-message-edit:focus-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .chat-message-edit:hover { background: rgba(255, 255, 255, .3); }
+        .chat-message-edit:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .admin-chat-toggle, #adminChatSend { background: linear-gradient(145deg, rgba(37, 99, 235, .9), rgba(14, 116, 180, .78)) !important; border: 1px solid rgba(255, 255, 255, .72); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); box-shadow: 0 10px 28px rgba(14, 116, 180, .24), inset 0 1px rgba(255, 255, 255, .42); }
+        .admin-chat-toggle:hover, #adminChatSend:hover { background: linear-gradient(145deg, rgba(29, 78, 216, .96), rgba(3, 105, 161, .9)) !important; }
+        .admin-chat-typing { align-items: center; gap: .55rem; width: fit-content; padding: .55rem .8rem; color: #315d78; background: rgba(239, 248, 255, .72); border: 1px solid rgba(255, 255, 255, .84); border-radius: .9rem; box-shadow: 0 4px 14px rgba(14, 116, 180, .08), inset 0 1px rgba(255, 255, 255, .86); font-size: .78rem; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+        .cbt-faq-typing-dots { display: inline-flex; gap: .22rem; align-items: center; }
+        .cbt-faq-typing-dots span { width: .35rem; height: .35rem; border-radius: 50%; background: #168bd0; animation: cbtFaqDot 1s ease-in-out infinite; }
+        .cbt-faq-typing-dots span:nth-child(2) { animation-delay: .14s; }
+        .cbt-faq-typing-dots span:nth-child(3) { animation-delay: .28s; }
+        @keyframes cbtFaqDot {
+            0%, 60%, 100% { opacity: .38; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-3px); }
+        }
+        @media (max-width: 480px) {
+            .cbt-faq-panel { right: 1rem; bottom: 5rem; width: calc(100vw - 2rem); max-height: min(70dvh, 34rem); }
+        }
     </style>
+    <link rel="stylesheet" href="/dyno-ai-glass.css">
 </head>
 
 <body
@@ -991,12 +1042,12 @@
                     <input id="cbtAdminTeacherName" type="text" maxlength="100" autocomplete="name" class="min-w-0 flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm" placeholder="Enter your full name">
                     <button id="cbtAdminRegisterTeacherButton" type="button" onclick="registerCbtAdminTeacherName()" class="rounded-xl bg-teal-700 px-5 py-3 text-sm font-bold text-white shadow hover:bg-teal-800">Save name</button>
                 </div>
-                <p id="cbtAdminTeacherRegistrationMessage" class="text-xs text-gray-500" role="status">Your name is saved once and can only be removed by the administrator.</p>
+                <p id="cbtAdminTeacherRegistrationMessage" class="text-xs text-gray-500" role="status">Register your name first to unlock the console. It is saved once and can only be removed by the administrator.</p>
             </div>
             <div id="cbtAdminTeacherIdentity" class="mt-5 hidden rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
                 Registered teacher: <strong id="cbtAdminTeacherIdentityName"></strong>
             </div>
-            <button id="cbtAdminUnlockButton" type="button" onclick="openAdminAuthModal()" class="mt-5 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow hover:bg-emerald-800">Unlock Admin Console</button>
+            <button id="cbtAdminUnlockButton" type="button" onclick="openAdminAuthModal()" class="mt-5 hidden rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow hover:bg-emerald-800">Unlock Admin Console</button>
         </section>
 
         <!-- ========================================== -->
@@ -1653,13 +1704,6 @@
                             <input id="questionTxtImportInput" type="file" accept=".txt,text/plain" class="hidden"
                                 onchange="importQuestionsFromTxtFile(event)">
 
-                            <!-- AI QUESTION GENERATOR -->
-                            <button onclick="openAiAutofillModal()"
-                                class="btn-ai-physical px-3.5 py-2 text-white text-xs font-black rounded-xl flex items-center gap-2 tracking-wide cursor-pointer"
-                                title="Generate questions with AI">
-                                <img src="ai.jpg" alt="AI" class="ai-logo-mark">
-                                <span>Manuel AI</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -6368,6 +6412,39 @@
 
         document.body.classList.add('cbt-admin-standalone');
     </script>
+    <section id="adminChatPanel" class="cbt-faq-panel ai-liquid-panel fixed bottom-24 right-5 z-40 hidden w-[min(29rem,calc(100vw-2rem))] max-h-[min(78vh,46rem)] flex-col overflow-hidden rounded-xl border border-sky-200 bg-white text-slate-900 shadow-2xl" aria-labelledby="adminChatTitle" aria-hidden="true">
+        <div class="flex items-start justify-between gap-3 border-b border-sky-100 bg-sky-50/90 px-4 py-3">
+            <div>
+                <h2 id="adminChatTitle" class="font-bold text-slate-900">Dyno AI</h2>
+                <p class="text-xs text-sky-800">Draft, generate, explain, or manage scoped questions</p>
+            </div>
+            <button id="adminChatClose" type="button" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sky-900 hover:bg-sky-100" aria-label="Close admin assistant">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="border-b border-sky-100 bg-white/80 px-4 py-2 text-xs text-slate-600">
+            Describe the task naturally. I’ll ask for missing details. Question drafts are never saved until you review them in the editor.
+        </div>
+        <div id="adminChatMessages" class="min-h-40 flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite" aria-busy="false">
+            <p class="cbt-faq-message is-assistant max-w-[94%] text-sm">Tell me what you need. I can answer questions, draft content, or generate questions for the selected class and subject. I cannot reset the page or delete results. Question deletion needs an explicit class, subject, and your confirmation.</p>
+            <div id="adminChatTyping" class="admin-chat-typing hidden" role="status" aria-label="Assistant is thinking">
+                <span></span>
+                <span class="cbt-faq-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </div>
+        </div>
+        <form id="adminChatForm" class="flex gap-2 border-t border-sky-100 bg-white/80 p-3">
+            <label class="sr-only" for="adminChatInput">Message Dyno AI</label>
+            <textarea id="adminChatInput" rows="2" maxlength="1200" class="min-w-0 flex-1 resize-none rounded-lg border border-sky-200 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" placeholder="Give me 10 questions for JSS1" required></textarea>
+            <button id="adminChatSend" type="submit" class="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-lg bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-50" aria-label="Send message" title="Send message">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            </button>
+        </form>
+    </section>
+    <button id="adminChatToggle" type="button" class="admin-chat-toggle fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-sky-700 text-white shadow-lg transition hover:-translate-y-1 hover:bg-sky-800" aria-label="Open Dyno AI" aria-controls="adminChatPanel" aria-expanded="false" title="Dyno AI">
+        <i class="fa-solid fa-comments text-xl" aria-hidden="true"></i>
+    </button>
+    <script src="cbt-admin-chat.js" defer></script>
+    <script src="dyno-ai-glass.js" defer></script>
     <script src="password-controls.js"></script>
 </body>
 
